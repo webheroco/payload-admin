@@ -81,3 +81,28 @@ test('a site can keep its dashboard, with Performance on its own page', () => {
   const config = webheroAdmin({ home: 'dashboard' })(base())
   assert.deepEqual(Object.keys(config.admin.components.views), ['seoOverview', 'performance', 'guide'])
 })
+
+test('approvals are off unless asked for, and wrap everything with drafts when on', async () => {
+  const off = webheroAdmin()(base())
+  assert.ok(!off.collections.some((c) => c.slug === 'reviews'))
+  assert.equal(off.admin.components.views.reviews, undefined)
+
+  const on = webheroAdmin({ approvals: true })(base())
+  const reviews = on.collections.find((c) => c.slug === 'reviews')
+  assert.ok(reviews)
+  assert.equal(reviews.endpoints[0].path, '/publish-due')
+  assert.equal(on.admin.components.views.reviews.path, '/reviews')
+  const pages = on.collections.find((c) => c.slug === 'pages')
+  assert.equal(pages.admin.components.edit.PublishButton.path, '@webheroco/payload-admin/client#ReviewButton')
+  assert.ok(pages.fields.some((f) => f.name === 'reviewBanner'))
+  assert.equal(on.globals[0].admin.components.elements.PublishButton.clientProps.roleField, 'role')
+  // Submissions has no drafts, so it publishes as before.
+  assert.equal(on.collections.find((c) => c.slug === 'submissions').admin.components.edit?.PublishButton, undefined)
+
+  // An editor's publish is refused; an approver's goes through.
+  const guard = pages.hooks.beforeChange[0]
+  const req = (role) => ({ user: { id: 1, role } })
+  assert.throws(() => guard({ data: { _status: 'published' }, req: req('editor'), context: {} }), /Only an approver can publish/)
+  assert.deepEqual(guard({ data: { _status: 'published' }, req: req('client-admin'), context: {} }), { _status: 'published' })
+  assert.deepEqual(guard({ data: { _status: 'draft' }, req: req('editor'), context: {} }), { _status: 'draft' })
+})

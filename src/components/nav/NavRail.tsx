@@ -21,7 +21,7 @@ export const NavRail = async (props: ServerProps & { visibleEntities?: VisibleEn
   if (!payload?.config || !visibleEntities) return null
   const { collections, globals, routes } = payload.config
   const adminRoute = routes.admin
-  const { views, home } = readOptions(payload.config)
+  const { views, home, approvals } = readOptions(payload.config)
 
   const groups = groupNavItems(
     [
@@ -79,6 +79,7 @@ export const NavRail = async (props: ServerProps & { visibleEntities?: VisibleEn
             : undefined
       }
       seoHref={views.seo ? formatAdminURL({ adminRoute, path: '/seo' }) : undefined}
+      reviewsHref={approvals ? formatAdminURL({ adminRoute, path: '/reviews' }) : undefined}
     />
   )
 }

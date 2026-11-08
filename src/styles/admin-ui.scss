@@ -11,6 +11,7 @@
 @use '../components/header/header';
 @use '../components/guide/guide';
 @use '../components/palette/palette';
+@use '../components/review/review';
 
 // Native selects in custom views: room for the arrow, never touching the edge.
 .cms-select {

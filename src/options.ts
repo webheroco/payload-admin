@@ -60,6 +60,29 @@ export type WebheroAdminOptions = {
    * beforeDashboard) with Performance at /performance.
    */
   home?: 'performance' | 'dashboard'
+  /**
+   * Sign-off before anything goes live. Off unless set. `true` uses the
+   * defaults: approvers are users whose `role` is super-admin or client-admin,
+   * and every collection and global with drafts goes through review.
+   */
+  approvals?: boolean | ApprovalOptions
+}
+
+export type ApprovalOptions = {
+  /** Role values that may publish, schedule and send back. Default super-admin, client-admin. */
+  approverRoles?: string[]
+  /** The users field holding the role (a select, single or many). Default `role`. */
+  roleField?: string
+  /** Only these collection and global slugs. Default: everything with drafts. */
+  only?: string[]
+}
+
+export type ResolvedApprovals = { approverRoles: string[]; roleField: string; only: string[] | null }
+
+/** True when the user holds one of the approver roles. */
+export const canApprove = (user: unknown, a: ResolvedApprovals) => {
+  const value = (user as Record<string, unknown> | null)?.[a.roleField]
+  return (Array.isArray(value) ? value : [value]).some((v) => typeof v === 'string' && a.approverRoles.includes(v))
 }
 
 /** The options with every default filled in. Plain data only, so it can sit on the config. */
@@ -75,6 +98,7 @@ export type ResolvedOptions = {
   maxVersions: number
   views: { seo: boolean; performance: boolean; guide: boolean }
   home: 'performance' | 'dashboard'
+  approvals: ResolvedApprovals | null
 }
 
 export function resolveOptions(options: WebheroAdminOptions, collectionSlugs: Set<string>): ResolvedOptions {
@@ -107,6 +131,13 @@ export function resolveOptions(options: WebheroAdminOptions, collectionSlugs: Se
     },
     // Performance can only be home when it is switched on.
     home: (options.views?.performance ?? true) ? (options.home ?? 'performance') : 'dashboard',
+    approvals: options.approvals
+      ? {
+          approverRoles: (options.approvals === true ? undefined : options.approvals.approverRoles) ?? ['super-admin', 'client-admin'],
+          roleField: (options.approvals === true ? undefined : options.approvals.roleField) ?? 'role',
+          only: (options.approvals === true ? undefined : options.approvals.only) ?? null,
+        }
+      : null,
   }
 }
 
