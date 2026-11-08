@@ -32,6 +32,9 @@ First release, moved out of the `client-payload` skill's templates
 - Approvals (`approvals: true`, off by default): Submit for review, Send
   back, Schedule, a Reviews page with list and board, emails, and
   `/api/reviews/publish-due` for scheduled changes. Ported from Quartix.
+- Every table cell is pinned to the top; Page and Slug columns are wider;
+  slugs link to the live page in a new tab. Schema findings mark errors red
+  and suggestions ("Could add image") amber.
 - The SEO overview lists only collections that exist (a site
   without Posts would have errored).
 - Performance reads the skill's one Submissions collection by default, as

@@ -174,14 +174,17 @@ export const SchemaTab: React.FC<{
             <th>Page</th>
             <th>Slug</th>
             <th>Schema</th>
-            <th>Issues</th>
+            <th>Findings</th>
           </tr>
         </thead>
         <tbody>
           {visible.map((row) => {
             const res = results[key(row)]
             const checks = pageChecks(row)
-            const issues = checks.flatMap((c) => (c.verdict === 'error' || c.verdict === 'warn' ? c.issues.map((i) => `${c.type}: ${i}`) : []))
+            // Errors first (they stop rich results), then suggestions.
+            const issues = checks
+              .flatMap((c) => (c.verdict === 'error' || c.verdict === 'warn' ? c.issues.map((i) => ({ text: `${c.type}: ${i}`, verdict: i.startsWith('Could add') ? ('warn' as const) : ('error' as const) })) : []))
+              .sort((a, b) => (a.verdict === b.verdict ? 0 : a.verdict === 'error' ? -1 : 1))
             return (
               <tr key={key(row)}>
                 <td className="cms-seo__cell-page">
@@ -216,7 +219,9 @@ export const SchemaTab: React.FC<{
                   {issues.length ? (
                     <ul className="cms-schema__issues">
                       {issues.map((i) => (
-                        <li key={i}>{i}</li>
+                        <li key={i.text} className={`is-${i.verdict}`}>
+                          {i.text}
+                        </li>
                       ))}
                     </ul>
                   ) : null}

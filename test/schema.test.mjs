@@ -17,7 +17,7 @@ test('reads @graph, checks required and recommended properties', () => {
     }),
   )
   assert.deepEqual(checks.map((c) => [c.type, c.verdict]), [['Organization', 'good'], ['BlogPosting', 'warn']])
-  assert.ok(checks[1].issues.includes('No datePublished (recommended)'))
+  assert.ok(checks[1].issues.includes('Could add datePublished'))
 })
 
 test('FAQ questions need an answer; broken JSON is an error; unknown types have no verdict', () => {

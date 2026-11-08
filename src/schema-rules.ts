@@ -3,7 +3,8 @@
  *
  * The site's code writes the schema, so the tab reads each live page and
  * checks what it finds against Google's rich result rules: a missing required
- * property is an error (red), a missing recommended one a warning (amber).
+ * property is an error (red) that stops rich results; a missing recommended
+ * one is a suggestion (amber): the page still qualifies, it just says less.
  * Types the site doesn't use never appear, and a type with no rules here
  * (a custom one) is listed without a verdict.
  */
@@ -146,7 +147,7 @@ export function checkNode(node: SchemaNode): Check[] {
       const rule = RULES[type]
       if (!rule) return { type, verdict: 'none' as const, issues: ['No checks for this type'] }
       const errors = rule.required.filter((k) => !has(node, k)).map((k) => `Missing ${k}`)
-      const warnings = (rule.recommended ?? []).filter((k) => !has(node, k)).map((k) => `No ${k} (recommended)`)
+      const warnings = (rule.recommended ?? []).filter((k) => !has(node, k)).map((k) => `Could add ${k}`)
       const extra = rule.extra?.(node)
       errors.push(...(extra?.errors ?? []))
       warnings.push(...(extra?.warnings ?? []))

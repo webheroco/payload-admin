@@ -423,9 +423,10 @@ export const SeoWorkspace: React.FC<{
                     {row.titleTranslated ? null : <span className="cms-seo__note">not translated</span>}
                   </td>
                   <td className="cms-seo__cell-path">
-                    <span className="cms-seo__path" title={row.path}>
+                    {/* The live page, in a new tab. */}
+                    <a className="cms-seo__path" href={row.path} target="_blank" rel="noopener noreferrer" title={row.path}>
                       {row.path}
-                    </span>
+                    </a>
                   </td>
                   <td className="cms-seo__cell-kind">
                     <span className="cms-seo__kind">{row.kind}</span>
