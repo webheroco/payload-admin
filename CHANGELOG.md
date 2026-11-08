@@ -16,6 +16,16 @@ First release, moved out of the `client-payload` skill's templates
   well as the Form Builder, and follows the chosen site on multi-site.
 - The SEO plugin's tab is renamed "Google" with `tabbedUI` too (it only
   worked when the tab was named `meta`).
+- The menu has no group headings or dividers, so it keeps the same shape
+  open and collapsed and nothing jumps. "Collapse menu" is an icon at the top
+  right of the open menu; collapsed, clicking the logo or hovering the edge
+  opens it.
+- The SEO overview gives the page, its address and its type their own
+  one-line columns. Unpublished changes are an amber dot beside the name.
+- The account picture sits in the top right corner, lined up with the
+  preview's "open in a new tab" arrow.
+- The section palette works on any collection (`blocksField` prop, default
+  `layout`); redirects keep string IDs; localized slugs show their address.
 - The general admin styles that were in the template's `custom.css`
   (switches, save help, List/Grid, read-only fields, Live Preview on small
   screens) are part of the package's styles.

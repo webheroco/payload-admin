@@ -72,16 +72,32 @@
       border-bottom: 1px solid var(--theme-elevation-100);
       font-size: 14px;
     }
-    th:nth-child(1),
-    td:nth-child(1) {
-      width: 18%;
+    // Page, address and type each keep to one line; the search text takes the room.
+    .cms-seo__cell-page,
+    .cms-seo__cell-path,
+    .cms-seo__cell-kind {
+      white-space: nowrap;
+      width: 1%;
     }
-    th:nth-child(2),
-    td:nth-child(2) {
-      width: 24%;
+    .cms-seo__cell-page .cms-seo__page {
+      display: inline-block;
+      max-width: 220px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      vertical-align: top;
+    }
+    .cms-seo__cell-path .cms-seo__path {
+      display: block;
+      max-width: 200px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-top: 0;
     }
     th:nth-child(4),
-    th:nth-child(5) {
+    td:nth-child(4) {
+      width: 26%;
+    }
+    th:nth-child(6) {
       width: 1%;
     }
   }
@@ -103,11 +119,27 @@
   }
 
   &__path,
-  &__kind {
+  &__kind,
+  &__note {
     display: block;
     margin-top: 3px;
     font-size: 13px;
     color: var(--theme-elevation-600);
+  }
+  &__kind {
+    margin-top: 0;
+  }
+
+  // Unpublished changes: an amber dot beside the page name, words in its tip.
+  &__flag {
+    position: relative;
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    margin: 7px 0 0 8px;
+    border-radius: 50%;
+    background: #f59e0b;
+    vertical-align: top;
   }
 
   &__text {
@@ -162,8 +194,12 @@
     margin-left: 0;
     width: 100%;
   }
+  .cms-seo__tools {
+    flex-wrap: wrap;
+  }
   .cms-seo__search {
-    flex: 1;
+    flex: 1 1 140px;
+    min-width: 140px;
     width: auto;
   }
   // Narrow screens: one card per row instead of a squashed table.
@@ -184,8 +220,20 @@
       padding: 0;
       border: 0;
     }
-    td:nth-child(2),
-    td:nth-child(3) {
+    // Page and Index on the first line, address and type under the name,
+    // then the search title and description full width.
+    td.cms-seo__cell-page,
+    td.cms-seo__cell-path,
+    td.cms-seo__cell-kind {
+      grid-column: 1;
+      white-space: normal;
+    }
+    td:nth-child(6) {
+      grid-column: 2;
+      grid-row: 1;
+    }
+    td:nth-child(4),
+    td:nth-child(5) {
       grid-column: 1 / -1;
     }
   }

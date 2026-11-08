@@ -380,3 +380,12 @@ html[data-palette] .cms-rail:not(:hover, :has([aria-expanded='true'])) {
 .cms-sitemenu__button[aria-expanded='true']::after {
   display: none !important;
 }
+
+// The picture sits in the top right corner: Payload keeps a page gutter and
+// room for its own avatar (hidden) to the right of the actions.
+.app-header__content {
+  padding-right: 16px !important;
+}
+.app-header__actions-wrapper {
+  margin-right: 0 !important;
+}

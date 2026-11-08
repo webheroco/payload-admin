@@ -12,6 +12,12 @@ export type RailGroup = { label: string; items: RailItem[] }
 
 const STORAGE_KEY = 'cms-rail-collapsed'
 
+/** The rail can only be held open on wide screens without the section palette. */
+const canPin = () =>
+  typeof window !== 'undefined' &&
+  window.matchMedia('(min-width: 1025px)').matches &&
+  !document.documentElement.hasAttribute('data-palette')
+
 const readCollapsed = () => {
   try {
     return window.localStorage.getItem(STORAGE_KEY) === '1'
@@ -66,7 +72,21 @@ export const NavRailClient: React.FC<{
   return (
     <aside className={`cms-rail${collapsed ? ' is-collapsed' : ''}`} aria-label="Main menu">
       <div className="cms-rail__top">
-        <Link href={adminRoute} prefetch={false} className="cms-rail__logo" aria-label="Dashboard" data-tip="Dashboard">
+        <Link
+          href={adminRoute}
+          prefetch={false}
+          className="cms-rail__logo"
+          aria-label={collapsed ? 'Open menu' : 'Dashboard'}
+          data-tip={collapsed ? 'Open menu' : 'Dashboard'}
+          onClick={(event) => {
+            // Collapsed, the logo opens the menu. Where the rail is always icons
+            // (narrow screens, the section palette) it goes to the dashboard.
+            if (collapsed && canPin()) {
+              event.preventDefault()
+              setCollapsed(false)
+            }
+          }}
+        >
           {/* Replace with the client's logo mark. */}
           <svg viewBox="0 0 32 32" width="28" height="28" aria-hidden="true">
             <rect width="32" height="32" rx="8" fill="currentColor" />
@@ -75,6 +95,16 @@ export const NavRailClient: React.FC<{
         </Link>
         {/* On multi-site the site menu takes the logo's place (the CSS hides the logo when it is there). */}
         {beforeLinks}
+        {/* An icon at the right of the open menu. Collapsed, there is none: the logo or the edge opens it. */}
+        <button
+          type="button"
+          className="cms-rail__toggle"
+          onClick={() => setCollapsed((c) => !c)}
+          aria-label={collapsed ? 'Keep menu open' : 'Collapse menu'}
+          data-tip={collapsed ? 'Keep menu open' : 'Collapse menu'}
+        >
+          <Icon name={collapsed ? 'expand' : 'collapse'} size={18} />
+        </button>
       </div>
 
       <nav className="cms-rail__scroll">
@@ -86,8 +116,8 @@ export const NavRailClient: React.FC<{
           {seoHref ? <RailLink href={seoHref} icon="seo" label="SEO overview" active={isActive(seoHref)} /> : null}
         </div>
         {groups.map((group) => (
-          <div className="cms-rail__group" key={group.label}>
-            <div className="cms-rail__heading">{group.label}</div>
+          // No group headings: the menu keeps the same shape open and collapsed, so nothing jumps.
+          <div className="cms-rail__group" key={group.label} aria-label={group.label} role="group">
             {group.items.map((item) => (
               <RailLink key={item.slug} href={item.href} icon={item.icon} label={item.label} active={isActive(item.href)} />
             ))}
@@ -95,19 +125,6 @@ export const NavRailClient: React.FC<{
         ))}
       </nav>
 
-      {/* Collapse sits at the foot, so the site menu has the full width. Theme, account and log out are in the account menu top right. */}
-      <div className="cms-rail__bottom">
-        <button
-          type="button"
-          className="cms-rail__link"
-          onClick={() => setCollapsed((c) => !c)}
-          aria-label={collapsed ? 'Expand menu' : 'Collapse menu'}
-          data-tip={collapsed ? 'Expand menu' : 'Collapse menu'}
-        >
-          <Icon name={collapsed ? 'expand' : 'collapse'} size={18} />
-          <span className="cms-rail__text">{collapsed ? 'Keep menu open' : 'Collapse menu'}</span>
-        </button>
-      </div>
     </aside>
   )
 }

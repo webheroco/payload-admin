@@ -427,6 +427,8 @@ export const SeoWorkspace: React.FC<{
             <thead>
               <tr>
                 <th>Page</th>
+                <th>Address</th>
+                <th>Type</th>
                 <th>Search title</th>
                 <th>Description</th>
                 <th>Index</th>
@@ -435,16 +437,22 @@ export const SeoWorkspace: React.FC<{
             <tbody>
               {visible.map((row) => (
                 <tr key={`${row.collection}-${row.id}`}>
-                  <td>
+                  <td className="cms-seo__cell-page">
                     <Link href={row.editHref} prefetch={false} className="cms-seo__page">
                       {row.title}
                     </Link>
-                    <span className="cms-seo__path">{row.path}</span>
-                    <span className="cms-seo__kind">
-                      {row.kind}
-                      {row.titleTranslated ? '' : ' · not translated'}
-                      {row.hasDraft ? ' · has unpublished changes' : ''}
+                    {row.hasDraft ? (
+                      <span className="cms-seo__flag" data-tip="Has unpublished changes" aria-label="Has unpublished changes" />
+                    ) : null}
+                    {row.titleTranslated ? null : <span className="cms-seo__note">not translated</span>}
+                  </td>
+                  <td className="cms-seo__cell-path">
+                    <span className="cms-seo__path" title={row.path}>
+                      {row.path}
                     </span>
+                  </td>
+                  <td className="cms-seo__cell-kind">
+                    <span className="cms-seo__kind">{row.kind}</span>
                   </td>
                   <td>
                     <EditableText
