@@ -18,7 +18,7 @@ const base = () => ({
         {
           type: 'tabs',
           tabs: [
-            { label: 'Content', fields: [] },
+            { label: 'Content', fields: [{ name: 'noIndex', type: 'checkbox', label: 'Hide from search engines' }] },
             // The SEO plugin with tabbedUI: an unnamed tab holding the `meta` group.
             { label: 'SEO', fields: [{ name: 'meta', type: 'group', fields: [{ name: 'image', type: 'upload', relationTo: 'media' }] }] },
           ],
@@ -53,12 +53,19 @@ test('the plugin sets the admin and keeps what the project set', () => {
   const pages = config.collections[0]
   assert.equal(pages.admin.hideAPIURL, true)
   assert.equal(pages.versions.maxPerDoc, 50)
-  assert.equal(pages.fields[0].name, 'saveHelp')
+  // Save help sits in the status "i" note, not at the top of the form.
+  assert.ok(!pages.fields.some((f) => f.name === 'saveHelp'))
+  assert.deepEqual(pages.admin.components.edit.Status.clientProps, { help: 'Drafts.' })
   assert.equal(pages.fields.find((f) => f.name === 'hidden').admin.components.Field, SWITCH_FIELD)
   const tabs = pages.fields.find((f) => f.type === 'tabs').tabs
   assert.equal(tabs[0].label, 'Content')
-  assert.equal(tabs[1].label, 'Google')
-  assert.equal(tabs[1].fields[0].fields[0].maxDepth, 1)
+  assert.equal(tabs[1].label, 'SEO')
+  // noIndex moves from Content into SEO, shown as "Indexed".
+  assert.equal(tabs[0].fields.length, 0)
+  assert.equal(tabs[1].fields[0].name, 'noIndex')
+  assert.equal(tabs[1].fields[0].label, 'Indexed')
+  assert.deepEqual(tabs[1].fields[0].admin.components.Field, { path: SWITCH_FIELD, clientProps: { invert: true } })
+  assert.equal(tabs[1].fields[1].fields[0].maxDepth, 1)
   assert.ok(pages.admin.components.edit.beforeDocumentControls.includes(PREVIEW_TOOLBAR))
   assert.deepEqual(pages.admin.components.beforeListTable[0].clientProps, {
     routes: { pages: '/:slug', posts: '/blog/:slug' },
@@ -94,7 +101,8 @@ test('approvals are off unless asked for, and wrap everything with drafts when o
   assert.equal(on.admin.components.views.reviews.path, '/reviews')
   const pages = on.collections.find((c) => c.slug === 'pages')
   assert.equal(pages.admin.components.edit.PublishButton.path, '@webheroco/payload-admin/client#ReviewButton')
-  assert.ok(pages.fields.some((f) => f.name === 'reviewBanner'))
+  // The review's state is a line beside the buttons, not a banner field.
+  assert.ok(!pages.fields.some((f) => f.name === 'reviewBanner'))
   assert.equal(on.globals[0].admin.components.elements.PublishButton.clientProps.roleField, 'role')
   // Submissions has no drafts, so it publishes as before.
   assert.equal(on.collections.find((c) => c.slug === 'submissions').admin.components.edit?.PublishButton, undefined)

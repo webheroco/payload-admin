@@ -6,13 +6,15 @@
  * - relationship and upload fields populate one level deep unless they say
  *   otherwise, and version history is capped;
  * - every checkbox, however deeply nested, renders as an on/off switch;
- * - each edit view says how saving works at the top of its form (`saveHelp`);
+ * - `saveHelp` text sits in the status "i" note, so nothing pushes the form down;
  * - everything with Live Preview gets the preview toolbar (Phone, Tablet,
  *   Laptop, Fit, Custom) and the project's `previewControls`;
  * - everything with drafts gets the status pills and "Undo changes";
  * - everything with versions gets the Versions icon on the one header row;
  * - nothing shows the raw API link;
- * - the SEO plugin's "SEO" tab is called "Google", with a line saying what it is for;
+ * - the SEO plugin's tab is "SEO", and the page's `noIndex` switch moves into it,
+ *   shown as "Indexed" (on = search engines may list it), the word the SEO
+ *   overview uses;
  * - translated collections get a "Languages" column;
  * - the List/Grid switch gets the site's addresses for its page tiles.
  */
@@ -25,7 +27,6 @@ import {
   LANGUAGES_CELL,
   LIST_GRID_SWITCH,
   PREVIEW_TOOLBAR,
-  SAVE_HELP,
   SWITCH_FIELD,
   VERSIONS_BUTTON,
 } from './paths.js'
@@ -38,20 +39,60 @@ function isSeoTab(tab: { name?: string; fields: Field[] }): boolean {
   return tab.name === 'meta' || tab.fields.some((f) => 'name' in f && f.name === 'meta')
 }
 
-/** The SEO plugin names its tab "SEO", which editors don't read as anything. */
+const INDEXED: Partial<Field> = {
+  label: 'Indexed',
+  admin: {
+    description: 'On: search engines may list this page. Off for thank-you, landing and private pages.',
+    components: { Field: { path: SWITCH_FIELD, clientProps: { invert: true } } },
+  },
+}
+
+/** The page's `noIndex` checkbox, shown as "Indexed" (stored value unchanged). */
+const asIndexed = (field: Field): Field =>
+  ({ ...field, label: INDEXED.label, admin: { ...('admin' in field ? field.admin : {}), ...INDEXED.admin } }) as Field
+
+const isNoIndex = (f: Field) => f.type === 'checkbox' && f.name === 'noIndex'
+
+/**
+ * The SEO plugin's tab is called "SEO", with a line saying what it is for,
+ * and the page's `noIndex` switch moves into it from wherever the site put
+ * it (top level or another tab). Moving a field between tabs changes no
+ * data: an unnamed tab stores nothing of its own.
+ */
 export function withPlainSeoTab(fields: Field[] | undefined): Field[] {
-  return (fields ?? []).map((field) =>
+  const list = fields ?? []
+  const seoTab = list.flatMap((f) => (f.type === 'tabs' ? f.tabs : [])).find(isSeoTab)
+  // Only into an unnamed tab: a named one (`meta`) would change where the value is stored.
+  const canMove = Boolean(seoTab && !('name' in seoTab && seoTab.name))
+  let moved: Field | undefined
+  const strip = (fs: Field[]) =>
+    fs.filter((f) => {
+      if (canMove && !moved && isNoIndex(f)) {
+        moved = asIndexed(f)
+        return false
+      }
+      return true
+    })
+  const top = strip(list).map((field) =>
+    field.type === 'tabs'
+      ? { ...field, tabs: field.tabs.map((tab) => (isSeoTab(tab) || ('name' in tab && tab.name) ? tab : { ...tab, fields: strip(tab.fields) })) }
+      : isNoIndex(field)
+        ? asIndexed(field)
+        : field,
+  )
+  return top.map((field) =>
     field.type === 'tabs'
       ? {
           ...field,
           tabs: field.tabs.map((tab) =>
-            tab.label === 'SEO' && isSeoTab(tab)
+            isSeoTab(tab)
               ? {
                   ...tab,
-                  label: 'Google',
-                  description: tab.description ?? 'How this page appears in Google results and when it is shared.',
+                  label: tab.label === 'SEO' || tab.label === 'Google' || !tab.label ? 'SEO' : tab.label,
+                  description: tab.description ?? 'How this page appears in search results and when it is shared.',
+                  fields: moved ? [moved, ...tab.fields] : tab.fields.map((f) => (isNoIndex(f) ? asIndexed(f) : f)),
                 }
-              : tab,
+              : { ...tab, fields: tab.fields.map((f) => (isNoIndex(f) ? asIndexed(f) : f)) },
           ),
         }
       : field,
@@ -98,18 +139,6 @@ export function withShallowRelations(fields: Field[] | undefined): Field[] {
     }
     return field
   })
-}
-
-/** A `ui` field at the top of the form. `ui` fields store nothing, so no migration. */
-function withSaveHelp(fields: Field[], slug: string, options: ResolvedOptions): Field[] {
-  const text = options.saveHelp[slug]
-  if (!text) return fields
-  const help: Field = {
-    name: 'saveHelp',
-    type: 'ui',
-    admin: { components: { Field: { path: SAVE_HELP, clientProps: { text } } } },
-  }
-  return [help, ...fields]
 }
 
 /** A list column of EN / FR / ES chips. `ui` fields store nothing, so no migration. */
@@ -185,13 +214,15 @@ export function collectionDefaults(
         edit: {
           ...components?.edit,
           // The editor's-words status pills, "Undo changes" and the dates note.
-          ...(hasDrafts ? { Status: components?.edit?.Status ?? DOC_STATUS } : {}),
+          ...(hasDrafts
+            ? { Status: components?.edit?.Status ?? (options.saveHelp[collection.slug] ? { path: DOC_STATUS, clientProps: { help: options.saveHelp[collection.slug] } } : DOC_STATUS) }
+            : {}),
           ...(beforeControls.length ? { beforeDocumentControls: beforeControls } : {}),
         },
       },
     },
     fields: withLanguagesColumn(
-      withSaveHelp(withShallowRelations(withSwitches(withPlainSeoTab(collection.fields))), collection.slug, options),
+      withShallowRelations(withSwitches(withPlainSeoTab(collection.fields))),
       collection.slug,
       options,
     ),
@@ -228,6 +259,6 @@ export function globalDefaults(
           }
         : {}),
     },
-    fields: withSaveHelp(withShallowRelations(withSwitches(withPlainSeoTab(global.fields))), global.slug, options),
+    fields: withShallowRelations(withSwitches(withPlainSeoTab(global.fields))),
   }
 }

@@ -1,4 +1,15 @@
-// @webheroco/payload-admin. Switches, save help, readable read-only fields, List/Grid, and Live Preview on small screens.
+// @webheroco/payload-admin. Corners, switches, readable read-only fields, List/Grid, and Live Preview on small screens.
+
+/* One set of corners everywhere, Payload's own fields and buttons included:
+   every control (input, search, select, button, pill) --cms-radius; cards,
+   panels, menus and dialogs --cms-radius-lg; switches and dots fully round. */
+html:root {
+  --cms-radius: 8px;
+  --cms-radius-lg: 12px;
+  --style-radius-s: var(--cms-radius);
+  --style-radius-m: var(--cms-radius);
+  --style-radius-l: var(--cms-radius-lg);
+}
 
 /* On/off switches (SwitchField.tsx). */
 .cms-switch-field__row {
@@ -28,7 +39,7 @@
 }
 
 .cms-switch--on {
-  background: var(--cms-brand);
+  background: var(--cms-brand, var(--theme-elevation-900));
 }
 
 .cms-switch:focus-visible {
@@ -55,17 +66,6 @@
 
 .cms-switch--on .cms-switch__thumb {
   transform: translateX(18px);
-}
-
-/* How saving works, at the top of each edit view (SaveHelp.tsx). */
-.cms-save-help {
-  margin: 0 0 var(--base);
-  padding: calc(var(--base) * 0.5) calc(var(--base) * 0.75);
-  border-left: 3px solid var(--cms-brand);
-  border-radius: 4px;
-  background: var(--theme-elevation-50);
-  color: var(--theme-elevation-800);
-  font-size: 14px;
 }
 
 /* Read-only values (submissions, imported records) at AA contrast instead of
@@ -95,7 +95,7 @@
   display: inline-flex;
   gap: 4px;
   padding: 3px;
-  border-radius: 8px;
+  border-radius: var(--cms-radius);
   background: var(--theme-elevation-100);
 }
 
@@ -104,7 +104,7 @@
   min-width: 72px;
   padding: 0 14px;
   border: 0;
-  border-radius: 6px;
+  border-radius: var(--cms-radius);
   background: transparent;
   color: var(--theme-elevation-800);
   font: inherit;
@@ -166,7 +166,7 @@
   aspect-ratio: 4 / 3;
   overflow: hidden;
   border: 1px solid var(--theme-elevation-100);
-  border-radius: 8px;
+  border-radius: var(--cms-radius);
   background: var(--theme-elevation-50);
 }
 

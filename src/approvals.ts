@@ -31,12 +31,11 @@ import {
   type GlobalConfig,
   type GlobalSlug,
   type PayloadRequest,
-  type UIField,
   type Where,
 } from 'payload'
 
 import { canApprove, type ResolvedApprovals } from './options.js'
-import { REVIEW_BANNER, REVIEW_BUTTON } from './paths.js'
+import { REVIEW_BUTTON } from './paths.js'
 
 export const REVIEWS_SLUG = 'reviews'
 
@@ -412,7 +411,6 @@ export function withApprovals(config: Config, a: ResolvedApprovals): Config {
   const usersSlug = config.admin?.user ?? 'users'
   const clientProps = { approverRoles: a.approverRoles, roleField: a.roleField }
   const button = { path: REVIEW_BUTTON, clientProps }
-  const banner: UIField = { name: 'reviewBanner', type: 'ui', admin: { components: { Field: { path: REVIEW_BANNER, clientProps } } } }
   const included = (slug: string, entity: { versions?: unknown }) => hasDrafts(entity) && (!a.only || a.only.includes(slug))
   const refuse = () => {
     throw new APIError('Only an approver can publish. Use Submit for review, and an approver will publish it.', 403)
@@ -438,7 +436,6 @@ export function withApprovals(config: Config, a: ResolvedApprovals): Config {
     }
     return {
       ...c,
-      fields: [banner, ...c.fields],
       admin: { ...c.admin, components: { ...c.admin?.components, edit: { ...c.admin?.components?.edit, PublishButton: button } } },
       hooks: {
         ...c.hooks,
@@ -468,7 +465,6 @@ export function withApprovals(config: Config, a: ResolvedApprovals): Config {
     }
     return {
       ...g,
-      fields: [banner, ...g.fields],
       admin: { ...g.admin, components: { ...g.admin?.components, elements: { ...g.admin?.components?.elements, PublishButton: button } } },
       hooks: {
         ...g.hooks,

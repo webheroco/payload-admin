@@ -83,7 +83,7 @@ Only what differs per client:
 | `enquiries` | the Form Builder if `form-submissions` exists, else `{ collection: 'submissions', formField: 'form', pageField: 'page' }` | Where Performance counts enquiries. |
 | `livePreview` | none | Collections and globals with Live Preview; they get the preview toolbar. |
 | `previewControls` | none | More components beside the preview toolbar, such as the site's click-to-edit bridge. |
-| `saveHelp` | none | One line per slug at the top of the edit view saying how saving works there. |
+| `saveHelp` | none | Per slug, how saving works there. Shown in the status "i" note, so nothing pushes the form down. |
 | `translated` | none | Collections that get the Languages column. |
 | `listPageSize` | 25 | Rows per list page. |
 | `maxVersions` | 50 | Versions kept per document. |

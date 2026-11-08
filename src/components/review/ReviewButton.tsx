@@ -26,7 +26,7 @@ const nextHour = () => {
 }
 
 export const ReviewButton: React.FC<ApproverProps> = ({ approverRoles, roleField }) => {
-  const { api, target, ready, open, user, approver } = useReviewTarget({ approverRoles, roleField })
+  const { api, target, ready, open, latest, user, approver } = useReviewTarget({ approverRoles, roleField })
   const modified = useFormModified()
   const { submit: submitForm } = useForm()
   const { id, collectionSlug, globalSlug } = useDocumentInfo()
@@ -79,12 +79,36 @@ export const ReviewButton: React.FC<ApproverProps> = ({ approverRoles, roleField
       : run('POST', '', { ...target, status: 'scheduled', publishAt }, `Scheduled for ${formatWhen(publishAt)}.`)
   }
 
+  /**
+   * The review's state as one short line before the buttons (a pre-header,
+   * not a banner): who asked and when, or who sent it back. The full
+   * message or note is in its tip and on the Reviews page.
+   */
+  const stateLine = (() => {
+    if (!latest) return null
+    if (latest.status === 'sentBack') {
+      const note = latest.note ? `“${latest.note}”` : ''
+      return { text: `Sent back by ${personName(latest.reviewedBy, 'an approver')}`, tip: note, tone: 'back' }
+    }
+    if (latest.status === 'waiting') {
+      const mine = (typeof latest.submittedBy === 'object' ? latest.submittedBy?.id : latest.submittedBy) === user?.id
+      return { text: `${mine ? 'Submitted' : `From ${personName(latest.submittedBy)}`}, ${formatWhen(latest.createdAt)}`, tip: latest.message ? `“${latest.message}”` : '', tone: 'waiting' }
+    }
+    if (latest.status === 'scheduled') return { text: `Goes live ${formatWhen(latest.publishAt)}`, tip: '', tone: 'scheduled' }
+    return null
+  })()
+  const line = stateLine && (
+    <span className={`review-actions__note is-${stateLine.tone}`} data-tip={stateLine.tip || undefined} tabIndex={stateLine.tip ? 0 : undefined}>
+      {stateLine.text}
+    </span>
+  )
+
   const someoneElses = open && open.status === 'waiting' && (typeof open.submittedBy === 'object' ? open.submittedBy?.id : open.submittedBy) !== user?.id
 
   if (approver) {
     return (
       <div className="review-actions">
-        {open?.status === 'scheduled' && <span className="review-actions__note">Goes live {formatWhen(open.publishAt)}</span>}
+        {line}
         {someoneElses && (
           <Button buttonStyle="secondary" size="medium" className="review-actions__back" disabled={busy} onClick={() => setDialog('sendBack')}>
             Send back
@@ -131,6 +155,7 @@ export const ReviewButton: React.FC<ApproverProps> = ({ approverRoles, roleField
   if (open?.status === 'waiting') {
     return (
       <div className="review-actions">
+        {line}
         <Button buttonStyle="primary" size="medium" disabled>
           Waiting for review
         </Button>
@@ -148,6 +173,7 @@ export const ReviewButton: React.FC<ApproverProps> = ({ approverRoles, roleField
   }
   return (
     <div className="review-actions">
+      {line}
       <Button buttonStyle="primary" size="medium" disabled={busy || !ready} onClick={submit}>
         Submit for review
       </Button>

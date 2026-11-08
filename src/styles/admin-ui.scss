@@ -21,7 +21,7 @@
   height: 40px;
   padding: 0 40px 0 14px;
   border: 1px solid var(--theme-elevation-150);
-  border-radius: var(--style-radius-s, 4px);
+  border-radius: var(--cms-radius);
   background-color: var(--theme-input-bg, var(--theme-bg));
   color: var(--theme-text);
   font: inherit;
@@ -40,7 +40,7 @@
   height: 40px;
   padding: 0 14px;
   border: 1px solid var(--theme-elevation-150);
-  border-radius: var(--style-radius-s, 4px);
+  border-radius: var(--cms-radius);
   background: var(--theme-input-bg, var(--theme-bg));
   color: var(--theme-text);
   font: inherit;
@@ -79,7 +79,7 @@
     min-width: 240px;
     max-width: 320px;
     padding: 10px 12px;
-    border-radius: 8px;
+    border-radius: var(--cms-radius);
     background: var(--theme-elevation-900);
     color: var(--theme-bg);
     font: 400 13px/1.45 var(--font-body, system-ui);

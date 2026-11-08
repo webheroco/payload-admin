@@ -31,7 +31,8 @@ const when = (value: unknown) => {
     : date.toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
 }
 
-export const DocStatus: React.FC = () => {
+/** `help`: how saving works here (webheroAdmin `saveHelp`), shown in the "i" note. */
+export const DocStatus: React.FC<{ help?: string }> = ({ help }) => {
   const {
     id,
     collectionSlug,
@@ -109,7 +110,7 @@ export const DocStatus: React.FC = () => {
           )}
         </span>
         <TranslationStatus />
-        <span className="cms-info cms-status__info" tabIndex={0} aria-label="Dates">
+        <span className="cms-info cms-status__info" tabIndex={0} aria-label="Dates and saving">
           <Icon name="info" size={16} />
           <span className="cms-info__note" role="tooltip">
             <dl>
@@ -118,6 +119,7 @@ export const DocStatus: React.FC = () => {
               <dt>Created</dt>
               <dd>{when(savedDocumentData?.createdAt)}</dd>
             </dl>
+            {help ? <p className="cms-status__help">{help}</p> : null}
           </span>
         </span>
       </div>

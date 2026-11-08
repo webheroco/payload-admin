@@ -272,7 +272,7 @@
   &__count {
     min-width: 20px;
     padding: 1px 7px;
-    border-radius: 10px;
+    border-radius: var(--cms-radius-lg);
     background: var(--theme-elevation-100);
     font-size: 12px;
     font-weight: 600;
@@ -291,7 +291,7 @@
   gap: 8px;
   height: 40px;
   padding: 0 16px;
-  border-radius: var(--style-radius-s, 4px);
+  border-radius: var(--cms-radius);
   background: var(--theme-elevation-800);
   color: var(--theme-bg);
   font-size: 14px;
@@ -322,7 +322,7 @@
   &__badge {
     min-width: 18px;
     height: 18px;
-    border-radius: 9px;
+    border-radius: 999px;
     background: var(--theme-text);
     color: var(--theme-bg);
     font-size: 11px;
@@ -392,7 +392,7 @@
     all: unset;
     width: 32px;
     height: 32px;
-    border-radius: 6px;
+    border-radius: var(--cms-radius);
     text-align: center;
     font-size: 22px;
     line-height: 30px;
@@ -434,7 +434,7 @@
     align-items: center;
     gap: 10px;
     padding: 9px 12px;
-    border-radius: 6px;
+    border-radius: var(--cms-radius);
     border: 1px solid transparent;
     cursor: pointer;
     font-size: 14px;
@@ -469,7 +469,7 @@
   width: 100%;
   margin: -6px -8px;
   padding: 6px 28px 6px 8px;
-  border-radius: 6px;
+  border-radius: var(--cms-radius);
   border: 1px solid transparent;
   cursor: text;
 
@@ -581,7 +581,7 @@
     gap: 6px;
     padding: 14px 16px;
     border: 1px solid var(--theme-elevation-150);
-    border-radius: 8px;
+    border-radius: var(--cms-radius);
   }
   &__card-head {
     display: flex;
@@ -606,7 +606,7 @@
     height: 28px;
     padding: 0 10px;
     border: 1px solid var(--theme-elevation-150);
-    border-radius: 14px;
+    border-radius: var(--cms-radius);
     font-size: 13px;
     white-space: nowrap;
   }

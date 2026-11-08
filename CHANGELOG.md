@@ -1,5 +1,23 @@
 # Changelog
 
+## Unreleased
+
+- Nothing pushes the editor's fields down. The save help moves into the
+  status "i" note, and the review banner is gone: the review's state is one
+  short line beside the review buttons ("From Hannah, Sun 8 Nov, 15:09",
+  "Sent back by Callum"), with the message or note in its tip.
+  `ReviewBanner` still exports (it renders nothing) so old import maps work.
+- The SEO plugin's tab is "SEO" (was "Google"). A `noIndex` checkbox moves
+  into it from the Content tab and shows as an "Indexed" switch (on = search
+  engines may list it), the word the SEO overview uses. Stored value and
+  data unchanged. `SwitchField` takes `invert`.
+- One set of corners: every control (Payload's inputs, search, selects,
+  buttons, pills) uses `--cms-radius` (8px), cards, panels, menus and
+  dialogs `--cms-radius-lg` (12px). Payload's `--style-radius-*` follow them.
+- The document's buttons are all 34px with 8px between each, and the row
+  and the preview toolbar end 16px from the edge, under the top-right menus.
+- CI runs on pull requests only and cancels superseded runs.
+
 ## 0.1.0
 
 First release, moved out of the `client-payload` skill's templates

@@ -9,9 +9,12 @@
 import { FieldDescription, FieldLabel, useField } from "@payloadcms/ui";
 import type { CheckboxFieldClientComponent } from "payload";
 
-export const SwitchField: CheckboxFieldClientComponent = ({ field, path, readOnly }) => {
+/** `invert`: the switch shows the opposite of the stored value (noIndex shown as "Indexed"). */
+export const SwitchField: CheckboxFieldClientComponent = (props) => {
+  const { field, path, readOnly } = props;
+  const invert = Boolean((props as { invert?: boolean }).invert);
   const { value, setValue } = useField<boolean>({ path });
-  const on = Boolean(value);
+  const on = invert ? !value : Boolean(value);
   const disabled = Boolean(readOnly || field.admin?.readOnly);
   const id = `switch-${path.replace(/\W+/g, "-")}`;
 
@@ -25,7 +28,7 @@ export const SwitchField: CheckboxFieldClientComponent = ({ field, path, readOnl
           aria-checked={on}
           disabled={disabled}
           className={`cms-switch${on ? " cms-switch--on" : ""}`}
-          onClick={() => setValue(!on)}
+          onClick={() => setValue(invert ? on : !on)}
         >
           <span className="cms-switch__thumb" aria-hidden="true" />
         </button>

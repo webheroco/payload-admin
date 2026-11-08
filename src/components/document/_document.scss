@@ -35,7 +35,7 @@ body:has(.live-preview-window) .doc-controls .preview-btn {
   box-sizing: border-box;
   padding: 0 3px;
   border: 1px solid var(--theme-elevation-150);
-  border-radius: 8px;
+  border-radius: var(--cms-radius);
   white-space: nowrap;
 
   // Hairlines between status, translations and dates: a 1px sliver of
@@ -66,7 +66,7 @@ body:has(.live-preview-window) .doc-controls .preview-btn {
     width: 26px;
     height: 26px;
     border: 0;
-    border-radius: 6px;
+    border-radius: var(--cms-radius);
     &:hover,
     &:focus-visible {
       background: var(--theme-elevation-50);
@@ -84,7 +84,7 @@ body:has(.live-preview-window) .doc-controls .preview-btn {
   height: 26px;
   padding: 0 9px;
   box-sizing: border-box;
-  border-radius: 6px;
+  border-radius: var(--cms-radius);
   border: 1px solid var(--theme-elevation-150);
   font-size: 12.5px;
   font-weight: 500;
@@ -114,6 +114,8 @@ body:has(.live-preview-window) .doc-controls .preview-btn {
 }
 
 // Tips under pills and small icon buttons.
+.review-actions__note[data-tip]:hover::after,
+.review-actions__note[data-tip]:focus-visible::after,
 .cms-pill[data-tip]:hover::after,
 .cms-icon-button[data-tip]:hover::after,
 .cms-seo__dot[data-tip]:hover::after {
@@ -124,7 +126,7 @@ body:has(.live-preview-window) .doc-controls .preview-btn {
   transform: translateX(-50%);
   z-index: 1000;
   padding: 5px 10px;
-  border-radius: 6px;
+  border-radius: var(--cms-radius);
   background: var(--theme-elevation-900);
   color: var(--theme-bg);
   font-size: 12px;
@@ -137,6 +139,10 @@ body:has(.live-preview-window) .doc-controls .preview-btn {
 // width, height and zoom inputs only show under Custom.
 .live-preview-toolbar {
   gap: 10px;
+
+  // Same side padding as the top bar, so "open in a new tab" lines up
+  // under the menus.
+  padding-right: 16px;
 
   // "Open in a new tab" sits at the right-hand end.
   .live-preview-toolbar-controls {
@@ -172,7 +178,7 @@ body:has(.live-preview-window) .doc-controls .preview-btn {
     height: 32px;
     min-width: 34px;
     padding: 0 6px;
-    border-radius: 6px;
+    border-radius: var(--cms-radius);
     color: var(--theme-elevation-600);
     cursor: pointer;
     font-size: 13px;
@@ -201,7 +207,7 @@ body:has(.live-preview-window) .doc-controls .preview-btn {
     transform: translateX(-50%);
     z-index: 1000;
     padding: 4px 8px;
-    border-radius: 6px;
+    border-radius: var(--cms-radius);
     background: var(--theme-elevation-900);
     color: var(--theme-bg);
     font-size: 12px;
@@ -227,7 +233,7 @@ body:has(.doc-controls) .doc-header {
   justify-content: center;
   width: 34px;
   height: 34px;
-  border-radius: 8px;
+  border-radius: var(--cms-radius);
   color: var(--theme-elevation-700);
   text-decoration: none;
 
@@ -238,13 +244,25 @@ body:has(.doc-controls) .doc-header {
   &.is-small {
     width: 26px;
     height: 26px;
-    border-radius: 6px;
+    border-radius: var(--cms-radius);
   }
 }
 
-// The document's buttons: one height, one radius, icons borderless.
+// The document's buttons: one height, one radius, icons borderless, and
+// the same 8px between every one of them (the menus top right use 8px too).
+// The row ends where the top bar ends, so the ⋮ menu lines up under the
+// picture.
+.doc-controls {
+  padding-right: 16px !important;
+}
+.doc-controls__wrapper {
+  padding-right: 0 !important;
+}
+.doc-controls__controls-wrapper {
+  gap: 8px !important;
+}
 .doc-controls__controls {
-  gap: 4px;
+  gap: 8px;
   align-items: center;
 }
 .doc-controls__controls-wrapper {
@@ -261,7 +279,7 @@ body:has(.doc-controls) .doc-header {
     align-items: center;
     justify-content: center;
     border: 0;
-    border-radius: 8px;
+    border-radius: var(--cms-radius);
     background: none;
     color: var(--theme-elevation-700);
     &:hover {
@@ -270,7 +288,7 @@ body:has(.doc-controls) .doc-header {
     }
   }
   .doc-controls__popup {
-    margin-left: 2px;
+    margin: 0;
   }
   .doc-controls__dots {
     width: 100%;
@@ -286,23 +304,23 @@ body:has(.doc-controls) .doc-header {
     color: var(--theme-text);
   }
   .form-submit {
-    margin-left: 6px;
+    margin: 0;
     .btn {
       margin: 0;
       height: 34px;
       padding: 0 14px;
-      border-radius: 8px 0 0 8px;
+      border-radius: var(--cms-radius) 0 0 var(--cms-radius);
       font-size: 13px;
       font-weight: 600;
     }
     .btn:not(.btn--withPopup) .btn,
     > .btn {
-      border-radius: 8px;
+      border-radius: var(--cms-radius);
     }
     .popup-button {
       height: 34px;
       width: 30px;
-      border-radius: 0 8px 8px 0;
+      border-radius: 0 var(--cms-radius) var(--cms-radius) 0;
       border-left: 1px solid color-mix(in srgb, var(--theme-bg) 25%, transparent);
     }
   }
@@ -360,4 +378,23 @@ html.cms-headrow {
   .cms-status .cms-info {
     display: none;
   }
+}
+
+// How saving works (webheroAdmin `saveHelp`), under the dates in the "i" note.
+.cms-status__help {
+  margin: 8px 0 0;
+  padding-top: 8px;
+  border-top: 1px solid color-mix(in srgb, var(--theme-bg) 20%, transparent);
+  white-space: normal;
+}
+
+// A review message can be long: let its tip wrap, opening to the left.
+.review-actions__note[data-tip]:hover::after,
+.review-actions__note[data-tip]:focus-visible::after {
+  left: auto;
+  right: 0;
+  transform: none;
+  width: max-content;
+  max-width: 320px;
+  white-space: normal;
 }

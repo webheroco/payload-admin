@@ -22,7 +22,7 @@
     height: 26px;
     padding: 0 8px;
     box-sizing: border-box;
-    border-radius: 6px;
+    border-radius: var(--cms-radius);
     gap: 5px;
     border: 1px solid var(--theme-elevation-150);
     font-size: 11px;
@@ -65,7 +65,7 @@
     transform: translateX(-50%);
     z-index: 1000;
     padding: 4px 8px;
-    border-radius: 6px;
+    border-radius: var(--cms-radius);
     background: var(--theme-elevation-900);
     color: var(--theme-bg);
     font-size: 12px;
