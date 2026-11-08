@@ -37,28 +37,44 @@ type Range = { min: number; max: number }
 const TITLE: Range = { min: 30, max: 60 }
 const DESCRIPTION: Range = { min: 70, max: 160 }
 
+/** empty: red. off (too short or too long): amber. good: green. */
+type LengthState = 'empty' | 'off' | 'good'
+const TIP: Record<string, string> = { empty: 'Empty', short: 'Too short', long: 'Too long', good: 'Good length' }
+
 const verdict = (text: string, range: Range) => {
   const n = text.trim().length
-  if (n === 0) return { label: 'Missing', tone: 'warn' as const, n }
-  if (n < range.min) return { label: 'Short', tone: 'warn' as const, n }
-  if (n > range.max) return { label: 'Long', tone: 'warn' as const, n }
-  return { label: 'Good', tone: 'good' as const, n }
+  if (n === 0) return { state: 'empty' as LengthState, tip: TIP.empty, n }
+  if (n < range.min) return { state: 'off' as LengthState, tip: TIP.short, n }
+  if (n > range.max) return { state: 'off' as LengthState, tip: TIP.long, n }
+  return { state: 'good' as LengthState, tip: TIP.good, n }
 }
 
-const needsAttention = (row: SeoRow) =>
-  verdict(row.searchTitle, TITLE).tone === 'warn' || verdict(row.description, DESCRIPTION).tone === 'warn'
-
+/** A coloured dot beside the count. No words: the tip says what the colour means. */
 const Length: React.FC<{ text: string; range: Range }> = ({ text, range }) => {
   const v = verdict(text, range)
   return (
     <span className="cms-seo__length">
-      <span className={`cms-pill cms-pill--${v.tone}`}>{v.label}</span>
+      <span className={`cms-seo__dot is-${v.state}`} data-tip={v.tip} role="img" aria-label={v.tip} />
       <span className="cms-seo__count">
         {v.n} / {range.max}
       </span>
     </span>
   )
 }
+
+const LENGTH_OPTIONS = (rows: SeoRow[], pick: (r: SeoRow) => string, range: Range) => [
+  { value: 'all', label: 'Any length' },
+  { value: 'empty', label: 'Empty', count: rows.filter((r) => verdict(pick(r), range).state === 'empty').length },
+  {
+    value: 'off',
+    label: 'Too short or too long',
+    count: rows.filter((r) => verdict(pick(r), range).state === 'off').length,
+  },
+  { value: 'good', label: 'Good length', count: rows.filter((r) => verdict(pick(r), range).state === 'good').length },
+]
+
+/** What the listings show before anyone touches the filters: pages search engines may list. */
+const DEFAULTS = { kind: 'all', status: 'all', indexed: 'yes', titleLength: 'all', descLength: 'all' }
 
 const api = async (url: string, method: string, body?: unknown) => {
   const res = await fetch(url, {
@@ -230,8 +246,8 @@ export const SeoWorkspace: React.FC<{
   const [rows, setRows] = useState(initialRows)
   const [redirects, setRedirects] = useState(initialRedirects ?? [])
   const [query, setQuery] = useState('')
-  const [kind, setKind] = useState('all')
-  const [show, setShow] = useState('all')
+  const [filters, setFilters] = useState(DEFAULTS)
+  const set = (key: keyof typeof DEFAULTS) => (value: string) => setFilters((f) => ({ ...f, [key]: value }))
   const [panel, setPanel] = useState(false)
 
   // The title lives in the breadcrumb, not in a heading row.
@@ -249,14 +265,22 @@ export const SeoWorkspace: React.FC<{
   }
 
   const kinds = useMemo(() => Array.from(new Set(rows.map((r) => r.kind))), [rows])
-  const attention = rows.filter(needsAttention).length
-  const activeFilters = (kind !== 'all' ? 1 : 0) + (show !== 'all' ? 1 : 0)
+  const { kind, status, indexed, titleLength, descLength } = filters
+  // The badge counts filters changed from the defaults, so the indexed-only default doesn't show as one.
+  const activeFilters = (Object.keys(DEFAULTS) as (keyof typeof DEFAULTS)[]).filter(
+    (k) => filters[k] !== DEFAULTS[k],
+  ).length
+  const notIndexed = rows.filter((r) => !r.indexed).length
   const q = query.trim().toLowerCase()
 
   const visible = rows.filter((row) => {
     if (kind !== 'all' && row.kind !== kind) return false
-    if (show === 'attention' && !needsAttention(row)) return false
-    if (show === 'hidden' && row.indexed) return false
+    if (status === 'live' && row.hasDraft) return false
+    if (status === 'changes' && !row.hasDraft) return false
+    if (indexed === 'yes' && !row.indexed) return false
+    if (indexed === 'no' && row.indexed) return false
+    if (titleLength !== 'all' && verdict(row.searchTitle, TITLE).state !== titleLength) return false
+    if (descLength !== 'all' && verdict(row.description, DESCRIPTION).state !== descLength) return false
     return !q || [row.title, row.path, row.searchTitle, row.description].some((t) => t.toLowerCase().includes(q))
   })
 
@@ -361,16 +385,6 @@ export const SeoWorkspace: React.FC<{
         </div>
 
         <div className="cms-seo__tools">
-          {tab === 'listings' && attention > 0 && (
-            <button
-              type="button"
-              className={`cms-chip cms-chip--warn${show === 'attention' ? ' is-active' : ''}`}
-              onClick={() => setShow(show === 'attention' ? 'all' : 'attention')}
-              aria-pressed={show === 'attention'}
-            >
-              {attention} need attention
-            </button>
-          )}
           <input
             className="cms-input cms-seo__search"
             type="search"
@@ -418,9 +432,17 @@ export const SeoWorkspace: React.FC<{
 
       {tab === 'listings' ? (
         <>
-          {(activeFilters > 0 || q) && (
-            <p className="cms-seo__showing">
+          {visible.length < rows.length && (
+            <p className="cms-seo__showing" aria-live="polite">
               Showing {visible.length} of {rows.length}
+              {activeFilters === 0 && !q && indexed === 'yes' && notIndexed > 0 ? (
+                <>
+                  . {notIndexed} not indexed {notIndexed === 1 ? 'is' : 'are'} hidden.{' '}
+                  <button type="button" className="cms-seo__reveal" onClick={() => set('indexed')('all')}>
+                    Show {notIndexed === 1 ? 'it' : 'them'}
+                  </button>
+                </>
+              ) : null}
             </p>
           )}
           <table className="cms-table cms-seo__table">
@@ -431,7 +453,7 @@ export const SeoWorkspace: React.FC<{
                 <th>Type</th>
                 <th>Search title</th>
                 <th>Description</th>
-                <th>Index</th>
+                <th>Indexed</th>
               </tr>
             </thead>
             <tbody>
@@ -489,29 +511,48 @@ export const SeoWorkspace: React.FC<{
           <FilterPanel
             open={panel}
             onClose={() => setPanel(false)}
-            onClear={() => {
-              setKind('all')
-              setShow('all')
-            }}
+            onClear={() => setFilters(DEFAULTS)}
           >
             <Choice
               legend="Type"
               value={kind}
-              onChange={setKind}
+              onChange={set('kind')}
               options={[
                 { value: 'all', label: 'All types', count: rows.length },
                 ...kinds.map((k) => ({ value: k, label: `${k}s`, count: rows.filter((r) => r.kind === k).length })),
               ]}
             />
             <Choice
-              legend="Show"
-              value={show}
-              onChange={setShow}
+              legend="Status"
+              value={status}
+              onChange={set('status')}
               options={[
-                { value: 'all', label: 'Everything' },
-                { value: 'attention', label: 'Needs attention', count: attention },
-                { value: 'hidden', label: 'Hidden from search', count: rows.filter((r) => !r.indexed).length },
+                { value: 'all', label: 'Any status' },
+                { value: 'live', label: 'Live', count: rows.filter((r) => !r.hasDraft).length },
+                { value: 'changes', label: 'Unpublished changes', count: rows.filter((r) => r.hasDraft).length },
               ]}
+            />
+            <Choice
+              legend="Indexed"
+              value={indexed}
+              onChange={set('indexed')}
+              options={[
+                { value: 'yes', label: 'Indexed', count: rows.length - notIndexed },
+                { value: 'no', label: 'Not indexed', count: notIndexed },
+                { value: 'all', label: 'Both' },
+              ]}
+            />
+            <Choice
+              legend="Search title length"
+              value={titleLength}
+              onChange={set('titleLength')}
+              options={LENGTH_OPTIONS(rows, (r) => r.searchTitle, TITLE)}
+            />
+            <Choice
+              legend="Description length"
+              value={descLength}
+              onChange={set('descLength')}
+              options={LENGTH_OPTIONS(rows, (r) => r.description, DESCRIPTION)}
             />
           </FilterPanel>
         </>

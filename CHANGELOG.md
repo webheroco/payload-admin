@@ -10,6 +10,11 @@ First release, moved out of the `client-payload` skill's templates
   plain options instead of edited template files.
 - Page addresses (`routes`, `homeSlug`) are options, so the SEO overview and
   the List/Grid page tiles no longer import the site's `cms/paths.ts`.
+- SEO overview: lengths are a coloured dot beside the count (red empty,
+  amber too short or long, green good) with the words in its tip; the
+  "need attention" chip is gone; Filters has Type, Status, Indexed and
+  both lengths; the column is "Indexed", and pages hidden from search are
+  filtered out until "Show it" or the Indexed filter brings them back.
 - The SEO overview lists only collections that exist (a site
   without Posts would have errored).
 - Performance reads the skill's one Submissions collection by default, as
