@@ -1,0 +1,261 @@
+// @webheroco/payload-admin. Switches, save help, readable read-only fields, List/Grid, and Live Preview on small screens.
+
+/* On/off switches (SwitchField.tsx). */
+.cms-switch-field__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.cms-switch-field__row .field-label,
+.cms-switch-field__row label.field-label {
+  margin: 0;
+  line-height: 26px;
+  cursor: pointer;
+}
+
+.cms-switch {
+  position: relative;
+  flex: none;
+  width: 44px;
+  height: 26px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: var(--theme-elevation-300);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.cms-switch--on {
+  background: var(--cms-brand);
+}
+
+.cms-switch:focus-visible {
+  outline: 2px solid var(--theme-elevation-800);
+  outline-offset: 2px;
+}
+
+.cms-switch:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.cms-switch__thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.25);
+  transition: transform 0.2s ease;
+}
+
+.cms-switch--on .cms-switch__thumb {
+  transform: translateX(18px);
+}
+
+/* How saving works, at the top of each edit view (SaveHelp.tsx). */
+.cms-save-help {
+  margin: 0 0 var(--base);
+  padding: calc(var(--base) * 0.5) calc(var(--base) * 0.75);
+  border-left: 3px solid var(--cms-brand);
+  border-radius: 4px;
+  background: var(--theme-elevation-50);
+  color: var(--theme-elevation-800);
+  font-size: 14px;
+}
+
+/* Read-only values (submissions, imported records) at AA contrast instead of
+   Payload's pale default. */
+.field-type input:disabled,
+.field-type textarea:disabled,
+.field-type .rs--is-disabled .rs__single-value,
+.read-only input,
+.read-only textarea {
+  color: var(--theme-elevation-900);
+  -webkit-text-fill-color: var(--theme-elevation-900);
+  opacity: 1;
+}
+
+/* Blocks are named by their type; the free-text block name adds nothing. */
+.blocks-field__block-header .section-title {
+  display: none;
+}
+
+/* List / Grid (ListGridSwitch.tsx). Grid hides only the table, so
+   pagination and filters stay. */
+.cms-view-switch {
+  margin-bottom: var(--base);
+}
+
+.cms-view-switch__buttons {
+  display: inline-flex;
+  gap: 4px;
+  padding: 3px;
+  border-radius: 8px;
+  background: var(--theme-elevation-100);
+}
+
+.cms-view-switch__button {
+  min-height: 34px;
+  min-width: 72px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--theme-elevation-800);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.cms-view-switch__button--active {
+  background: var(--theme-elevation-0);
+  color: var(--theme-elevation-1000);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.12);
+}
+
+.collection-list:has(.cms-view-switch[data-view="grid"]) .table {
+  display: none;
+}
+
+/* Four across at most: smaller tiles cannot be told apart by eye, which is
+   the point of the grid. */
+.cms-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--base);
+  margin: var(--base) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (max-width: 1280px) {
+  .cms-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .cms-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .cms-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.cms-grid__item a {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.cms-grid__thumb {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border: 1px solid var(--theme-elevation-100);
+  border-radius: 8px;
+  background: var(--theme-elevation-50);
+}
+
+.cms-grid__thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Logos and graphics whole, not cropped. */
+.cms-grid__thumb img.cms-grid__graphic {
+  object-fit: contain;
+  padding: 12px;
+}
+
+/* The page loads at desktop width and is scaled to the tile. flex: none stops
+   the frame being squeezed to the tile, which would give it the mobile
+   layout. It is a picture: clicks go to the tile's link. */
+.cms-grid__page {
+  flex: 0 0 auto;
+  border: 0;
+  transform: scale(var(--cms-thumb-scale, 0.25));
+  transform-origin: 0 0;
+  pointer-events: none;
+}
+
+.cms-grid__thumb:has(.cms-grid__page) {
+  align-items: flex-start;
+  justify-content: flex-start;
+  background: #fff;
+}
+
+.cms-grid__placeholder {
+  font-size: 40px;
+  font-weight: 800;
+  color: var(--theme-elevation-400);
+}
+
+.cms-grid__label {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.cms-grid__meta {
+  font-size: 12px;
+  color: var(--theme-elevation-600);
+}
+
+.cms-grid__meta--warn {
+  color: var(--theme-warning-750, #8a5a00);
+  font-weight: 600;
+}
+
+/* Grouped submissions: Payload shows the stored value ("contact"). */
+.group-by-header__heading {
+  text-transform: capitalize;
+}
+
+/* Live Preview on smaller screens. Below 1024px Payload gives the preview the
+   full width and squeezes the fields to nothing, and Live Preview opens by
+   default, so a tablet showed a preview and no fields. Tablets split the
+   screen; phones get the fields full width and no preview. */
+@media (max-width: 1024px) {
+  .collection-edit__main--is-live-previewing {
+    width: 50%;
+    flex-shrink: 0;
+  }
+
+  .live-preview-window {
+    width: 50%;
+  }
+}
+
+@media (max-width: 767px) {
+  .collection-edit__main--is-live-previewing {
+    width: 100%;
+  }
+
+  .collection-edit__main--is-live-previewing::after {
+    display: none;
+  }
+
+  .live-preview-window {
+    display: none !important;
+  }
+
+  .doc-controls__meta,
+  .doc-controls__list-item {
+    flex-wrap: wrap;
+    white-space: normal;
+  }
+}

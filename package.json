@@ -1,0 +1,85 @@
+{
+  "name": "@webheroco/payload-admin",
+  "version": "0.1.0",
+  "description": "The WebHero Payload admin: icon rail menu, one-row document header, section palette, SEO overview, Performance and guide, shared by every client site.",
+  "license": "UNLICENSED",
+  "private": false,
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/webheroco/payload-admin.git"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "files": [
+    "dist",
+    "src",
+    "README.md",
+    "CHANGELOG.md"
+  ],
+  "sideEffects": [
+    "*.css",
+    "*.scss"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./rsc": {
+      "types": "./dist/rsc.d.ts",
+      "default": "./dist/rsc.js"
+    },
+    "./client": {
+      "types": "./dist/client.d.ts",
+      "default": "./dist/client.js"
+    },
+    "./multi-site": {
+      "types": "./dist/multi-site.d.ts",
+      "default": "./dist/multi-site.js"
+    },
+    "./styles.css": "./dist/admin-ui.css",
+    "./styles.scss": "./src/styles/admin-ui.scss",
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "build": "rm -rf dist && tsc -p tsconfig.build.json && sass --no-source-map src/styles/admin-ui.scss dist/admin-ui.css",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "node --test test/*.test.mjs",
+    "prepublishOnly": "npm run build"
+  },
+  "peerDependencies": {
+    "@payloadcms/next": "^3.90.0",
+    "@payloadcms/plugin-multi-tenant": "^3.90.0",
+    "@payloadcms/translations": "^3.90.0",
+    "@payloadcms/ui": "^3.90.0",
+    "next": "^15.4.11 || ^16.3.3",
+    "payload": "^3.90.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@payloadcms/plugin-multi-tenant": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@payloadcms/next": "3.93.0",
+    "@payloadcms/plugin-multi-tenant": "3.93.0",
+    "@payloadcms/translations": "3.93.0",
+    "@payloadcms/ui": "3.93.0",
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "next": "16.4.5",
+    "payload": "3.93.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "sass": "1.108.1",
+    "typescript": "5.9.3"
+  },
+  "engines": {
+    "node": ">=20.9.0"
+  }
+}

@@ -1,0 +1,75 @@
+// Runs against the built package (npm run build first): the entry Payload's
+// CLI loads must work in plain Node, with no React or Next in it.
+import assert from 'node:assert/strict'
+import { test } from 'node:test'
+
+import { LIST_GRID_SWITCH, NAV_RAIL, PREVIEW_TOOLBAR, SWITCH_FIELD, publicPath, webheroAdmin } from '../dist/index.js'
+
+const base = () => ({
+  admin: { components: { actions: ['/components/admin/Own#Own'] } },
+  collections: [
+    {
+      slug: 'pages',
+      versions: { drafts: true },
+      admin: { components: { beforeListTable: [{ path: LIST_GRID_SWITCH, clientProps: { collectionSlug: 'pages' } }] } },
+      fields: [
+        { name: 'title', type: 'text' },
+        { name: 'hidden', type: 'checkbox' },
+        {
+          type: 'tabs',
+          tabs: [
+            { label: 'Content', fields: [] },
+            // The SEO plugin with tabbedUI: an unnamed tab holding the `meta` group.
+            { label: 'SEO', fields: [{ name: 'meta', type: 'group', fields: [{ name: 'image', type: 'upload', relationTo: 'media' }] }] },
+          ],
+        },
+      ],
+    },
+    { slug: 'submissions', fields: [{ name: 'form', type: 'select', options: ['contact'] }] },
+  ],
+  globals: [{ slug: 'navigation', versions: { drafts: true }, fields: [] }],
+})
+
+test('addresses', () => {
+  const routes = { pages: '/:slug', posts: '/blog/:slug' }
+  assert.equal(publicPath(routes, 'home', 'pages', { slug: 'home' }), '/')
+  assert.equal(publicPath(routes, 'home', 'pages', { slug: 'about' }), '/about')
+  assert.equal(publicPath(routes, 'home', 'posts', { slug: 'hello' }), '/blog/hello')
+  assert.equal(publicPath(routes, 'home', 'pages', { slug: 'x', path: '/services/x' }), '/services/x')
+  assert.equal(publicPath(routes, 'home', 'media', { slug: 'x' }), null)
+})
+
+test('the plugin sets the admin and keeps what the project set', () => {
+  const config = webheroAdmin({ livePreview: { collections: ['pages'] }, saveHelp: { pages: 'Drafts.' } })(base())
+  assert.equal(config.admin.components.Nav, NAV_RAIL)
+  assert.equal(config.admin.components.actions.at(-1), '/components/admin/Own#Own')
+  assert.equal(config.admin.components.actions.length, 5)
+  assert.deepEqual(Object.keys(config.admin.components.views), ['seoOverview', 'performance', 'guide'])
+  assert.deepEqual(config.admin.custom.webheroAdmin.enquiries, { collection: 'submissions', formField: 'form', pageField: 'page' })
+  assert.deepEqual(config.admin.custom.webheroAdmin.seo, [{ slug: 'pages', kind: 'Page' }])
+
+  const pages = config.collections[0]
+  assert.equal(pages.admin.hideAPIURL, true)
+  assert.equal(pages.versions.maxPerDoc, 50)
+  assert.equal(pages.fields[0].name, 'saveHelp')
+  assert.equal(pages.fields.find((f) => f.name === 'hidden').admin.components.Field, SWITCH_FIELD)
+  const tabs = pages.fields.find((f) => f.type === 'tabs').tabs
+  assert.equal(tabs[0].label, 'Content')
+  assert.equal(tabs[1].label, 'Google')
+  assert.equal(tabs[1].fields[0].fields[0].maxDepth, 1)
+  assert.ok(pages.admin.components.edit.beforeDocumentControls.includes(PREVIEW_TOOLBAR))
+  assert.deepEqual(pages.admin.components.beforeListTable[0].clientProps, {
+    routes: { pages: '/:slug', posts: '/blog/:slug' },
+    homeSlug: 'home',
+    collectionSlug: 'pages',
+  })
+  assert.equal(config.globals[0].versions.max, 50)
+})
+
+test('pages can be turned off, and the Form Builder is found', () => {
+  const input = base()
+  input.collections.push({ slug: 'form-submissions', fields: [] })
+  const config = webheroAdmin({ views: { performance: false } })(input)
+  assert.deepEqual(Object.keys(config.admin.components.views), ['seoOverview', 'guide'])
+  assert.deepEqual(config.admin.custom.webheroAdmin.enquiries, { formBuilder: true })
+})

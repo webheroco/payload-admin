@@ -1,0 +1,81 @@
+// @webheroco/payload-admin. The rules behind it: client-payload references/admin-ui.md.
+// Languages: translation chips and pills. The language menu is in ../header.
+
+// One control per job: the language menu top right replaces Payload's locale picker.
+.app-header__localizer,
+.app-header__localizer-spacing {
+  display: none !important;
+}
+
+.cms-langs {
+  display: inline-flex;
+  gap: 4px;
+  vertical-align: middle;
+
+  &__chip {
+    all: unset;
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 30px;
+    height: 26px;
+    padding: 0 8px;
+    box-sizing: border-box;
+    border-radius: 6px;
+    gap: 5px;
+    border: 1px solid var(--theme-elevation-150);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: var(--theme-elevation-800);
+    cursor: default;
+
+    // Dot: green translated, half-filled started, hollow not yet.
+    &::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      box-sizing: border-box;
+    }
+    &.is-done::before {
+      background: #16a34a;
+    }
+    &.is-part::before {
+      border: 1.5px solid #16a34a;
+      background: linear-gradient(90deg, #16a34a 50%, transparent 50%);
+    }
+    &.is-none {
+      color: var(--theme-elevation-500);
+    }
+    &.is-none::before {
+      border: 1.5px solid var(--theme-elevation-400);
+    }
+  }
+  button.cms-langs__chip {
+    cursor: pointer;
+  }
+
+  &__chip[data-tip]:hover::after {
+    content: attr(data-tip);
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    padding: 4px 8px;
+    border-radius: 6px;
+    background: var(--theme-elevation-900);
+    color: var(--theme-bg);
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+    pointer-events: none;
+  }
+}
+
+// The plugin's own selector is replaced by the site menu at the top of the rail.
+.tenant-selector {
+  display: none !important;
+}

@@ -1,0 +1,117 @@
+// @webheroco/payload-admin. The rules behind it: client-payload references/admin-ui.md.
+// Admin UI standard (demo). Rail menu, compact document header, preview
+// toolbar and list/overview layout. Imported after Payload's own CSS.
+
+@use 'base';
+@use '../components/nav/rail';
+@use '../components/document/document';
+@use '../components/seo/seo';
+@use '../components/performance/performance';
+@use '../components/i18n/i18n';
+@use '../components/header/header';
+@use '../components/guide/guide';
+@use '../components/palette/palette';
+
+// Native selects in custom views: room for the arrow, never touching the edge.
+.cms-select {
+  appearance: none;
+  -webkit-appearance: none;
+  height: 40px;
+  padding: 0 40px 0 14px;
+  border: 1px solid var(--theme-elevation-150);
+  border-radius: var(--style-radius-s, 4px);
+  background-color: var(--theme-input-bg, var(--theme-bg));
+  color: var(--theme-text);
+  font: inherit;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2.5' stroke-linecap='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 2px solid var(--theme-success-500, #2f7cf6);
+    outline-offset: 1px;
+  }
+}
+
+.cms-input {
+  height: 40px;
+  padding: 0 14px;
+  border: 1px solid var(--theme-elevation-150);
+  border-radius: var(--style-radius-s, 4px);
+  background: var(--theme-input-bg, var(--theme-bg));
+  color: var(--theme-text);
+  font: inherit;
+  min-width: 0;
+}
+
+// Table headings never wrap: keep them to one short word instead.
+.table th,
+.cms-table th {
+  white-space: nowrap;
+}
+
+// A small "i" that opens a note on hover or focus. Pure CSS.
+.cms-info {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1px solid var(--theme-elevation-250);
+  color: var(--theme-elevation-600);
+  font: 600 11px/1 var(--font-body, system-ui);
+  cursor: help;
+  background: none;
+  padding: 0;
+  vertical-align: middle;
+
+  &__note {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    min-width: 240px;
+    max-width: 320px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: var(--theme-elevation-900);
+    color: var(--theme-bg);
+    font: 400 13px/1.45 var(--font-body, system-ui);
+    text-align: left;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 120ms;
+    pointer-events: none;
+
+    dl {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 4px 12px;
+      margin: 0;
+    }
+    dt {
+      opacity: 0.7;
+    }
+    dd {
+      margin: 0;
+      white-space: nowrap;
+    }
+  }
+
+  &:hover &__note,
+  &:focus-visible &__note {
+    opacity: 1;
+    visibility: visible;
+  }
+}
+
+// The logo lives in the menu; the breadcrumb starts at the section name.
+.step-nav__home,
+.step-nav__home + span {
+  display: none !important;
+}

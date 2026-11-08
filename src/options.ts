@@ -1,0 +1,107 @@
+/**
+ * The project's settings for the admin, as given to `webheroAdmin()` and
+ * kept on `admin.custom.webheroAdmin` so the server components can read them.
+ */
+import type { CustomComponent, SanitizedConfig } from 'payload'
+
+import { DEFAULT_HOME_SLUG, DEFAULT_ROUTES, type SiteRoutes } from './routes.js'
+
+/** Where the Performance page counts enquiries from. */
+export type EnquirySource =
+  /** The skill's standard: one Submissions collection with a form type field. */
+  | { collection: string; formField: string; pageField?: string }
+  /** The official Form Builder plugin: `forms` and `form-submissions`. */
+  | { formBuilder: true }
+
+export type WebheroAdminOptions = {
+  /**
+   * Where each routable collection lives on the site, `:slug` standing for
+   * the slug. Used for the List/Grid page tiles and the SEO overview's links.
+   * Default `{ pages: '/:slug', posts: '/blog/:slug' }`.
+   */
+  routes?: SiteRoutes
+  /** The slug of the page served at `/`. Default `home`. */
+  homeSlug?: string
+  /**
+   * The collections listed in the SEO overview, with what one row is called.
+   * Default: Pages and Posts, where they exist.
+   */
+  seo?: { slug: string; kind: string }[]
+  /**
+   * Where Performance counts enquiries. Default: the Form Builder when the
+   * config has `form-submissions`, else a `submissions` collection whose
+   * `form` field names the form.
+   */
+  enquiries?: EnquirySource
+  /** Collections and globals with Live Preview: they get the preview toolbar. */
+  livePreview?: { collections?: string[]; globals?: string[] }
+  /**
+   * Components added beside the preview toolbar wherever Live Preview is on,
+   * such as the site's own click-to-edit bridge.
+   */
+  previewControls?: CustomComponent[]
+  /** Collections with translations: they get a Languages column. */
+  translated?: string[]
+  /**
+   * One line at the top of each edit view saying how saving works there, by
+   * collection or global slug. Leave a slug out to show nothing.
+   */
+  saveHelp?: Record<string, string>
+  /** Rows per list page. Default 25. */
+  listPageSize?: number
+  /** Versions kept per document. Default 50. */
+  maxVersions?: number
+  /** Turn a page off with `false`. All on by default. */
+  views?: { seo?: boolean; performance?: boolean; guide?: boolean }
+}
+
+/** The options with every default filled in. Plain data only, so it can sit on the config. */
+export type ResolvedOptions = {
+  routes: SiteRoutes
+  homeSlug: string
+  seo: { slug: string; kind: string }[]
+  enquiries: EnquirySource
+  livePreview: { collections: string[]; globals: string[] }
+  translated: string[]
+  saveHelp: Record<string, string>
+  listPageSize: number
+  maxVersions: number
+  views: { seo: boolean; performance: boolean; guide: boolean }
+}
+
+export function resolveOptions(options: WebheroAdminOptions, collectionSlugs: Set<string>): ResolvedOptions {
+  const defaultSeo = [
+    { slug: 'pages', kind: 'Page' },
+    { slug: 'posts', kind: 'Post' },
+  ].filter((k) => collectionSlugs.has(k.slug))
+  const enquiries: EnquirySource =
+    options.enquiries ??
+    (collectionSlugs.has('form-submissions')
+      ? { formBuilder: true }
+      : { collection: 'submissions', formField: 'form', pageField: 'page' })
+  return {
+    routes: options.routes ?? DEFAULT_ROUTES,
+    homeSlug: options.homeSlug ?? DEFAULT_HOME_SLUG,
+    seo: options.seo ?? defaultSeo,
+    enquiries,
+    livePreview: {
+      collections: options.livePreview?.collections ?? [],
+      globals: options.livePreview?.globals ?? [],
+    },
+    translated: options.translated ?? [],
+    saveHelp: options.saveHelp ?? {},
+    listPageSize: options.listPageSize ?? 25,
+    maxVersions: options.maxVersions ?? 50,
+    views: {
+      seo: options.views?.seo ?? true,
+      performance: options.views?.performance ?? true,
+      guide: options.views?.guide ?? true,
+    },
+  }
+}
+
+/** The settings on a built config, or the defaults when the plugin isn't installed. */
+export function readOptions(config: Pick<SanitizedConfig, 'admin' | 'collections'>): ResolvedOptions {
+  const stored = (config.admin?.custom as { webheroAdmin?: ResolvedOptions } | undefined)?.webheroAdmin
+  return stored ?? resolveOptions({}, new Set(config.collections.map((c) => c.slug)))
+}
