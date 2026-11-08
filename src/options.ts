@@ -53,6 +53,13 @@ export type WebheroAdminOptions = {
   maxVersions?: number
   /** Turn a page off with `false`. All on by default. */
   views?: { seo?: boolean; performance?: boolean; guide?: boolean }
+  /**
+   * What opens when someone signs in. Default 'performance': the admin's home
+   * is the Performance page and there is no separate dashboard of links that
+   * repeat the menu. 'dashboard' keeps Payload's dashboard (and the site's
+   * beforeDashboard) with Performance at /performance.
+   */
+  home?: 'performance' | 'dashboard'
 }
 
 /** The options with every default filled in. Plain data only, so it can sit on the config. */
@@ -67,6 +74,7 @@ export type ResolvedOptions = {
   listPageSize: number
   maxVersions: number
   views: { seo: boolean; performance: boolean; guide: boolean }
+  home: 'performance' | 'dashboard'
 }
 
 export function resolveOptions(options: WebheroAdminOptions, collectionSlugs: Set<string>): ResolvedOptions {
@@ -97,6 +105,8 @@ export function resolveOptions(options: WebheroAdminOptions, collectionSlugs: Se
       performance: options.views?.performance ?? true,
       guide: options.views?.guide ?? true,
     },
+    // Performance can only be home when it is switched on.
+    home: (options.views?.performance ?? true) ? (options.home ?? 'performance') : 'dashboard',
   }
 }
 

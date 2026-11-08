@@ -23,7 +23,16 @@ import { PerformanceClient, type Enquiry } from './PerformanceClient.js'
 
 const PERIODS = [7, 30, 90] as const
 
-export const Performance = async ({ initPageResult, params, searchParams }: AdminViewServerProps) => {
+/** Performance at /performance: a view of its own, so it draws the admin template. */
+export const Performance = (props: AdminViewServerProps) => render(props, true)
+
+/**
+ * Performance as the admin's home (admin.components.views.dashboard). Payload
+ * already wraps the dashboard in its template, so this draws only the page.
+ */
+export const PerformanceHome = (props: AdminViewServerProps) => render(props, false)
+
+const render = async ({ initPageResult, params, searchParams }: AdminViewServerProps, template: boolean) => {
   const { locale, permissions, req, visibleEntities } = initPageResult
   const { payload, user } = req
   const adminRoute = payload.config.routes.admin
@@ -49,6 +58,20 @@ export const Performance = async ({ initPageResult, params, searchParams }: Admi
       ? await formBuilderEnquiries({ adminRoute, from: previousStart, req, tenantID: tenant?.id, user })
       : await collectionEnquiries({ adminRoute, from: previousStart, req, source, tenantID: tenant?.id, user })
 
+  const page = (
+    <Gutter>
+      <PerformanceClient
+        days={days}
+        periods={[...PERIODS]}
+        siteName={tenant?.name ?? 'This site'}
+        enquiries={enquiries}
+        start={start.toISOString()}
+        end={end.toISOString()}
+      />
+    </Gutter>
+  )
+  if (!template) return page
+
   return (
     <DefaultTemplate
       i18n={req.i18n}
@@ -60,16 +83,7 @@ export const Performance = async ({ initPageResult, params, searchParams }: Admi
       user={user ?? undefined}
       visibleEntities={visibleEntities}
     >
-      <Gutter>
-        <PerformanceClient
-          days={days}
-          periods={[...PERIODS]}
-          siteName={tenant?.name ?? 'This site'}
-          enquiries={enquiries}
-          start={start.toISOString()}
-          end={end.toISOString()}
-        />
-      </Gutter>
+      {page}
     </DefaultTemplate>
   )
 }

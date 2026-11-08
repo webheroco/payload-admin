@@ -13,6 +13,8 @@ import { redirect } from 'next/navigation'
 import { formatAdminURL } from 'payload/shared'
 import React from 'react'
 
+import { readOptions } from '../../options.js'
+
 import { GuideClient, type GuideSection } from './GuideClient.js'
 
 export const Guide = async ({ initPageResult, params, searchParams }: AdminViewServerProps) => {
@@ -22,6 +24,7 @@ export const Guide = async ({ initPageResult, params, searchParams }: AdminViewS
   if (!user) redirect(formatAdminURL({ adminRoute, path: '/login' }))
 
   const url = (path: `/${string}`) => formatAdminURL({ adminRoute, path })
+  const { home } = readOptions(payload.config)
   const can = (slug: string) => Boolean(permissions?.collections?.[slug]?.read)
   const locales = payload.config.localization ? payload.config.localization.locales : []
   const sites = can('tenants') ? (await payload.count({ collection: 'tenants', req })).totalDocs : 0
@@ -122,10 +125,12 @@ export const Guide = async ({ initPageResult, params, searchParams }: AdminViewS
       icon: 'chart',
       title: 'Performance and enquiries',
       steps: [
-        'Performance shows every enquiry sent from the website, by form, by page and by day.',
+        home === 'performance'
+          ? 'Performance is the first page you see when you sign in. It shows every enquiry sent from the website, by form, by page and by day.'
+          : 'Performance shows every enquiry sent from the website, by form, by page and by day.',
         'Each enquiry is also kept in Form Submissions, with everything the visitor filled in.',
       ],
-      action: { label: 'Open Performance', href: url('/performance') },
+      action: { label: 'Open Performance', href: home === 'performance' ? adminRoute : url('/performance') },
     },
     {
       id: 'account',

@@ -13,6 +13,7 @@ export const LANGUAGE_MENU = `${CLIENT}#LanguageMenu`
 export const HEADER_ROW = `${CLIENT}#HeaderRow`
 export const SEO_OVERVIEW = `${RSC}#SeoOverview`
 export const PERFORMANCE = `${RSC}#Performance`
+export const PERFORMANCE_HOME = `${RSC}#PerformanceHome`
 export const GUIDE = `${RSC}#Guide`
 export const LANGUAGES_CELL = `${RSC}#LanguagesCell`
 

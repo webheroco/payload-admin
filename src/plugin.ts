@@ -12,7 +12,7 @@ import type { Config, Plugin } from 'payload'
 
 import { collectionDefaults, globalDefaults } from './defaults.js'
 import { resolveOptions, type WebheroAdminOptions } from './options.js'
-import { ACCOUNT_MENU, GUIDE, HEADER_ROW, HELP_BUTTON, LANGUAGE_MENU, NAV_RAIL, PERFORMANCE, SEO_OVERVIEW } from './paths.js'
+import { ACCOUNT_MENU, GUIDE, HEADER_ROW, HELP_BUTTON, LANGUAGE_MENU, NAV_RAIL, PERFORMANCE, PERFORMANCE_HOME, SEO_OVERVIEW } from './paths.js'
 
 /** Payload draws actions in reverse, so these read language, ?, picture. */
 const ACTIONS = [ACCOUNT_MENU, HELP_BUTTON, LANGUAGE_MENU, HEADER_ROW]
@@ -40,9 +40,12 @@ export const webheroAdmin =
           actions: [...ACTIONS, ...ownActions],
           views: {
             ...(resolved.views.seo ? { seoOverview: { Component: SEO_OVERVIEW, path: '/seo' as const } } : {}),
-            ...(resolved.views.performance
-              ? { performance: { Component: PERFORMANCE, path: '/performance' as const } }
-              : {}),
+            // Performance is the admin's home (the dashboard view), or its own page at /performance.
+            ...(resolved.home === 'performance'
+              ? { dashboard: { Component: PERFORMANCE_HOME } }
+              : resolved.views.performance
+                ? { performance: { Component: PERFORMANCE, path: '/performance' as const } }
+                : {}),
             ...(resolved.views.guide ? { guide: { Component: GUIDE, path: '/guide' as const } } : {}),
             ...components.views,
           },

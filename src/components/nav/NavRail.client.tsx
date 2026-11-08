@@ -52,9 +52,11 @@ export const NavRailClient: React.FC<{
   seoHref?: string
   /** Left out when the project turned Performance off. */
   performanceHref?: string
+  /** 'performance': Performance is the home page, so there is no Dashboard link. */
+  home?: 'performance' | 'dashboard'
   /** Whatever the config puts in beforeNavLinks: on multi-site, SiteMenu and TenantDefault. */
   beforeLinks?: React.ReactNode
-}> = ({ groups, adminRoute, seoHref, performanceHref, beforeLinks }) => {
+}> = ({ groups, adminRoute, seoHref, performanceHref, home, beforeLinks }) => {
   const pathname = usePathname() ?? ''
   const [collapsed, setCollapsed] = useState(false)
 
@@ -76,8 +78,8 @@ export const NavRailClient: React.FC<{
           href={adminRoute}
           prefetch={false}
           className="cms-rail__logo"
-          aria-label={collapsed ? 'Open menu' : 'Dashboard'}
-          data-tip={collapsed ? 'Open menu' : 'Dashboard'}
+          aria-label={collapsed ? 'Open menu' : 'Home'}
+          data-tip={collapsed ? 'Open menu' : 'Home'}
           onClick={(event) => {
             // Collapsed, the logo opens the menu. Where the rail is always icons
             // (narrow screens, the section palette) it goes to the dashboard.
@@ -109,9 +111,16 @@ export const NavRailClient: React.FC<{
 
       <nav className="cms-rail__scroll">
         <div className="cms-rail__group">
-          <RailLink href={adminRoute} icon="home" label="Dashboard" active={pathname === adminRoute} />
+          {home === 'performance' ? null : (
+            <RailLink href={adminRoute} icon="home" label="Dashboard" active={pathname === adminRoute} />
+          )}
           {performanceHref ? (
-            <RailLink href={performanceHref} icon="chart" label="Performance" active={isActive(performanceHref)} />
+            <RailLink
+              href={performanceHref}
+              icon="chart"
+              label="Performance"
+              active={performanceHref === adminRoute ? pathname === adminRoute : isActive(performanceHref)}
+            />
           ) : null}
           {seoHref ? <RailLink href={seoHref} icon="seo" label="SEO overview" active={isActive(seoHref)} /> : null}
         </div>

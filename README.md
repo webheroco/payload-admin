@@ -88,6 +88,7 @@ Only what differs per client:
 | `listPageSize` | 25 | Rows per list page. |
 | `maxVersions` | 50 | Versions kept per document. |
 | `views` | all on | `{ seo, performance, guide }`: `false` turns a page off. |
+| `home` | `'performance'` | What `/admin` opens on. Performance replaces the dashboard; `'dashboard'` keeps Payload's dashboard and puts Performance at `/performance`. |
 
 The plugin sets the menu (`Nav`), the top-right actions and the three pages.
 Anything the project sets itself is kept: its own `Nav`, a view at the same
@@ -107,7 +108,7 @@ admin: { components: { beforeListTable: [{ path: LIST_GRID_SWITCH, clientProps: 
 | Entry | Holds |
 | --- | --- |
 | `@webheroco/payload-admin` | the plugin, the option types, `publicPath`, the path constants. No React, so Payload's CLI can load it. |
-| `@webheroco/payload-admin/rsc` | server components: `NavRail`, `AccountMenu`, `SeoOverview`, `Performance`, `Guide`, `LanguagesCell` |
+| `@webheroco/payload-admin/rsc` | server components: `NavRail`, `AccountMenu`, `SeoOverview`, `Performance`, `PerformanceHome`, `Guide`, `LanguagesCell` |
 | `@webheroco/payload-admin/client` | client components: `HelpButton`, `LanguageMenu`, `HeaderRow`, `SwitchField`, `SaveHelp`, `PreviewToolbar`, `DocStatus`, `VersionsButton`, `BlockPalette`, `ListGridSwitch`, and `Mark`, `Icon`, `useMenu`, `useFilter`, `useSites` for a project's own pieces |
 | `@webheroco/payload-admin/multi-site` | `SiteMenu` (needs `@payloadcms/plugin-multi-tenant`) |
 | `@webheroco/payload-admin/styles.css` | all the admin styles, compiled |

@@ -49,12 +49,6 @@
     width: 280px;
   }
 
-  &__showing {
-    margin: 18px 0 6px;
-    font-size: 13px;
-    color: var(--theme-elevation-600);
-  }
-
   &__table {
     width: 100%;
     border-collapse: collapse;
@@ -130,18 +124,6 @@
     margin-top: 0;
   }
 
-  // Unpublished changes: an amber dot beside the page name, words in its tip.
-  &__flag {
-    position: relative;
-    display: inline-block;
-    width: 8px;
-    height: 8px;
-    margin: 7px 0 0 8px;
-    border-radius: 50%;
-    background: #f59e0b;
-    vertical-align: top;
-  }
-
   &__text {
     display: block;
     line-height: 1.45;
@@ -178,18 +160,6 @@
     }
   }
 
-  &__reveal {
-    all: unset;
-    color: var(--theme-text);
-    font-weight: 600;
-    text-decoration: underline;
-    text-underline-offset: 3px;
-    cursor: pointer;
-    &:focus-visible {
-      outline: 2px solid #2f7cf6;
-      outline-offset: 2px;
-    }
-  }
 }
 
 .cms-stat {

@@ -266,10 +266,8 @@ export const SeoWorkspace: React.FC<{
 
   const kinds = useMemo(() => Array.from(new Set(rows.map((r) => r.kind))), [rows])
   const { kind, status, indexed, titleLength, descLength } = filters
-  // The badge counts filters changed from the defaults, so the indexed-only default doesn't show as one.
-  const activeFilters = (Object.keys(DEFAULTS) as (keyof typeof DEFAULTS)[]).filter(
-    (k) => filters[k] !== DEFAULTS[k],
-  ).length
+  // The badge counts every filter that narrows the list, the indexed-only default included.
+  const activeFilters = (Object.keys(filters) as (keyof typeof DEFAULTS)[]).filter((k) => filters[k] !== 'all').length
   const notIndexed = rows.filter((r) => !r.indexed).length
   const q = query.trim().toLowerCase()
 
@@ -360,7 +358,7 @@ export const SeoWorkspace: React.FC<{
             className={`cms-tabs__tab${tab === 'listings' ? ' is-active' : ''}`}
             onClick={() => switchTab('listings')}
           >
-            Search listings <span className="cms-tabs__count">{rows.length}</span>
+            Metadata <span className="cms-tabs__count">{rows.length}</span>
           </button>
           {canRedirect && (
             <button
@@ -378,7 +376,7 @@ export const SeoWorkspace: React.FC<{
             i
             <span className="cms-info__note" role="tooltip">
               {tab === 'listings'
-                ? `What search engines show for each page and post${localeLabel ? ` in ${localeLabel}` : ''}. Click any title or description to change it. Aim for titles of ${TITLE.min} to ${TITLE.max} characters and descriptions of ${DESCRIPTION.min} to ${DESCRIPTION.max}.`
+                ? `What search engines show for each page and post${localeLabel ? ` in ${localeLabel}` : ''}. Click any title or description to change it. Aim for title tags of ${TITLE.min} to ${TITLE.max} characters and meta descriptions of ${DESCRIPTION.min} to ${DESCRIPTION.max}.`
                 : 'Send visitors from an old address to a page that exists. Permanent (301) tells search engines the page has moved for good.'}
             </span>
           </span>
@@ -432,27 +430,14 @@ export const SeoWorkspace: React.FC<{
 
       {tab === 'listings' ? (
         <>
-          {visible.length < rows.length && (
-            <p className="cms-seo__showing" aria-live="polite">
-              Showing {visible.length} of {rows.length}
-              {activeFilters === 0 && !q && indexed === 'yes' && notIndexed > 0 ? (
-                <>
-                  . {notIndexed} not indexed {notIndexed === 1 ? 'is' : 'are'} hidden.{' '}
-                  <button type="button" className="cms-seo__reveal" onClick={() => set('indexed')('all')}>
-                    Show {notIndexed === 1 ? 'it' : 'them'}
-                  </button>
-                </>
-              ) : null}
-            </p>
-          )}
           <table className="cms-table cms-seo__table">
             <thead>
               <tr>
                 <th>Page</th>
-                <th>Address</th>
+                <th>Slug</th>
                 <th>Type</th>
-                <th>Search title</th>
-                <th>Description</th>
+                <th>Title tag</th>
+                <th>Meta description</th>
                 <th>Indexed</th>
               </tr>
             </thead>
@@ -463,9 +448,6 @@ export const SeoWorkspace: React.FC<{
                     <Link href={row.editHref} prefetch={false} className="cms-seo__page">
                       {row.title}
                     </Link>
-                    {row.hasDraft ? (
-                      <span className="cms-seo__flag" data-tip="Has unpublished changes" aria-label="Has unpublished changes" />
-                    ) : null}
                     {row.titleTranslated ? null : <span className="cms-seo__note">not translated</span>}
                   </td>
                   <td className="cms-seo__cell-path">
@@ -479,19 +461,19 @@ export const SeoWorkspace: React.FC<{
                   <td>
                     <EditableText
                       value={row.searchTitle}
-                      placeholder="Add a search title"
+                      placeholder="Add a title tag"
                       range={TITLE}
-                      label={`search title for ${row.title}`}
+                      label={`title tag for ${row.title}`}
                       onSave={saveMeta(row, 'title')}
                     />
                   </td>
                   <td>
                     <EditableText
                       value={row.description}
-                      placeholder="Add a description"
+                      placeholder="Add a meta description"
                       multiline
                       range={DESCRIPTION}
-                      label={`description for ${row.title}`}
+                      label={`meta description for ${row.title}`}
                       onSave={saveMeta(row, 'description')}
                     />
                   </td>
@@ -543,13 +525,13 @@ export const SeoWorkspace: React.FC<{
               ]}
             />
             <Choice
-              legend="Search title length"
+              legend="Title tag length"
               value={titleLength}
               onChange={set('titleLength')}
               options={LENGTH_OPTIONS(rows, (r) => r.searchTitle, TITLE)}
             />
             <Choice
-              legend="Description length"
+              legend="Meta description length"
               value={descLength}
               onChange={set('descLength')}
               options={LENGTH_OPTIONS(rows, (r) => r.description, DESCRIPTION)}
