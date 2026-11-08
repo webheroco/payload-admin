@@ -87,7 +87,8 @@ Only what differs per client:
 | `translated` | none | Collections that get the Languages column. |
 | `listPageSize` | 25 | Rows per list page. |
 | `maxVersions` | 50 | Versions kept per document. |
-| `views` | all on | `{ seo, performance, guide }`: `false` turns a page off. |
+| `views` | all on | `{ seo, performance, guide, sections }`: `false` turns a page off. |
+| `approvals` | off | `true`, or `{ approverRoles, roleField, only }`: sign-off before anything goes live (see below). |
 | `home` | `'performance'` | What `/admin` opens on. Performance replaces the dashboard; `'dashboard'` keeps Payload's dashboard and puts Performance at `/performance`. |
 
 The plugin sets the menu (`Nav`), the top-right actions and the three pages.
@@ -108,7 +109,7 @@ admin: { components: { beforeListTable: [{ path: LIST_GRID_SWITCH, clientProps: 
 | Entry | Holds |
 | --- | --- |
 | `@webheroco/payload-admin` | the plugin, the option types, `publicPath`, the path constants. No React, so Payload's CLI can load it. |
-| `@webheroco/payload-admin/rsc` | server components: `NavRail`, `AccountMenu`, `SeoOverview`, `Performance`, `PerformanceHome`, `Guide`, `LanguagesCell` |
+| `@webheroco/payload-admin/rsc` | server components: `NavRail`, `AccountMenu`, `SeoOverview`, `Performance`, `PerformanceHome`, `Sections`, `Reviews`, `Guide`, `LanguagesCell` |
 | `@webheroco/payload-admin/client` | client components: `HelpButton`, `LanguageMenu`, `HeaderRow`, `SwitchField`, `SaveHelp`, `PreviewToolbar`, `DocStatus`, `VersionsButton`, `BlockPalette`, `ListGridSwitch`, and `Mark`, `Icon`, `useMenu`, `useFilter`, `useSites` for a project's own pieces |
 | `@webheroco/payload-admin/multi-site` | `SiteMenu` (needs `@payloadcms/plugin-multi-tenant`) |
 | `@webheroco/payload-admin/styles.css` | all the admin styles, compiled |
@@ -123,3 +124,23 @@ in light and dark. [CHANGELOG.md](CHANGELOG.md) says what changed.
 ## Changing the package
 
 See [AGENTS.md](AGENTS.md).
+
+## Approvals (optional)
+
+`webheroAdmin({ approvals: true })` puts every collection and global with
+drafts through sign-off. Editors get "Submit for review" instead of Publish,
+and the server refuses their publishes. Approvers (users whose `role` is
+`super-admin` or `client-admin`, change with `approverRoles` and `roleField`)
+publish, schedule or send back with a note, from the document or the Reviews
+page (`/admin/reviews`, a list and a board). Emails go through Payload's email
+adapter. It adds a hidden `reviews` collection, so run a migration.
+
+Scheduled changes go live when `GET /api/reviews/publish-due` runs. Add a
+Vercel cron for it and set `CRON_SECRET` in production:
+
+```json
+{ "crons": [{ "path": "/api/reviews/publish-due", "schedule": "*/5 * * * *" }] }
+```
+
+On Vercel's Hobby plan crons run once a day, so use a daily schedule there or
+upgrade.

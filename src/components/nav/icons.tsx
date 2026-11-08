@@ -109,6 +109,7 @@ const paths: Record<string, React.ReactNode> = {
     </>
   ),
   chart: <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" />,
+  blocks: <path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z" strokeLinejoin="round" />,
   collapse: <path d="M15 6l-6 6 6 6" />,
   expand: <path d="M9 6l6 6-6 6" />,
   help: (

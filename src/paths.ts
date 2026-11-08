@@ -17,6 +17,7 @@ export const PERFORMANCE_HOME = `${RSC}#PerformanceHome`
 export const GUIDE = `${RSC}#Guide`
 export const LANGUAGES_CELL = `${RSC}#LanguagesCell`
 export const REVIEWS = `${RSC}#Reviews`
+export const SECTIONS = `${RSC}#Sections`
 export const REVIEW_BUTTON = `${CLIENT}#ReviewButton`
 export const REVIEW_BANNER = `${CLIENT}#ReviewBanner`
 

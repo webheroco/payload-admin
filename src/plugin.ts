@@ -13,7 +13,7 @@ import type { Config, Plugin } from 'payload'
 import { withApprovals } from './approvals.js'
 import { collectionDefaults, globalDefaults } from './defaults.js'
 import { resolveOptions, type WebheroAdminOptions } from './options.js'
-import { ACCOUNT_MENU, GUIDE, HEADER_ROW, HELP_BUTTON, LANGUAGE_MENU, NAV_RAIL, PERFORMANCE, PERFORMANCE_HOME, REVIEWS, SEO_OVERVIEW } from './paths.js'
+import { ACCOUNT_MENU, GUIDE, HEADER_ROW, HELP_BUTTON, LANGUAGE_MENU, NAV_RAIL, PERFORMANCE, PERFORMANCE_HOME, REVIEWS, SECTIONS, SEO_OVERVIEW } from './paths.js'
 
 /** Payload draws actions in reverse, so these read language, ?, picture. */
 const ACTIONS = [ACCOUNT_MENU, HELP_BUTTON, LANGUAGE_MENU, HEADER_ROW]
@@ -50,6 +50,7 @@ export const webheroAdmin =
                 ? { performance: { Component: PERFORMANCE, path: '/performance' as const } }
                 : {}),
             ...(resolved.views.guide ? { guide: { Component: GUIDE, path: '/guide' as const } } : {}),
+            ...(resolved.views.sections ? { sections: { Component: SECTIONS, path: '/sections' as const } } : {}),
             ...(resolved.approvals ? { reviews: { Component: REVIEWS, path: '/reviews' as const } } : {}),
             ...components.views,
           },

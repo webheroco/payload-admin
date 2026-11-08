@@ -53,11 +53,12 @@ export const NavRailClient: React.FC<{
   /** Left out when the project turned Performance off. */
   performanceHref?: string
   reviewsHref?: string
+  sectionsHref?: string
   /** 'performance': Performance is the home page, so there is no Dashboard link. */
   home?: 'performance' | 'dashboard'
   /** Whatever the config puts in beforeNavLinks: on multi-site, SiteMenu and TenantDefault. */
   beforeLinks?: React.ReactNode
-}> = ({ groups, adminRoute, seoHref, performanceHref, reviewsHref, home, beforeLinks }) => {
+}> = ({ groups, adminRoute, seoHref, performanceHref, reviewsHref, sectionsHref, home, beforeLinks }) => {
   const pathname = usePathname() ?? ''
   const [collapsed, setCollapsed] = useState(false)
 
@@ -124,6 +125,7 @@ export const NavRailClient: React.FC<{
             />
           ) : null}
           {seoHref ? <RailLink href={seoHref} icon="seo" label="SEO overview" active={isActive(seoHref)} /> : null}
+          {sectionsHref ? <RailLink href={sectionsHref} icon="blocks" label="Sections" active={isActive(sectionsHref)} /> : null}
           {reviewsHref ? <RailLink href={reviewsHref} icon="check" label="Reviews" active={isActive(reviewsHref)} /> : null}
         </div>
         {groups.map((group) => (

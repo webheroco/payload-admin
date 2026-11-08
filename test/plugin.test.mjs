@@ -45,7 +45,7 @@ test('the plugin sets the admin and keeps what the project set', () => {
   assert.equal(config.admin.components.actions.at(-1), '/components/admin/Own#Own')
   assert.equal(config.admin.components.actions.length, 5)
   // Performance is the home page: it replaces the dashboard rather than adding /performance.
-  assert.deepEqual(Object.keys(config.admin.components.views), ['seoOverview', 'dashboard', 'guide'])
+  assert.deepEqual(Object.keys(config.admin.components.views), ['seoOverview', 'dashboard', 'guide', 'sections'])
   assert.equal(config.admin.custom.webheroAdmin.home, 'performance')
   assert.deepEqual(config.admin.custom.webheroAdmin.enquiries, { collection: 'submissions', formField: 'form', pageField: 'page' })
   assert.deepEqual(config.admin.custom.webheroAdmin.seo, [{ slug: 'pages', kind: 'Page' }])
@@ -72,14 +72,14 @@ test('pages can be turned off, and the Form Builder is found', () => {
   const input = base()
   input.collections.push({ slug: 'form-submissions', fields: [] })
   const config = webheroAdmin({ views: { performance: false } })(input)
-  assert.deepEqual(Object.keys(config.admin.components.views), ['seoOverview', 'guide'])
+  assert.deepEqual(Object.keys(config.admin.components.views), ['seoOverview', 'guide', 'sections'])
   assert.deepEqual(config.admin.custom.webheroAdmin.enquiries, { formBuilder: true })
   assert.equal(config.admin.custom.webheroAdmin.home, 'dashboard')
 })
 
 test('a site can keep its dashboard, with Performance on its own page', () => {
   const config = webheroAdmin({ home: 'dashboard' })(base())
-  assert.deepEqual(Object.keys(config.admin.components.views), ['seoOverview', 'performance', 'guide'])
+  assert.deepEqual(Object.keys(config.admin.components.views), ['seoOverview', 'performance', 'guide', 'sections'])
 })
 
 test('approvals are off unless asked for, and wrap everything with drafts when on', async () => {

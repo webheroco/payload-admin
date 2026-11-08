@@ -52,7 +52,7 @@ export type WebheroAdminOptions = {
   /** Versions kept per document. Default 50. */
   maxVersions?: number
   /** Turn a page off with `false`. All on by default. */
-  views?: { seo?: boolean; performance?: boolean; guide?: boolean }
+  views?: { seo?: boolean; performance?: boolean; guide?: boolean; sections?: boolean }
   /**
    * What opens when someone signs in. Default 'performance': the admin's home
    * is the Performance page and there is no separate dashboard of links that
@@ -96,7 +96,7 @@ export type ResolvedOptions = {
   saveHelp: Record<string, string>
   listPageSize: number
   maxVersions: number
-  views: { seo: boolean; performance: boolean; guide: boolean }
+  views: { seo: boolean; performance: boolean; guide: boolean; sections: boolean }
   home: 'performance' | 'dashboard'
   approvals: ResolvedApprovals | null
 }
@@ -128,6 +128,7 @@ export function resolveOptions(options: WebheroAdminOptions, collectionSlugs: Se
       seo: options.views?.seo ?? true,
       performance: options.views?.performance ?? true,
       guide: options.views?.guide ?? true,
+      sections: options.views?.sections ?? true,
     },
     // Performance can only be home when it is switched on.
     home: (options.views?.performance ?? true) ? (options.home ?? 'performance') : 'dashboard',

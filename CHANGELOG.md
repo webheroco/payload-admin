@@ -21,6 +21,17 @@ First release, moved out of the `client-payload` skill's templates
   it replaces the dashboard of links, and the menu has no Dashboard link.
   `home: 'dashboard'` keeps the dashboard with Performance at /performance.
   Run `payload generate:importmap` after updating (new `PerformanceHome`).
+- SEO overview: a Schema tab. It reads each indexed page as the public sees
+  it and checks its JSON-LD against Google's rich result rules (red errors,
+  amber recommended properties missing, green valid). Site-wide types
+  (Organization, LocalBusiness, WebSite, BreadcrumbList) are one card each at
+  the top with how many pages carry them; the table and its Type filter only
+  list the page types the site actually uses.
+- Sections (`/sections`, on by default): every section the site can use, with
+  its picture, description, group and the pages using it. Read only.
+- Approvals (`approvals: true`, off by default): Submit for review, Send
+  back, Schedule, a Reviews page with list and board, emails, and
+  `/api/reviews/publish-due` for scheduled changes. Ported from Quartix.
 - The SEO overview lists only collections that exist (a site
   without Posts would have errored).
 - Performance reads the skill's one Submissions collection by default, as
