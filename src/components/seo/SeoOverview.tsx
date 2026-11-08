@@ -114,7 +114,7 @@ export const SeoOverview = async ({ initPageResult, params, searchParams }: Admi
       <Gutter>
         <SeoWorkspace
           apiRoute={payload.config.routes.api}
-          initialTab={searchParams?.tab === 'redirects' ? 'redirects' : 'listings'}
+          initialTab={searchParams?.tab === 'redirects' ? 'redirects' : searchParams?.tab === 'schema' ? 'schema' : 'listings'}
           locale={locale?.code}
           localeLabel={typeof localeLabel?.label === 'string' ? localeLabel.label : undefined}
           redirects={redirects}

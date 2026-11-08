@@ -10,6 +10,9 @@ import { toast, useStepNav } from '@payloadcms/ui'
 import Link from 'next/link'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 
+import { Choice, FilterPanel } from './filters.js'
+import { SchemaTab } from './SchemaTab.js'
+
 export type SeoRow = {
   id: string
   collection: string
@@ -176,64 +179,11 @@ const EditableText: React.FC<{
   )
 }
 
-/** A side panel from the right for filters that don't need to be on screen all the time. */
-const FilterPanel: React.FC<{ open: boolean; onClose: () => void; onClear: () => void; children: React.ReactNode }> = ({
-  open,
-  onClose,
-  onClear,
-  children,
-}) => {
-  useEffect(() => {
-    if (!open) return
-    const esc = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
-    window.addEventListener('keydown', esc)
-    return () => window.removeEventListener('keydown', esc)
-  }, [open, onClose])
-  return (
-    <div className={`cms-panel${open ? ' is-open' : ''}`} aria-hidden={!open}>
-      <div className="cms-panel__scrim" onClick={onClose} />
-      <aside className="cms-panel__sheet" role="dialog" aria-label="Filters">
-        <header className="cms-panel__head">
-          <h2>Filters</h2>
-          <button type="button" className="cms-panel__close" onClick={onClose} aria-label="Close filters">
-            ×
-          </button>
-        </header>
-        <div className="cms-panel__body">{children}</div>
-        <footer className="cms-panel__foot">
-          <button type="button" className="cms-button cms-button--quiet" onClick={onClear}>
-            Clear filters
-          </button>
-          <button type="button" className="cms-button" onClick={onClose}>
-            Done
-          </button>
-        </footer>
-      </aside>
-    </div>
-  )
-}
-
-const Choice: React.FC<{
-  legend: string
-  value: string
-  options: { value: string; label: string; count?: number }[]
-  onChange: (value: string) => void
-}> = ({ legend, value, options, onChange }) => (
-  <fieldset className="cms-choice">
-    <legend>{legend}</legend>
-    {options.map((o) => (
-      <label key={o.value} className={`cms-choice__option${value === o.value ? ' is-active' : ''}`}>
-        <input type="radio" checked={value === o.value} onChange={() => onChange(o.value)} />
-        <span>{o.label}</span>
-        {o.count !== undefined ? <span className="cms-choice__count">{o.count}</span> : null}
-      </label>
-    ))}
-  </fieldset>
-)
+type Tab = 'listings' | 'schema' | 'redirects'
 
 export const SeoWorkspace: React.FC<{
   apiRoute: string
-  initialTab: 'listings' | 'redirects'
+  initialTab: Tab
   locale?: string
   localeLabel?: string
   rows: SeoRow[]
@@ -242,24 +192,27 @@ export const SeoWorkspace: React.FC<{
 }> = ({ apiRoute, initialTab, locale, localeLabel, rows: initialRows, redirects: initialRedirects }) => {
   const { setStepNav } = useStepNav()
   const canRedirect = initialRedirects !== null
-  const [tab, setTab] = useState(canRedirect ? initialTab : 'listings')
+  const [tab, setTab] = useState<Tab>(initialTab === 'redirects' && !canRedirect ? 'listings' : initialTab)
   const [rows, setRows] = useState(initialRows)
   const [redirects, setRedirects] = useState(initialRedirects ?? [])
   const [query, setQuery] = useState('')
   const [filters, setFilters] = useState(DEFAULTS)
   const set = (key: keyof typeof DEFAULTS) => (value: string) => setFilters((f) => ({ ...f, [key]: value }))
   const [panel, setPanel] = useState(false)
+  const [schemaPanel, setSchemaPanel] = useState(false)
+  const [schemaFilters, setSchemaFilters] = useState(0)
+  const [recheck, setRecheck] = useState(0)
 
   // The title lives in the breadcrumb, not in a heading row.
   useEffect(() => setStepNav([{ label: 'SEO overview' }]), [setStepNav])
   useEffect(() => setRows(initialRows), [initialRows])
   useEffect(() => setRedirects(initialRedirects ?? []), [initialRedirects])
 
-  const switchTab = (next: 'listings' | 'redirects') => {
+  const switchTab = (next: Tab) => {
     setTab(next)
     setQuery('')
     const params = new URLSearchParams(window.location.search)
-    if (next === 'redirects') params.set('tab', 'redirects')
+    if (next !== 'listings') params.set('tab', next)
     else params.delete('tab')
     window.history.replaceState(null, '', `${window.location.pathname}${params.size ? `?${params}` : ''}`)
   }
@@ -269,6 +222,7 @@ export const SeoWorkspace: React.FC<{
   // The badge counts every filter that narrows the list, the indexed-only default included.
   const activeFilters = (Object.keys(filters) as (keyof typeof DEFAULTS)[]).filter((k) => filters[k] !== 'all').length
   const notIndexed = rows.filter((r) => !r.indexed).length
+  const shownFilters = tab === 'schema' ? schemaFilters : activeFilters
   const q = query.trim().toLowerCase()
 
   const visible = rows.filter((row) => {
@@ -360,6 +314,15 @@ export const SeoWorkspace: React.FC<{
           >
             Metadata <span className="cms-tabs__count">{rows.length}</span>
           </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === 'schema'}
+            className={`cms-tabs__tab${tab === 'schema' ? ' is-active' : ''}`}
+            onClick={() => switchTab('schema')}
+          >
+            Schema
+          </button>
           {canRedirect && (
             <button
               type="button"
@@ -377,7 +340,9 @@ export const SeoWorkspace: React.FC<{
             <span className="cms-info__note" role="tooltip">
               {tab === 'listings'
                 ? `What search engines show for each page and post${localeLabel ? ` in ${localeLabel}` : ''}. Click any title or description to change it. Aim for title tags of ${TITLE.min} to ${TITLE.max} characters and meta descriptions of ${DESCRIPTION.min} to ${DESCRIPTION.max}.`
-                : 'Send visitors from an old address to a page that exists. Permanent (301) tells search engines the page has moved for good.'}
+                : tab === 'schema'
+                  ? 'The structured data (JSON-LD) each indexed page gives search engines, read from the live site. Site-wide types are summarised at the top. Red means errors that stop rich results, amber means recommended properties are missing. The schema is written by the site’s code, so fixes are a developer job.'
+                  : 'Send visitors from an old address to a page that exists. Permanent (301) tells search engines the page has moved for good.'}
             </span>
           </span>
         </div>
@@ -386,16 +351,17 @@ export const SeoWorkspace: React.FC<{
           <input
             className="cms-input cms-seo__search"
             type="search"
-            placeholder={tab === 'listings' ? 'Search pages' : 'Search redirects'}
+            placeholder={tab === 'redirects' ? 'Search redirects' : 'Search pages'}
             aria-label="Search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
-          {tab === 'listings' ? (
+          {tab !== 'redirects' ? (
+            <>
             <button
               type="button"
-              className={`cms-button cms-button--outline${activeFilters ? ' is-active' : ''}`}
-              onClick={() => setPanel(true)}
+              className={`cms-button cms-button--outline${shownFilters ? ' is-active' : ''}`}
+              onClick={() => (tab === 'schema' ? setSchemaPanel(true) : setPanel(true))}
             >
               <svg
                 viewBox="0 0 24 24"
@@ -409,8 +375,14 @@ export const SeoWorkspace: React.FC<{
               >
                 <path d="M4 6h16M7 12h10M10 18h4" />
               </svg>
-              Filters{activeFilters ? <span className="cms-button__badge">{activeFilters}</span> : null}
+              Filters{shownFilters ? <span className="cms-button__badge">{shownFilters}</span> : null}
             </button>
+            {tab === 'schema' ? (
+              <button type="button" className="cms-button cms-button--outline" onClick={() => setRecheck((n) => n + 1)}>
+                Check again
+              </button>
+            ) : null}
+            </>
           ) : (
             <button
               type="button"
@@ -538,6 +510,15 @@ export const SeoWorkspace: React.FC<{
             />
           </FilterPanel>
         </>
+      ) : tab === 'schema' ? (
+        <SchemaTab
+          rows={rows}
+          query={query}
+          panel={schemaPanel}
+          onPanel={setSchemaPanel}
+          onFilterCount={setSchemaFilters}
+          recheck={recheck}
+        />
       ) : (
         <table className="cms-table cms-seo__table cms-seo__table--redirects">
           <thead>
