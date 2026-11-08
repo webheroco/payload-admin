@@ -44,7 +44,7 @@ export const SeoOverview = async ({ initPageResult, params, searchParams }: Admi
       overrideAccess: false,
       pagination: false,
       req,
-      select: { title: true, slug: true, meta: true, noIndex: true, _status: true } as any,
+      select: { title: true, slug: true, path: true, meta: true, noIndex: true, _status: true } as any,
       user,
     })
     for (const doc of docs as any[]) {
@@ -55,7 +55,12 @@ export const SeoOverview = async ({ initPageResult, params, searchParams }: Admi
         kind: kind.kind,
         title: pick(doc.title) || doc.title?.[defaultCode] || 'Untitled',
         titleTranslated: Boolean(pick(doc.title)),
-        path: publicPath(routes, homeSlug, kind.slug, doc) ?? '',
+        // A localized slug or path comes back per language: use this language's, else the main one's.
+        path:
+          publicPath(routes, homeSlug, kind.slug, {
+            slug: pick(doc.slug) || doc.slug?.[defaultCode],
+            path: pick(doc.path) || doc.path?.[defaultCode],
+          }) ?? '',
         searchTitle: pick(doc.meta?.title),
         description: pick(doc.meta?.description),
         indexed: doc.noIndex !== true,

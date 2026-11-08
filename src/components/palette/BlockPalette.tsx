@@ -8,12 +8,13 @@
  * sections; a click adds it at the end. Inserting uses the form's own
  * addFieldRow, exactly like "Add below", so autosave and Live Preview follow.
  */
-import { useConfig, useForm, useFormFields } from '@payloadcms/ui'
+import { useConfig, useDocumentInfo, useForm, useFormFields } from '@payloadcms/ui'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 
 
-const FIELD_PATH = 'layout'
+/** The blocks field the palette adds to, unless the field says otherwise. */
+const DEFAULT_FIELD = 'layout'
 const DRAG_THRESHOLD = 5
 
 type PaletteBlock = { slug: string; label: string; description: string; thumbnail?: string }
@@ -43,7 +44,15 @@ const findBlocksField = (fields: any[] | undefined, name: string): any => {
   return undefined
 }
 
-export const BlockPalette: React.FC<{ descriptions?: Record<string, string> }> = ({ descriptions = {} }) => {
+export const BlockPalette: React.FC<{
+  descriptions?: Record<string, string>
+  /** The blocks field (top level) the sections go into. Default `layout`. (Not `field`: Payload passes that prop itself.) */
+  blocksField?: string
+  /** The collection whose blocks are listed. Default: the document being edited. */
+  collection?: string
+}> = ({ descriptions = {}, blocksField: FIELD_PATH = DEFAULT_FIELD, collection }) => {
+  const { collectionSlug } = useDocumentInfo()
+  const slug = collection ?? collectionSlug ?? 'pages'
   const { config } = useConfig()
   const { addFieldRow } = useForm()
   const rowCount = useFormFields(([fields]) => fields?.[FIELD_PATH]?.rows?.length ?? 0)
@@ -62,8 +71,8 @@ export const BlockPalette: React.FC<{ descriptions?: Record<string, string> }> =
   const pointerY = useRef(0)
 
   const blocks = useMemo<PaletteBlock[]>(() => {
-    const pages = config.collections.find((c) => c.slug === 'pages')
-    const field = findBlocksField(pages?.fields as any[], FIELD_PATH)
+    const owner = config.collections.find((c) => c.slug === slug)
+    const field = findBlocksField(owner?.fields as any[], FIELD_PATH)
     return (field?.blocks ?? []).map((block: any) => {
       const thumb = block.admin?.images?.thumbnail ?? block.imageURL
       return {
@@ -73,7 +82,7 @@ export const BlockPalette: React.FC<{ descriptions?: Record<string, string> }> =
         thumbnail: typeof thumb === 'string' ? thumb : thumb?.url,
       }
     })
-  }, [config, descriptions])
+  }, [config, descriptions, slug, FIELD_PATH])
 
   const shown = blocks.filter((b) => {
     const q = query.trim().toLowerCase()

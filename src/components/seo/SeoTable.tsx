@@ -282,6 +282,9 @@ export const SeoWorkspace: React.FC<{
   // Redirect targets: every page and post, by name.
   const targets = rows.map((r) => ({ value: `${r.collection}:${r.id}`, label: `${r.title} (${r.path})` }))
 
+  /** Numeric IDs (Postgres, SQLite) go back as numbers; string IDs (MongoDB, custom) stay strings. */
+  const refId = (id: string): number | string => (/^\d+$/.test(id) ? Number(id) : id)
+
   const saveRedirect = async (row: RedirectRow, patch: Partial<RedirectRow>) => {
     const next = { ...row, ...patch }
     const body = {
@@ -293,7 +296,7 @@ export const SeoWorkspace: React.FC<{
           : {
               type: 'reference',
               reference: next.toRef
-                ? { relationTo: next.toRef.split(':')[0], value: Number(next.toRef.split(':')[1]) }
+                ? { relationTo: next.toRef.split(':')[0], value: refId(next.toRef.split(':').slice(1).join(':')) }
                 : undefined,
             },
     }
