@@ -73,7 +73,11 @@ export const BlockPalette: React.FC<{
   const blocks = useMemo<PaletteBlock[]>(() => {
     const owner = config.collections.find((c) => c.slug === slug)
     const field = findBlocksField(owner?.fields as any[], FIELD_PATH)
-    return (field?.blocks ?? []).map((block: any) => {
+    // Sections shared through the config's `blocks` are referenced by slug
+    // (blockReferences): look those up in the config's own block library.
+    const library = (config as { blocksMap?: Record<string, unknown> }).blocksMap ?? {}
+    const referenced = ((field?.blockReferences ?? []) as unknown[]).map((ref) => (typeof ref === 'string' ? library[ref] : ref))
+    return [...(field?.blocks ?? []), ...referenced].filter(Boolean).map((block: any) => {
       const thumb = block.admin?.images?.thumbnail ?? block.imageURL
       return {
         slug: block.slug,

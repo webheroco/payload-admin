@@ -13,6 +13,34 @@ export type EnquirySource =
   /** The official Form Builder plugin: `forms` and `form-submissions`. */
   | { formBuilder: true }
 
+/** A link out of the admin, shown in the menu after the groups and opened in a new tab. */
+export type RailLink = {
+  label: string
+  /** An absolute address, such as the shop's own admin. */
+  href: string
+  /** An icon name from the package's set (nav/icons.tsx). Default `external`. */
+  icon?: string
+  /** The hover tip. Default: the label. */
+  tip?: string
+  /** Links with the same group sit together, as one block of the menu. Default `Links`. */
+  group?: string
+}
+
+/** One more card in "How to use the admin", in the editor's words. */
+export type GuideCard = {
+  id: string
+  title: string
+  steps: string[]
+  /** An icon name from the package's set. Default `file`. */
+  icon?: string
+  /** A button to the screen the card is about: an admin path (`/collections/pages`) or an absolute address. */
+  action?: { label: string; href: string }
+  /** Only shown to people who can read this collection. */
+  collection?: string
+  /** Placed after the card with this id. Default: before "Your account". */
+  after?: string
+}
+
 export type WebheroAdminOptions = {
   /**
    * Where each routable collection lives on the site, `:slug` standing for
@@ -49,6 +77,18 @@ export type WebheroAdminOptions = {
   saveHelp?: Record<string, string>
   /** Rows per list page. Default 25. */
   listPageSize?: number
+  /**
+   * Links out of the admin at the foot of the menu, opened in a new tab, such
+   * as the shop's own admin when products and orders live somewhere else.
+   */
+  links?: RailLink[]
+  /**
+   * A "View website" link in the menu: the site chosen in the site menu on
+   * multi-site (its tenant's `origin`), else `serverURL`. Default off.
+   */
+  websiteLink?: boolean
+  /** More cards for "How to use the admin", for what this site has that others don't. */
+  guideCards?: GuideCard[]
   /** Versions kept per document. Default 50. */
   maxVersions?: number
   /** Turn a page off with `false`. All on by default. */
@@ -95,6 +135,9 @@ export type ResolvedOptions = {
   translated: string[]
   saveHelp: Record<string, string>
   listPageSize: number
+  links: RailLink[]
+  websiteLink: boolean
+  guideCards: GuideCard[]
   maxVersions: number
   views: { seo: boolean; performance: boolean; guide: boolean; sections: boolean }
   home: 'performance' | 'dashboard'
@@ -123,6 +166,9 @@ export function resolveOptions(options: WebheroAdminOptions, collectionSlugs: Se
     translated: options.translated ?? [],
     saveHelp: options.saveHelp ?? {},
     listPageSize: options.listPageSize ?? 25,
+    links: options.links ?? [],
+    websiteLink: options.websiteLink ?? false,
+    guideCards: options.guideCards ?? [],
     maxVersions: options.maxVersions ?? 50,
     views: {
       seo: options.views?.seo ?? true,

@@ -1,5 +1,36 @@
 # Changelog
 
+## 0.3.0
+
+Multi-site fixes and room for what one site has that others don't, found
+moving the Europac 3D admin (three sites, a shop on Medusa) onto the package.
+Nothing changes for a site that sets none of the new options. No schema
+change. Run `payload generate:importmap` after updating.
+
+- Multi-site: the SEO overview (pages and redirects) and the Sections page
+  follow the site menu, like every list and Performance. Before, they listed
+  every site's pages together.
+- Sections reads only each page's title and sections, not whole pages.
+- The section palette lists sections shared through the config's `blocks`
+  and referenced from Pages with `blockReferences`, as the skill builds
+  them. Before, it was empty on such a site.
+- List/Grid: `picture` on the switch shows each page's picture instead of
+  the live page in a frame (`picture: ['gallery.image', 'meta.image']`, the
+  first found). Use it on multi-site, where a page of another site can't be
+  framed from this domain, and on big sites. `remember: false` opens every
+  visit on `defaultView`.
+- `links`: links out of the admin at the foot of the menu, opened in a new
+  tab with a small arrow, such as the shop's own admin.
+- `websiteLink: true`: "View website" in the menu, for the site chosen in
+  the site menu (its `origin`), else `serverURL`.
+- `guideCards`: more cards for "How to use the admin", each placed after a
+  card you name, shown only to people who can read its `collection`.
+- New icons: cart, box, receipt, stock, external. `submissions` gets the
+  inbox icon.
+- The menu marks the current screen with or without a trailing slash
+  (Next's `trailingSlash`).
+- Guide: the collapse arrow is beside the logo, not at the foot of the menu.
+
 ## 0.2.0
 
 - Published as a file on each GitHub release (public), installed by its

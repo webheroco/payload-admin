@@ -13,15 +13,32 @@ import React from 'react'
 
 import { readOptions } from '../../options.js'
 import { SETTINGS_GROUP } from '../header/AccountMenu.js'
+import { selectedSiteID } from '../selectedSite.js'
 import { iconFor } from './icons.js'
-import { NavRailClient, type RailGroup } from './NavRail.client.js'
+import { NavRailClient, type OutItem, type RailGroup } from './NavRail.client.js'
 
 export const NavRail = async (props: ServerProps & { visibleEntities?: VisibleEntities }) => {
   const { i18n, locale, params, payload, permissions, searchParams, user, visibleEntities } = props
   if (!payload?.config || !visibleEntities) return null
   const { collections, globals, routes } = payload.config
   const adminRoute = routes.admin
-  const { views, home, approvals } = readOptions(payload.config)
+  const { views, home, approvals, links, websiteLink } = readOptions(payload.config)
+
+  // Links out of the admin: the website (the chosen site's, on multi-site), then the project's own.
+  const outLinks: OutItem[] = []
+  if (websiteLink) {
+    const siteID = await selectedSiteID(payload)
+    const site = siteID
+      ? ((await payload
+          .findByID({ collection: 'tenants' as 'users', id: siteID, depth: 0, overrideAccess: true })
+          .catch(() => null)) as { name?: string; origin?: string; domain?: string } | null)
+      : null
+    const href = site?.origin ?? (site?.domain ? `https://${site.domain}` : payload.config.serverURL)
+    if (href) outLinks.push({ label: 'View website', href, icon: 'globe', tip: site?.name ? `Open ${site.name}` : 'Open the website', group: 'Website' })
+  }
+  for (const link of links) {
+    outLinks.push({ label: link.label, href: link.href, icon: link.icon ?? 'external', tip: link.tip ?? link.label, group: link.group ?? 'Links' })
+  }
 
   const groups = groupNavItems(
     [
@@ -81,6 +98,7 @@ export const NavRail = async (props: ServerProps & { visibleEntities?: VisibleEn
       seoHref={views.seo ? formatAdminURL({ adminRoute, path: '/seo' }) : undefined}
       sectionsHref={views.sections ? formatAdminURL({ adminRoute, path: '/sections' }) : undefined}
       reviewsHref={approvals ? formatAdminURL({ adminRoute, path: '/reviews' }) : undefined}
+      outLinks={outLinks}
     />
   )
 }

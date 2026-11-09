@@ -114,3 +114,19 @@ test('approvals are off unless asked for, and wrap everything with drafts when o
   assert.deepEqual(guard({ data: { _status: 'published' }, req: req('client-admin'), context: {} }), { _status: 'published' })
   assert.deepEqual(guard({ data: { _status: 'draft' }, req: req('editor'), context: {} }), { _status: 'draft' })
 })
+
+test('links, the website link and guide cards are kept as plain options', () => {
+  const config = webheroAdmin({
+    links: [{ label: 'Orders', href: 'https://shop.example/app/orders', icon: 'receipt', group: 'Shop' }],
+    websiteLink: true,
+    guideCards: [{ id: 'shop', title: 'Prices', steps: ['In the shop.'], after: 'edit' }],
+  })(base())
+  const stored = config.admin.custom.webheroAdmin
+  assert.deepEqual(stored.links, [{ label: 'Orders', href: 'https://shop.example/app/orders', icon: 'receipt', group: 'Shop' }])
+  assert.equal(stored.websiteLink, true)
+  assert.equal(stored.guideCards[0].after, 'edit')
+  // Plain data only: it sits on the config and goes to client components.
+  assert.doesNotThrow(() => JSON.stringify(stored))
+  const plain = webheroAdmin()(base()).admin.custom.webheroAdmin
+  assert.deepEqual([plain.links, plain.websiteLink, plain.guideCards], [[], false, []])
+})

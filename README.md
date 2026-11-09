@@ -78,6 +78,9 @@ Only what differs per client:
 | `saveHelp` | none | Per slug, how saving works there. Shown in the status "i" note, so nothing pushes the form down. |
 | `translated` | none | Collections that get the Languages column. |
 | `listPageSize` | 25 | Rows per list page. |
+| `links` | none | Links out of the admin at the foot of the menu, in a new tab: `{ label, href, icon?, tip?, group? }`. |
+| `websiteLink` | `false` | "View website" in the menu: the chosen site's `origin` on multi-site, else `serverURL`. |
+| `guideCards` | none | More guide cards: `{ id, title, steps, icon?, action?: { label, href }, collection?, after? }`. |
 | `maxVersions` | 50 | Versions kept per document. |
 | `views` | all on | `{ seo, performance, guide, sections }`: `false` turns a page off. |
 | `approvals` | off | `true`, or `{ approverRoles, roleField, only }`: sign-off before anything goes live (see below). |
@@ -97,6 +100,11 @@ import { BLOCK_PALETTE, LIST_GRID_SWITCH } from '@webheroco/payload-admin'
 
 admin: { components: { beforeListTable: [{ path: LIST_GRID_SWITCH, clientProps: { collectionSlug: 'pages', defaultView: 'grid' } }] } }
 ```
+
+The switch's page tiles show the live page in a frame. On multi-site (a page
+of another site can't be framed from this domain) or a big site, pass
+`picture` with the fields to take a picture from instead:
+`clientProps: { collectionSlug: 'pages', picture: ['gallery.image', 'meta.image'] }`.
 
 | Entry | Holds |
 | --- | --- |

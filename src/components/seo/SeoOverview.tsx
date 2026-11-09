@@ -16,6 +16,7 @@ import React from 'react'
 
 import { readOptions } from '../../options.js'
 import { publicPath } from '../../routes.js'
+import { selectedSiteID, siteWhere } from '../selectedSite.js'
 
 import { SeoWorkspace, type RedirectRow, type SeoRow } from './SeoTable.js'
 
@@ -30,9 +31,12 @@ export const SeoOverview = async ({ initPageResult, params, searchParams }: Admi
 
   const defaultCode = payload.config.localization ? payload.config.localization.defaultLocale : 'en'
   const code = locale?.code ?? defaultCode
+  // Multi-site: only the site picked in the site menu, like every list.
+  const siteID = await selectedSiteID(payload)
   const rows: SeoRow[] = []
   // One query at a time, only the fields the table shows, as the signed-in user.
   for (const kind of KINDS) {
+    const where = siteWhere(payload, kind.slug, siteID)
     const { docs } = await payload.find({
       collection: kind.slug as 'pages',
       depth: 0,
@@ -46,6 +50,7 @@ export const SeoOverview = async ({ initPageResult, params, searchParams }: Admi
       req,
       select: { title: true, slug: true, path: true, meta: true, noIndex: true, _status: true } as any,
       user,
+      ...(where ? { where } : {}),
     })
     for (const doc of docs as any[]) {
       const pick = (value: any) => (value && typeof value === 'object' ? value[code] : value) ?? ''
@@ -72,6 +77,7 @@ export const SeoOverview = async ({ initPageResult, params, searchParams }: Admi
   }
 
   // Redirects are for managers (cms/access.ts). Anyone else gets no Redirects tab.
+  const redirectWhere = payload.collections['redirects' as 'pages'] ? siteWhere(payload, 'redirects', siteID) : undefined
   const redirectResult = await payload
     .find({
       collection: 'redirects',
@@ -82,6 +88,7 @@ export const SeoOverview = async ({ initPageResult, params, searchParams }: Admi
       req,
       sort: 'from',
       user,
+      ...(redirectWhere ? { where: redirectWhere } : {}),
     })
     .catch(() => null)
   const redirects: RedirectRow[] | null =

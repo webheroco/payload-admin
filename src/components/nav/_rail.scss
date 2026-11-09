@@ -30,6 +30,7 @@ html[data-palette] {
 
 @mixin collapsed {
   .cms-rail__text,
+  .cms-rail__out,
   .cms-rail__toggle {
     display: none;
   }
@@ -205,6 +206,7 @@ html[data-palette] {
     .cms-rail__text {
       display: block;
     }
+    .cms-rail__out,
     .cms-rail__toggle {
       display: flex;
     }
@@ -243,4 +245,12 @@ html[data-palette] .cms-rail .cms-rail__toggle {
   .cms-rail .cms-rail__toggle {
     display: none !important;
   }
+}
+
+// A link that leaves the admin (webheroAdmin `links`, "View website"): it
+// opens in a new tab, marked by a small arrow at the end of the row.
+.cms-rail__out {
+  display: flex;
+  margin-left: auto;
+  color: var(--theme-elevation-400);
 }

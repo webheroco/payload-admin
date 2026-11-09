@@ -24,12 +24,12 @@ export const Guide = async ({ initPageResult, params, searchParams }: AdminViewS
   if (!user) redirect(formatAdminURL({ adminRoute, path: '/login' }))
 
   const url = (path: `/${string}`) => formatAdminURL({ adminRoute, path })
-  const { home } = readOptions(payload.config)
+  const { home, guideCards } = readOptions(payload.config)
   const can = (slug: string) => Boolean(permissions?.collections?.[slug]?.read)
   const locales = payload.config.localization ? payload.config.localization.locales : []
   const sites = can('tenants') ? (await payload.count({ collection: 'tenants', req })).totalDocs : 0
 
-  const sections: GuideSection[] = [
+  const standard: GuideSection[] = [
     {
       id: 'around',
       icon: 'home',
@@ -37,7 +37,7 @@ export const Guide = async ({ initPageResult, params, searchParams }: AdminViewS
       steps: [
         'The menu on the left has everything you edit, grouped the same way every time.',
         'Top right: the language you are editing, this guide, and your picture, which holds the theme, Settings, your profile and Log out.',
-        'Click the arrow at the foot of the menu to fold it down to icons. Hover over it to see it in full.',
+        'Click the arrow beside the logo to fold the menu down to icons. Hover over it to see it in full.',
       ],
     },
     {
@@ -143,6 +143,23 @@ export const Guide = async ({ initPageResult, params, searchParams }: AdminViewS
       action: { label: 'Open your profile', href: url('/account') },
     },
   ]
+
+  // The project's own cards (webheroAdmin `guideCards`), after the card they name, else before the account card.
+  const sections = [...standard]
+  for (const card of guideCards) {
+    if (card.collection && !can(card.collection)) continue
+    const href = card.action?.href
+    const section: GuideSection = {
+      id: card.id,
+      icon: card.icon ?? 'file',
+      title: card.title,
+      steps: card.steps,
+      action: card.action && href ? { label: card.action.label, href: href.startsWith('/') ? url(href as `/${string}`) : href } : undefined,
+    }
+    const after = card.after ? sections.findIndex((s) => s.id === card.after) : -1
+    const at = after >= 0 ? after + 1 : Math.max(0, sections.findIndex((s) => s.id === 'account'))
+    sections.splice(after >= 0 ? at : at || sections.length, 0, section)
+  }
 
   return (
     <DefaultTemplate
