@@ -1,7 +1,7 @@
 // @webheroco/payload-admin. The rules behind it: client-payload references/admin-ui.md.
 /**
  * How to use the admin (admin.components.views.guide, path /guide), opened
- * from the "?" top right. Short, task-by-task, in the editor's words, with a
+ * from the last item in the menu. Short, task-by-task, in the editor's words, with a
  * button to the screen each step is about. Sections for sites and languages
  * only appear when the CMS has more than one.
  */
@@ -32,16 +32,18 @@ export const Guide = async ({ initPageResult, params, searchParams }: AdminViewS
   const standard: GuideSection[] = [
     {
       id: 'around',
+      group: 'Getting around',
       icon: 'home',
       title: 'Finding your way around',
       steps: [
         'The menu on the left has everything you edit, grouped the same way every time.',
-        'Top right: the language you are editing, this guide, and your picture, which holds the theme, Settings, your profile and Log out.',
+        'Top right: the language you are editing, and your picture, which holds the theme, Settings, your profile and Log out. This guide is always the last item in the menu.',
         'Click the arrow beside the logo to fold the menu down to icons. Hover over it to see it in full.',
       ],
     },
     {
       id: 'edit',
+      group: 'Pages',
       icon: 'file',
       title: 'Change a page',
       steps: [
@@ -53,6 +55,7 @@ export const Guide = async ({ initPageResult, params, searchParams }: AdminViewS
     },
     {
       id: 'sections',
+      group: 'Pages',
       icon: 'form',
       title: 'Add, move or remove a section',
       steps: [
@@ -63,6 +66,7 @@ export const Guide = async ({ initPageResult, params, searchParams }: AdminViewS
     },
     {
       id: 'publish',
+      group: 'Pages',
       icon: 'check',
       title: 'Publish your changes',
       steps: [
@@ -73,6 +77,7 @@ export const Guide = async ({ initPageResult, params, searchParams }: AdminViewS
     },
     {
       id: 'media',
+      group: 'Pictures',
       icon: 'image',
       title: 'Pictures and videos',
       steps: [
@@ -86,6 +91,7 @@ export const Guide = async ({ initPageResult, params, searchParams }: AdminViewS
       ? [
           {
             id: 'sites',
+            group: 'Getting around',
             icon: 'globe',
             title: 'Your websites',
             steps: [
@@ -100,6 +106,7 @@ export const Guide = async ({ initPageResult, params, searchParams }: AdminViewS
       ? [
           {
             id: 'languages',
+            group: 'Getting around',
             icon: 'language',
             title: 'Other languages',
             steps: [
@@ -112,6 +119,7 @@ export const Guide = async ({ initPageResult, params, searchParams }: AdminViewS
       : []),
     {
       id: 'seo',
+      group: 'Google',
       icon: 'seo',
       title: 'How you appear on Google',
       steps: [
@@ -122,6 +130,7 @@ export const Guide = async ({ initPageResult, params, searchParams }: AdminViewS
     },
     {
       id: 'performance',
+      group: 'Enquiries',
       icon: 'chart',
       title: 'Performance and enquiries',
       steps: [
@@ -134,6 +143,7 @@ export const Guide = async ({ initPageResult, params, searchParams }: AdminViewS
     },
     {
       id: 'account',
+      group: 'Your account',
       icon: 'account',
       title: 'Your profile',
       steps: [
@@ -151,6 +161,8 @@ export const Guide = async ({ initPageResult, params, searchParams }: AdminViewS
     const href = card.action?.href
     const section: GuideSection = {
       id: card.id,
+      // Its own heading, else the heading of the card it follows.
+      group: card.group ?? (card.after ? sections.find((s) => s.id === card.after)?.group : undefined) ?? 'More',
       icon: card.icon ?? 'file',
       title: card.title,
       steps: card.steps,

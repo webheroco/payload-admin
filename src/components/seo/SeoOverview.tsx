@@ -48,7 +48,7 @@ export const SeoOverview = async ({ initPageResult, params, searchParams }: Admi
       overrideAccess: false,
       pagination: false,
       req,
-      select: { title: true, slug: true, path: true, meta: true, noIndex: true, _status: true } as any,
+      select: { title: true, slug: true, path: true, meta: true, noIndex: true, _status: true, updatedAt: true } as any,
       user,
       ...(where ? { where } : {}),
     })
@@ -71,6 +71,7 @@ export const SeoOverview = async ({ initPageResult, params, searchParams }: Admi
         indexed: doc.noIndex !== true,
         // The latest version is a draft: saving here must not publish other edits.
         hasDraft: doc._status !== 'published',
+        updatedAt: typeof doc.updatedAt === 'string' ? doc.updatedAt : '',
         editHref: formatAdminURL({ adminRoute, path: `/collections/${kind.slug}/${doc.id}` }),
       })
     }

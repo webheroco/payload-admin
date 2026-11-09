@@ -3,7 +3,8 @@
 
 /**
  * The Performance page: enquiries from the website's forms, by type, by page
- * and over time. The "i" note, site and period share one row; the title is in
+ * and over time. The "?" note and period share one row (the site menu already
+ * names the site); the title is in
  * the breadcrumb.
  */
 import { useStepNav } from '@payloadcms/ui'
@@ -12,6 +13,7 @@ import { useRouter } from 'next/navigation'
 import React, { useEffect, useMemo, useState } from 'react'
 
 import { BarList, number, StackedBars } from './charts.js'
+import { Icon } from '../nav/icons.js'
 
 export type Enquiry = { id: string; form: string; page: string; name: string; at: string; href: string }
 
@@ -63,11 +65,11 @@ const ago = (iso: string) => {
 export const PerformanceClient: React.FC<{
   days: number
   periods: number[]
-  siteName: string
+  siteName?: string
   start: string
   end: string
   enquiries: Enquiry[]
-}> = ({ days, periods, siteName, start, end, enquiries }) => {
+}> = ({ days, periods, start, end, enquiries }) => {
   const { setStepNav } = useStepNav()
   const router = useRouter()
   const [hidden, setHidden] = useState<string[]>([])
@@ -139,14 +141,13 @@ export const PerformanceClient: React.FC<{
             Enquiries <span className="cms-tabs__count">{current.length}</span>
           </span>
           <span className="cms-info" tabIndex={0} aria-label="About these numbers">
-            i
+            <Icon name="help" size={18} />
             <span className="cms-info__note" role="tooltip">
               Every form sent from the website, counted by form and by the page it was sent from. Changes compare with the period before.
             </span>
           </span>
         </div>
         <div className="cms-seo__tools">
-          <span className="cms-reports__site">{siteName}</span>
           <div className="cms-segment" role="radiogroup" aria-label="Period">
             {periods.map((p) => (
               <button key={p} type="button" role="radio" aria-checked={p === days} className={p === days ? 'is-active' : ''} onClick={() => go(p)}>

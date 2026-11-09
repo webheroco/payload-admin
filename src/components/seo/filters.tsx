@@ -23,7 +23,9 @@ export const FilterPanel: React.FC<{ open: boolean; onClose: () => void; onClear
         <header className="cms-panel__head">
           <h2>Filters</h2>
           <button type="button" className="cms-panel__close" onClick={onClose} aria-label="Close filters">
-            ×
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+              <path d="M6 6l12 12M18 6 6 18" />
+            </svg>
           </button>
         </header>
         <div className="cms-panel__body">{children}</div>

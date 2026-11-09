@@ -43,7 +43,10 @@ test('the plugin sets the admin and keeps what the project set', () => {
   const config = webheroAdmin({ livePreview: { collections: ['pages'] }, saveHelp: { pages: 'Drafts.' } })(base())
   assert.equal(config.admin.components.Nav, NAV_RAIL)
   assert.equal(config.admin.components.actions.at(-1), '/components/admin/Own#Own')
-  assert.equal(config.admin.components.actions.length, 5)
+  // Language, account and header row: the guide is in the menu, not a second "?" top right.
+  assert.equal(config.admin.components.actions.length, 4)
+  assert.ok(config.admin.components.providers.includes('@webheroco/payload-admin/client#ListPanels'))
+  assert.equal(config.i18n.translations.en.general.noResultsFound, 'Nothing to show.')
   // Performance is the home page: it replaces the dashboard rather than adding /performance.
   assert.deepEqual(Object.keys(config.admin.components.views), ['seoOverview', 'dashboard', 'guide', 'sections'])
   assert.equal(config.admin.custom.webheroAdmin.home, 'performance')
@@ -57,6 +60,7 @@ test('the plugin sets the admin and keeps what the project set', () => {
   assert.ok(!pages.fields.some((f) => f.name === 'saveHelp'))
   assert.deepEqual(pages.admin.components.edit.Status.clientProps, { help: 'Drafts.' })
   assert.equal(pages.fields.find((f) => f.name === 'hidden').admin.components.Field, SWITCH_FIELD)
+  assert.equal(pages.fields.find((f) => f.name === 'hidden').admin.components.Cell, '@webheroco/payload-admin/client#YesNoCell')
   const tabs = pages.fields.find((f) => f.type === 'tabs').tabs
   assert.equal(tabs[0].label, 'Content')
   assert.equal(tabs[1].label, 'SEO')
@@ -140,4 +144,35 @@ test('save help without drafts gets its own note beside Save', () => {
   assert.deepEqual(note.clientProps, { help: 'Saves live.' })
   const nav = config.globals[0].admin.components.elements.beforeDocumentControls.find((c) => c.path?.endsWith('#SaveNote'))
   assert.deepEqual(nav.clientProps, { help: 'Menus.' })
+})
+
+test('upload lists offer what an editor recognises, not the file plumbing', () => {
+  const input = base()
+  input.collections.push({
+    slug: 'media',
+    upload: { imageSizes: [{ name: 'card', width: 600 }] },
+    fields: [
+      { name: 'alt', type: 'text' },
+      { name: 'prefix', type: 'text' },
+      { name: '_objectKey', type: 'text' },
+    ],
+  })
+  const media = webheroAdmin()(input).collections.find((c) => c.slug === 'media')
+  const by = (name) => media.fields.find((f) => f.name === name)
+  assert.equal(by('alt').admin, undefined)
+  for (const name of ['prefix', '_objectKey', 'url', 'thumbnailURL', 'mimeType', 'filesize', 'width', 'height', 'focalX', 'focalY', 'sizes']) {
+    assert.equal(by(name).admin.disableListColumn, true, name)
+    assert.equal(by(name).admin.disableListFilter, true, name)
+  }
+  const card = by('sizes').fields.find((f) => f.name === 'card')
+  assert.deepEqual(card.fields.map((f) => f.name).sort(), ['filename', 'filesize', 'height', 'mimeType', 'url', 'width'])
+  // Collections without uploads get nothing added.
+  assert.equal(webheroAdmin()(base()).collections[0].fields.some((f) => f.name === 'url'), false)
+})
+
+test('a site that still lists the old "?" top right gets it taken out', () => {
+  const input = base()
+  input.admin.components.actions.push('@webheroco/payload-admin/client#HelpButton')
+  const actions = webheroAdmin()(input).admin.components.actions
+  assert.ok(!actions.includes('@webheroco/payload-admin/client#HelpButton'))
 })

@@ -13,10 +13,28 @@ import type { Config, Plugin } from 'payload'
 import { withApprovals } from './approvals.js'
 import { collectionDefaults, globalDefaults } from './defaults.js'
 import { resolveOptions, type WebheroAdminOptions } from './options.js'
-import { ACCOUNT_MENU, GUIDE, HEADER_ROW, HELP_BUTTON, LANGUAGE_MENU, NAV_RAIL, PERFORMANCE, PERFORMANCE_HOME, REVIEWS, SECTIONS, SEO_OVERVIEW } from './paths.js'
+import { ACCOUNT_MENU, GUIDE, HEADER_ROW, HELP_BUTTON, LANGUAGE_MENU, LIST_PANELS, NAV_RAIL, PERFORMANCE, PERFORMANCE_HOME, REVIEWS, SECTIONS, SEO_OVERVIEW } from './paths.js'
 
-/** Payload draws actions in reverse, so these read language, ?, picture. */
-const ACTIONS = [ACCOUNT_MENU, HELP_BUTTON, LANGUAGE_MENU, HEADER_ROW]
+/**
+ * Payload's list wording in plain words. An empty list reads the same whether
+ * nothing exists yet or a search found nothing, so it says both, briefly.
+ */
+const WORDING = {
+  en: {
+    general: {
+      noResultsFound: 'Nothing to show.',
+      noResultsDescription: 'Nothing has been added yet, or nothing matches your search or filters.',
+    },
+  },
+}
+
+/**
+ * Payload draws actions in reverse, so these read language, picture. The guide
+ * is the last item in the menu, so there is no second "?" up here.
+ */
+const ACTIONS = [ACCOUNT_MENU, LANGUAGE_MENU, HEADER_ROW]
+/** Older versions put the guide's "?" here: sites that copied it get it taken out. */
+const RETIRED = [HELP_BUTTON]
 
 export const webheroAdmin =
   (options: WebheroAdminOptions = {}): Plugin =>
@@ -29,11 +47,24 @@ export const webheroAdmin =
     const admin = config.admin ?? {}
     const components = admin.components ?? {}
     const ownActions = (components.actions ?? []).filter(
-      (a) => !ACTIONS.includes(typeof a === 'string' ? a : (a as { path?: string })?.path ?? ''),
+      (a) => {
+        const path = typeof a === 'string' ? a : ((a as { path?: string })?.path ?? '')
+        return !ACTIONS.includes(path) && !RETIRED.includes(path)
+      },
     )
 
+    const providers = components.providers ?? []
+    const translations = (config.i18n?.translations ?? {}) as Record<string, Record<string, Record<string, string>>>
     return {
       ...config,
+      // The site's own wording wins over ours.
+      i18n: {
+        ...config.i18n,
+        translations: {
+          ...translations,
+          en: { ...translations.en, general: { ...WORDING.en.general, ...translations.en?.general } },
+        } as any,
+      },
       admin: {
         ...admin,
         custom: { ...admin.custom, webheroAdmin: resolved },
@@ -41,6 +72,8 @@ export const webheroAdmin =
           ...components,
           Nav: components.Nav ?? NAV_RAIL,
           actions: [...ACTIONS, ...ownActions],
+          // Columns and Filters on Payload's own lists open in the right-hand panel.
+          providers: providers.includes(LIST_PANELS) ? providers : [LIST_PANELS, ...providers],
           views: {
             ...(resolved.views.seo ? { seoOverview: { Component: SEO_OVERVIEW, path: '/seo' as const } } : {}),
             // Performance is the admin's home (the dashboard view), or its own page at /performance.

@@ -13,6 +13,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { Choice, FilterPanel } from '../seo/filters.js'
 import { ReviewsBoard, type BoardColumn } from './ReviewsBoard.js'
 import { formatWhen } from './shared.js'
+import { Icon } from '../nav/icons.js'
 
 export type ReviewItem = {
   id: string
@@ -156,7 +157,7 @@ export const ReviewsClient: React.FC<{
             <span className="cms-tabs__tab is-active">Board</span>
           )}
           <span className="cms-info" tabIndex={0} aria-label="About this page">
-            i
+            <Icon name="help" size={18} />
             <span className="cms-info__note" role="tooltip">
               {approver
                 ? 'Changes waiting for sign-off, and what has been approved (Published shows the last 7 days, All the last 90). Open one to approve and publish it, approve it for a date, or request changes. On the board, drag a waiting card to Changes requested or Scheduled.'
@@ -196,6 +197,7 @@ export const ReviewsClient: React.FC<{
 
       {view === 'list' ? (
         <>
+          <div className="cms-scroll">
           <table className="cms-table cms-seo__table cms-reviews__table">
             <thead>
               <tr>
@@ -233,6 +235,7 @@ export const ReviewsClient: React.FC<{
               ))}
             </tbody>
           </table>
+          </div>
           {rows.length === 0 && <p className="cms-seo__empty">{tab === 'waiting' && !activeFilters && !q ? 'Nothing is waiting for review.' : 'Nothing here.'}</p>}
         </>
       ) : (

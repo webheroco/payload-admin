@@ -1,5 +1,38 @@
 # Changelog
 
+## 0.4.0
+
+No schema change. Run `payload generate:importmap` after updating (new
+`ListPanels` and `YesNoCell`).
+
+- Payload's own lists (Media, enquiries, anything without a view of ours):
+  - no big heading, since the breadcrumb already names the list;
+  - search, Columns, Filters and Create new share one top row that stays in view;
+  - the table scrolls inside its box, sideways too, with its heading row fixed;
+  - Columns and Filters open in the right-hand panel, close on Escape or a
+    click outside, and Filters starts with a condition to fill in;
+  - an empty list says "Nothing to show." in plain words;
+  - on/off settings read Yes or No, not `true` and `false`.
+- Upload collections: URL, MIME type, size, width, height, focal point,
+  every image size, a storage plugin's `prefix` and fields named with a
+  leading underscore are left out of Columns and Filters. `ui` fields
+  (the section palette) are left out of Columns.
+- SEO overview, Schema and Approvals tables: same scroll box and fixed
+  heading row; the tabs row stays in view.
+- Schema tab: results are kept in the browser. Opening the tab re-reads only
+  pages never checked or changed since; "Check again" reads them all.
+- SEO checks: a title tag or meta description in capitals is amber.
+- One help icon: every page and status note uses the same "?" icon. The
+  guide is the last item in the menu, and the "?" top right is gone (a site
+  that still lists `HelpButton` in its actions has it taken out).
+- Guide: grouped under headings (Getting around, Pages, Pictures, Google,
+  Enquiries, Your account) instead of a row of links. `guideCards` take a
+  `group`; without one a card joins the heading of the card it follows.
+- Performance: the site's name no longer repeats the site menu.
+- Grid: as many tiles as fit, at least four across on a laptop.
+- Speed: Sections reads only which sections each page uses, not their
+  contents; Performance reads only the fields it counts.
+
 ## 0.3.3
 
 No schema change.

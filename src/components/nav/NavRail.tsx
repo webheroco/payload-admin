@@ -97,6 +97,7 @@ export const NavRail = async (props: ServerProps & { visibleEntities?: VisibleEn
       }
       seoHref={views.seo ? formatAdminURL({ adminRoute, path: '/seo' }) : undefined}
       sectionsHref={views.sections ? formatAdminURL({ adminRoute, path: '/sections' }) : undefined}
+      guideHref={views.guide ? formatAdminURL({ adminRoute, path: '/guide' }) : undefined}
       reviewsHref={approvals ? formatAdminURL({ adminRoute, path: '/reviews' }) : undefined}
       outLinks={outLinks}
     />

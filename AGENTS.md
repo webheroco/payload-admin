@@ -63,7 +63,17 @@ just one. Before a release, the packed package must work in:
 - an app with a shop on Medusa beside it (`links` to the shop's admin);
 - an app with `trailingSlash: true`;
 - a list whose query holds only the visible columns (List/Grid `picture`
-  must still find each page's picture).
+  must still find each page's picture);
+- a site with hundreds of pages: no screen reads every page's content on
+  each visit (Sections reads block types only, Schema keeps its last check);
+- Payload's own lists, empty and full, with an upload collection on a
+  storage plugin: Columns and Filters open in the right-hand panel and offer
+  no file plumbing.
+
+Before a release, also look at every screen you touched at 1440, 1024 and
+390 wide for: a title said twice (breadcrumb and heading, site menu and page),
+an icon that differs from the same idea elsewhere, a control that does nothing
+on an empty list, and anything wider than the screen.
 
 When a site's move onto the package turns up a gap, add the case to this list
 and to `test/`, so the next site isn't the one that finds it.

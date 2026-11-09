@@ -13,6 +13,8 @@ export { ListGridSwitch } from './components/ListGridSwitch.js'
 export { ReviewButton } from './components/review/ReviewButton.js'
 export { SerpPreview } from './components/seo/SerpPreview.js'
 export { ReviewBanner } from './components/review/ReviewBanner.js'
+export { YesNoCell } from './components/YesNoCell.js'
+export { ListPanels } from './components/ListPanels.js'
 // Building blocks for a project's own admin pieces, so they match.
 export { Mark, useFilter, useMenu, useSites } from './components/header/menu.js'
 export { Icon, iconFor } from './components/nav/icons.js'

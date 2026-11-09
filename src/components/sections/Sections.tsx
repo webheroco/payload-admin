@@ -80,9 +80,21 @@ export const Sections = async ({ initPageResult, params, searchParams }: AdminVi
     // Which pages use each section, read as the signed-in user: only the
     // title and the blocks fields, so a big site doesn't load every page whole.
     const titleField = collection.admin?.useAsTitle
-    const select: Record<string, true> = { title: true, name: true }
+    const select: Record<string, unknown> = { title: true, name: true }
     if (titleField) select[titleField] = true
-    for (const { path } of found) select[path[0]] = true
+    // Of each blocks field, only which sections it holds (their type and id),
+    // not their text and pictures: on a big site that is most of the database.
+    for (const { path, field } of found) {
+      const slugs = [
+        ...((field.blocks ?? []) as AnyField[]).map((b) => b.slug),
+        ...((field.blockReferences ?? []) as (string | AnyField)[]).map((b) => (typeof b === 'string' ? b : b.slug)),
+      ]
+      let node = select
+      path.forEach((key, i) => {
+        if (i === path.length - 1) node[key] = Object.fromEntries(slugs.map((slug) => [slug, { id: true }]))
+        else node = (node[key] = typeof node[key] === 'object' && node[key] ? node[key] : {}) as Record<string, unknown>
+      })
+    }
     const where = siteWhere(payload, collection.slug, siteID)
     const { docs } = await payload
       .find({
@@ -94,7 +106,7 @@ export const Sections = async ({ initPageResult, params, searchParams }: AdminVi
         req,
         user,
         overrideAccess: false,
-        select: Object.fromEntries(Object.keys(select).filter((k) => collection.flattenedFields.some((f) => f.name === k)).map((k) => [k, true])),
+        select: Object.fromEntries(Object.entries(select).filter(([k]) => collection.flattenedFields.some((f) => f.name === k))) as any,
         ...(where ? { where } : {}),
       })
       .catch(() => ({ docs: [] as unknown[] }))
