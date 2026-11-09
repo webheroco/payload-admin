@@ -44,5 +44,6 @@ jobs:
         run: |
           FILE=$(npm pack --silent)
           gh release create "v${{ steps.version.outputs.version }}" "$FILE" \
+            --target "$GITHUB_SHA" \
             --title "v${{ steps.version.outputs.version }}" \
             --notes "Install: npm install --save-exact https://github.com/${{ github.repository }}/releases/download/v${{ steps.version.outputs.version }}/$FILE"
