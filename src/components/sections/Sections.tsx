@@ -15,6 +15,7 @@ import { formatAdminURL } from 'payload/shared'
 import React from 'react'
 
 import { BLOCK_PALETTE } from '../../paths.js'
+import { selectedSiteID, siteWhere } from '../selectedSite.js'
 import { SectionsClient, type SectionCard } from './SectionsClient.js'
 
 type AnyField = Record<string, any>
@@ -52,6 +53,8 @@ export const Sections = async ({ initPageResult, params, searchParams }: AdminVi
   for (const block of (payload.config.blocks ?? []) as AnyField[]) library.set(block.slug, block)
   const cards = new Map<string, SectionCard>()
   const descriptions: Record<string, string> = {}
+  // Multi-site: the pages of the site picked in the site menu.
+  const siteID = await selectedSiteID(payload)
 
   for (const collection of payload.config.collections) {
     const found: { path: string[]; field: AnyField }[] = []
@@ -74,11 +77,27 @@ export const Sections = async ({ initPageResult, params, searchParams }: AdminVi
       })
     }
 
-    // Which pages use each section, read as the signed-in user.
-    const { docs } = await payload
-      .find({ collection: collection.slug as CollectionSlug, depth: 0, draft: true, limit: 1000, pagination: false, req, user, overrideAccess: false })
-      .catch(() => ({ docs: [] as unknown[] }))
+    // Which pages use each section, read as the signed-in user: only the
+    // title and the blocks fields, so a big site doesn't load every page whole.
     const titleField = collection.admin?.useAsTitle
+    const select: Record<string, true> = { title: true, name: true }
+    if (titleField) select[titleField] = true
+    for (const { path } of found) select[path[0]] = true
+    const where = siteWhere(payload, collection.slug, siteID)
+    const { docs } = await payload
+      .find({
+        collection: collection.slug as CollectionSlug,
+        depth: 0,
+        draft: true,
+        limit: 1000,
+        pagination: false,
+        req,
+        user,
+        overrideAccess: false,
+        select: Object.fromEntries(Object.keys(select).filter((k) => collection.flattenedFields.some((f) => f.name === k)).map((k) => [k, true])),
+        ...(where ? { where } : {}),
+      })
+      .catch(() => ({ docs: [] as unknown[] }))
     for (const doc of docs as Record<string, unknown>[]) {
       const used = new Set<string>()
       for (const { path } of found) for (const b of (at(doc, path) as AnyField[] | undefined) ?? []) if (b?.blockType) used.add(b.blockType)

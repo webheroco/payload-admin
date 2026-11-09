@@ -9,6 +9,11 @@ import { Icon } from './icons.js'
 
 export type RailItem = { slug: string; label: string; href: string; icon: string }
 export type RailGroup = { label: string; items: RailItem[] }
+/** A link that leaves the admin, in a new tab (webheroAdmin `links`, "View website"). */
+export type OutItem = { label: string; href: string; icon: string; tip: string; group: string }
+
+/** Admin hrefs may end in "/" (trailingSlash) while usePathname() doesn't, or the other way round. */
+const trim = (path: string) => path.replace(/\/+$/, '') || '/'
 
 const STORAGE_KEY = 'cms-rail-collapsed'
 
@@ -45,6 +50,16 @@ const RailLink: React.FC<{ href: string; icon: string; label: string; active: bo
   </Link>
 )
 
+const OutLink: React.FC<{ item: OutItem }> = ({ item }) => (
+  <a href={item.href} target="_blank" rel="noopener" className="cms-rail__link is-out" data-tip={item.tip}>
+    <Icon name={item.icon} />
+    <span className="cms-rail__text">{item.label}</span>
+    <span className="cms-rail__out" aria-hidden="true">
+      <Icon name="external" size={14} />
+    </span>
+  </a>
+)
+
 export const NavRailClient: React.FC<{
   groups: RailGroup[]
   adminRoute: string
@@ -58,7 +73,9 @@ export const NavRailClient: React.FC<{
   home?: 'performance' | 'dashboard'
   /** Whatever the config puts in beforeNavLinks: on multi-site, SiteMenu and TenantDefault. */
   beforeLinks?: React.ReactNode
-}> = ({ groups, adminRoute, seoHref, performanceHref, reviewsHref, sectionsHref, home, beforeLinks }) => {
+  /** Links out of the admin, after the groups: "View website" and the project's `links`. */
+  outLinks?: OutItem[]
+}> = ({ groups, adminRoute, seoHref, performanceHref, reviewsHref, sectionsHref, home, beforeLinks, outLinks = [] }) => {
   const pathname = usePathname() ?? ''
   const [collapsed, setCollapsed] = useState(false)
 
@@ -72,7 +89,12 @@ export const NavRailClient: React.FC<{
     }
   }, [collapsed])
 
-  const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`)
+  const isActive = (href: string) => {
+    const base = trim(href)
+    const here = trim(pathname)
+    return here === base || here.startsWith(`${base}/`)
+  }
+  const outGroups = [...new Set(outLinks.map((l) => l.group))]
   return (
     <aside className={`cms-rail${collapsed ? ' is-collapsed' : ''}`} aria-label="Main menu">
       <div className="cms-rail__top">
@@ -114,14 +136,14 @@ export const NavRailClient: React.FC<{
       <nav className="cms-rail__scroll">
         <div className="cms-rail__group">
           {home === 'performance' ? null : (
-            <RailLink href={adminRoute} icon="home" label="Dashboard" active={pathname === adminRoute} />
+            <RailLink href={adminRoute} icon="home" label="Dashboard" active={trim(pathname) === trim(adminRoute)} />
           )}
           {performanceHref ? (
             <RailLink
               href={performanceHref}
               icon="chart"
               label="Performance"
-              active={performanceHref === adminRoute ? pathname === adminRoute : isActive(performanceHref)}
+              active={performanceHref === adminRoute ? trim(pathname) === trim(adminRoute) : isActive(performanceHref)}
             />
           ) : null}
           {seoHref ? <RailLink href={seoHref} icon="seo" label="SEO overview" active={isActive(seoHref)} /> : null}
@@ -134,6 +156,15 @@ export const NavRailClient: React.FC<{
             {group.items.map((item) => (
               <RailLink key={item.slug} href={item.href} icon={item.icon} label={item.label} active={isActive(item.href)} />
             ))}
+          </div>
+        ))}
+        {outGroups.map((group) => (
+          <div className="cms-rail__group" key={`out-${group}`} aria-label={group} role="group">
+            {outLinks
+              .filter((l) => l.group === group)
+              .map((item) => (
+                <OutLink key={item.href} item={item} />
+              ))}
           </div>
         ))}
       </nav>

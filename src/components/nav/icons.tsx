@@ -109,6 +109,33 @@ const paths: Record<string, React.ReactNode> = {
     </>
   ),
   chart: <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" />,
+  cart: (
+    <>
+      <path d="M3 4h2l2.4 11.2a1 1 0 0 0 1 .8h9.2a1 1 0 0 0 1-.8L20 8H6.2" />
+      <circle cx="9.5" cy="19.5" r="1.3" />
+      <circle cx="17" cy="19.5" r="1.3" />
+    </>
+  ),
+  box: (
+    <>
+      <path d="M21 8 12 3 3 8v8l9 5 9-5z" />
+      <path d="m3 8 9 5 9-5M12 13v8" />
+    </>
+  ),
+  receipt: (
+    <>
+      <path d="M6 3h12v18l-3-2-3 2-3-2-3 2z" />
+      <path d="M9 8h6M9 12h6" />
+    </>
+  ),
+  stock: (
+    <>
+      <rect x="3" y="13" width="7" height="7" rx="1" />
+      <rect x="14" y="13" width="7" height="7" rx="1" />
+      <rect x="8.5" y="4" width="7" height="7" rx="1" />
+    </>
+  ),
+  external: <path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5" />,
   blocks: <path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z" strokeLinejoin="round" />,
   collapse: <path d="M15 6l-6 6 6 6" />,
   expand: <path d="M9 6l6 6-6 6" />,
@@ -153,6 +180,7 @@ const bySlug: Record<string, string> = {
   redirects: 'redirect',
   forms: 'form',
   'form-submissions': 'inbox',
+  submissions: 'inbox',
   search: 'search',
   header: 'header',
   footer: 'footer',
