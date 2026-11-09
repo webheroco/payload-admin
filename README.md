@@ -1,7 +1,7 @@
 # @webheroco/payload-admin
 
 The WebHero Payload admin, shared by every client site: the icon rail menu,
-the language, guide and account menus, the one-row document header with the
+the language and account menus, the one-row document header with the
 status pills and preview toolbar, the section palette, List/Grid, the SEO
 overview, the Performance page and the "How to use the admin" guide, plus the
 admin defaults every collection gets.
@@ -75,12 +75,12 @@ Only what differs per client:
 | `enquiries` | the Form Builder if `form-submissions` exists, else `{ collection: 'submissions', formField: 'form', pageField: 'page' }` | Where Performance counts enquiries. |
 | `livePreview` | none | Collections and globals with Live Preview; they get the preview toolbar. |
 | `previewControls` | none | More components beside the preview toolbar, such as the site's click-to-edit bridge. |
-| `saveHelp` | none | Per slug, how saving works there. Shown in the status "i" note (or an "i" beside Save where there are no drafts), so nothing pushes the form down. |
+| `saveHelp` | none | Per slug, how saving works there. Shown in the status "?" note (or a "?" beside Save where there are no drafts), so nothing pushes the form down. |
 | `translated` | none | Collections that get the Languages column. |
 | `listPageSize` | 25 | Rows per list page. |
 | `links` | none | Links out of the admin at the foot of the menu, in a new tab: `{ label, href, icon?, tip?, group? }`. |
 | `websiteLink` | `false` | "View website" in the menu: the chosen site's `origin` on multi-site, else `serverURL`. |
-| `guideCards` | none | More guide cards: `{ id, title, steps, icon?, action?: { label, href }, collection?, after? }`. |
+| `guideCards` | none | More guide cards: `{ id, title, steps, icon?, action?: { label, href }, collection?, after?, group? }`. `group` is the heading it sits under ("Shop"); without one it joins the card it follows. |
 | `maxVersions` | 50 | Versions kept per document. |
 | `views` | all on | `{ seo, performance, guide, sections }`: `false` turns a page off. |
 | `approvals` | off | `true`, or `{ approverRoles, roleField, only }`: sign-off before anything goes live (see below). |
@@ -110,7 +110,7 @@ of another site can't be framed from this domain) or a big site, pass
 | --- | --- |
 | `@webheroco/payload-admin` | the plugin, the option types, `publicPath`, the path constants. No React, so Payload's CLI can load it. |
 | `@webheroco/payload-admin/rsc` | server components: `NavRail`, `AccountMenu`, `SeoOverview`, `Performance`, `PerformanceHome`, `Sections`, `Reviews`, `Guide`, `LanguagesCell` |
-| `@webheroco/payload-admin/client` | client components: `HelpButton`, `LanguageMenu`, `HeaderRow`, `SwitchField`, `SaveHelp`, `PreviewToolbar`, `DocStatus`, `SaveNote`, `VersionsButton`, `BlockPalette`, `ListGridSwitch`, and `Mark`, `Icon`, `useMenu`, `useFilter`, `useSites` for a project's own pieces |
+| `@webheroco/payload-admin/client` | client components: `LanguageMenu`, `ListPanels`, `YesNoCell`, `HelpButton` (retired: the guide is in the menu), `HeaderRow`, `SwitchField`, `SaveHelp`, `PreviewToolbar`, `DocStatus`, `SaveNote`, `VersionsButton`, `BlockPalette`, `ListGridSwitch`, and `Mark`, `Icon`, `useMenu`, `useFilter`, `useSites` for a project's own pieces |
 | `@webheroco/payload-admin/multi-site` | `SiteMenu` (needs `@payloadcms/plugin-multi-tenant`) |
 | `@webheroco/payload-admin/styles.css` | all the admin styles, compiled |
 | `@webheroco/payload-admin/styles.scss` | the same in Sass |

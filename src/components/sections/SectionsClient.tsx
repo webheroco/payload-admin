@@ -6,6 +6,7 @@ import Link from 'next/link'
 import React, { useEffect, useState } from 'react'
 
 import { Choice, FilterPanel } from '../seo/filters.js'
+import { Icon } from '../nav/icons.js'
 
 export type SectionCard = {
   slug: string
@@ -44,7 +45,7 @@ export const SectionsClient: React.FC<{ sections: SectionCard[] }> = ({ sections
             Sections <span className="cms-tabs__count">{sections.length}</span>
           </span>
           <span className="cms-info" tabIndex={0} aria-label="About this page">
-            i
+            <Icon name="help" size={18} />
             <span className="cms-info__note" role="tooltip">
               Every section the website can use, and the pages using it. Add, reorder and fill sections on any page with
               “Add a section” in the page editor. A new kind of section, or a change to how one looks, is built by your

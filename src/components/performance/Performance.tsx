@@ -126,6 +126,12 @@ async function collectionEnquiries({
     overrideAccess: false,
     pagination: false,
     req,
+    // Only what the page counts and lists, not every answer of every enquiry.
+    select: Object.fromEntries(
+      [source.formField, source.pageField, ...NAME_FIELDS, 'createdAt']
+        .filter((name): name is string => Boolean(name) && fields.some((f) => f.name === name))
+        .map((name) => [name, true]),
+    ) as any,
     sort: '-createdAt',
     user,
     where: { and: [{ createdAt: { greater_than_equal: from.toISOString() } }, ...bySite] },

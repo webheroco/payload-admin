@@ -31,6 +31,7 @@ import {
   SERP_PREVIEW,
   SWITCH_FIELD,
   VERSIONS_BUTTON,
+  YES_NO_CELL,
 } from './paths.js'
 
 /**
@@ -45,7 +46,10 @@ const INDEXED: Partial<Field> = {
   label: 'Indexed',
   admin: {
     description: 'On: search engines may list this page. Off for thank-you, landing and private pages.',
-    components: { Field: { path: SWITCH_FIELD, clientProps: { invert: true } } },
+    components: {
+      Field: { path: SWITCH_FIELD, clientProps: { invert: true } },
+      Cell: { path: YES_NO_CELL, clientProps: { invert: true } },
+    },
   },
 }
 
@@ -158,8 +162,15 @@ export function withPlainSeoTab(fields: Field[] | undefined, site?: SeoPreviewPr
 export function withSwitches(fields: Field[] | undefined): Field[] {
   return (fields ?? []).map((field) => {
     if (field.type === 'checkbox') {
-      if (field.admin?.components?.Field) return field
-      return { ...field, admin: { ...field.admin, components: { ...field.admin?.components, Field: SWITCH_FIELD } } }
+      const components = field.admin?.components
+      return {
+        ...field,
+        admin: {
+          ...field.admin,
+          // In a list it reads Yes or No, not true or false.
+          components: { ...components, Field: components?.Field ?? SWITCH_FIELD, Cell: components?.Cell ?? YES_NO_CELL },
+        },
+      }
     }
     if (field.type === 'tabs') {
       return { ...field, tabs: field.tabs.map((tab) => ({ ...tab, fields: withSwitches(tab.fields) })) }
@@ -170,6 +181,23 @@ export function withSwitches(fields: Field[] | undefined): Field[] {
     if ('fields' in field && Array.isArray(field.fields)) {
       return { ...field, fields: withSwitches(field.fields) } as Field
     }
+    return field
+  })
+}
+
+/**
+ * A `ui` field stores nothing, so as a list column it only ever shows
+ * "<No Palette>" and the like: it is left out of Columns unless it has a
+ * Cell of its own (the Languages column does).
+ */
+export function withoutUiColumns(fields: Field[] | undefined): Field[] {
+  return (fields ?? []).map((field) => {
+    if (field.type === 'ui') {
+      return field.admin?.components?.Cell ? field : ({ ...field, admin: { ...field.admin, disableListColumn: true } } as Field)
+    }
+    if (field.type === 'tabs') return { ...field, tabs: field.tabs.map((tab) => ({ ...tab, fields: withoutUiColumns(tab.fields) })) }
+    if (field.type === 'blocks') return field
+    if ('fields' in field && Array.isArray(field.fields)) return { ...field, fields: withoutUiColumns(field.fields) } as Field
     return field
   })
 }
@@ -194,6 +222,56 @@ export function withShallowRelations(fields: Field[] | undefined): Field[] {
     }
     return field
   })
+}
+
+const QUIET = { disableListColumn: true, disableListFilter: true }
+/** Payload's file fields, which only mean something to a developer. */
+const FILE_FIELDS: [string, 'text' | 'number'][] = [
+  ['url', 'text'],
+  ['thumbnailURL', 'text'],
+  ['mimeType', 'text'],
+  ['filesize', 'number'],
+  ['width', 'number'],
+  ['height', 'number'],
+]
+
+/**
+ * Upload collections: Columns and Filters offer what an editor recognises
+ * (file name, alt text, dates), not URL, MIME type, focal point, every
+ * image size or a storage plugin's prefix. The fields stay as they are;
+ * Payload merges these flags into its own upload fields by name.
+ */
+export function withQuietFileFields(collection: CollectionConfig): Field[] {
+  const fields = collection.fields ?? []
+  if (!collection.upload) return fields
+  const upload = typeof collection.upload === 'object' ? collection.upload : {}
+  const own = new Set(fields.map((f) => ('name' in f ? f.name : '')))
+  const quiet = (f: Field): Field => ({ ...f, admin: { ...('admin' in f ? f.admin : {}), ...QUIET } }) as Field
+  // A storage plugin's prefix and any field named with a leading underscore are plumbing.
+  const mine = fields.map((f) => ('name' in f && (f.name === 'prefix' || f.name.startsWith('_')) ? quiet(f) : f))
+  const added: Field[] = FILE_FIELDS.filter(([name]) => !own.has(name)).map(([name, type]) => ({ name, type, admin: QUIET }) as Field)
+  if (upload.focalPoint !== false || upload.imageSizes?.length || upload.resizeOptions) {
+    for (const name of ['focalX', 'focalY']) if (!own.has(name)) added.push({ name, type: 'number', admin: QUIET } as Field)
+  }
+  if (upload.imageSizes?.length && !own.has('sizes')) {
+    added.push({
+      name: 'sizes',
+      type: 'group',
+      admin: QUIET,
+      fields: upload.imageSizes.map(
+        (size) =>
+          ({
+            name: size.name,
+            type: 'group',
+            admin: QUIET,
+            fields: [...FILE_FIELDS.filter(([n]) => n !== 'thumbnailURL'), ['filename', 'text']].map(
+              ([n, t]) => ({ name: n, type: t, admin: QUIET }) as Field,
+            ),
+          }) as Field,
+      ),
+    } as Field)
+  }
+  return [...mine, ...added]
 }
 
 /** A list column of EN / FR / ES chips. `ui` fields store nothing, so no migration. */
@@ -282,7 +360,7 @@ export function collectionDefaults(
       },
     },
     fields: withLanguagesColumn(
-      withShallowRelations(withSwitches(withPlainSeoTab(collection.fields, { routes: options.routes, homeSlug: options.homeSlug }))),
+      withoutUiColumns(withShallowRelations(withSwitches(withPlainSeoTab(withQuietFileFields(collection), { routes: options.routes, homeSlug: options.homeSlug })))),
       collection.slug,
       options,
     ),

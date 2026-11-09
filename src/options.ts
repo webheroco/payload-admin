@@ -39,6 +39,8 @@ export type GuideCard = {
   collection?: string
   /** Placed after the card with this id. Default: before "Your account". */
   after?: string
+  /** The heading it sits under, such as "Shop". Default: the heading of the card it follows. */
+  group?: string
 }
 
 export type WebheroAdminOptions = {

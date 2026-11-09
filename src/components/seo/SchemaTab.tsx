@@ -9,7 +9,7 @@
  * page types, and only the types this site uses appear anywhere.
  */
 import Link from 'next/link'
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { checkHtml, SITE_WIDE, worst, type Check, type Verdict } from '../../schema-rules.js'
 import { Choice, FilterPanel } from './filters.js'
@@ -40,6 +40,36 @@ async function readPage(path: string, signal: AbortSignal): Promise<Result> {
   }
 }
 
+type Cached = Record<string, { at: string; result: Result }>
+const CACHE_KEY = 'webhero-admin:schema'
+const readCache = (): Cached => {
+  try {
+    const all = JSON.parse(window.localStorage.getItem(CACHE_KEY) ?? '{}')
+    return all && typeof all === 'object' ? all[window.location.host] ?? {} : {}
+  } catch {
+    return {}
+  }
+}
+const writeCache = (path: string, result: Result) => {
+  if (result.state === 'checking') return
+  try {
+    const all = JSON.parse(window.localStorage.getItem(CACHE_KEY) ?? '{}') ?? {}
+    const host = window.location.host
+    all[host] = { ...(all[host] ?? {}), [path]: { at: new Date().toISOString(), result } }
+    window.localStorage.setItem(CACHE_KEY, JSON.stringify(all))
+  } catch {
+    // Private windows and full storage: the tab still works, it just reads again next time.
+  }
+}
+const ago = (iso: string) => {
+  const minutes = Math.round((Date.now() - new Date(iso).getTime()) / 60000)
+  if (minutes < 1) return 'just now'
+  if (minutes < 60) return `${minutes} min ago`
+  const hours = Math.round(minutes / 60)
+  if (hours < 24) return `${hours} ${hours === 1 ? 'hour' : 'hours'} ago`
+  return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+}
+
 export const SCHEMA_DEFAULTS = { type: 'all', result: 'all' }
 
 export const SchemaTab: React.FC<{
@@ -57,26 +87,51 @@ export const SchemaTab: React.FC<{
   const set = (key: keyof typeof SCHEMA_DEFAULTS) => (value: string) => setFilters((f) => ({ ...f, [key]: value }))
   const key = (r: SeoRow) => `${r.collection}-${r.id}`
 
+  // The last results live in this browser, so opening the tab costs nothing. Only pages
+  // never checked, or changed since their check, are read again; "Check again" reads all.
+  const [checkedAt, setCheckedAt] = useState<string | null>(null)
+  const forced = useRef(recheck)
+
   const run = useCallback(
-    (signal: AbortSignal) => {
-      setResults(Object.fromEntries(pages.map((r) => [key(r), { state: 'checking' } as Result])))
+    (signal: AbortSignal, all: boolean) => {
+      const cache = readCache()
+      const stale = (r: SeoRow) => {
+        const hit = cache[r.path]
+        return all || !hit || (r.updatedAt ? r.updatedAt > hit.at : false)
+      }
+      const todo = pages.filter(stale)
+      setResults(
+        Object.fromEntries(pages.map((r) => [key(r), stale(r) ? ({ state: 'checking' } as Result) : cache[r.path].result])),
+      )
+      const latest = pages.reduce<string | null>((max, r) => {
+        const at = cache[r.path]?.at
+        return at && (!max || at > max) ? at : max
+      }, null)
+      setCheckedAt(todo.length ? null : latest)
+      if (!todo.length) return
       // Four at a time, so a big site doesn't hit its own server with every page at once.
       let next = 0
       const worker = async () => {
-        while (next < pages.length && !signal.aborted) {
-          const row = pages[next++]
+        while (next < todo.length && !signal.aborted) {
+          const row = todo[next++]
           const result = await readPage(row.path, signal).catch(() => null)
-          if (result) setResults((all) => ({ ...all, [key(row)]: result }))
+          if (!result) continue
+          setResults((current) => ({ ...current, [key(row)]: result }))
+          writeCache(row.path, result)
         }
       }
-      void Promise.all([worker(), worker(), worker(), worker()])
+      void Promise.all([worker(), worker(), worker(), worker()]).then(() => {
+        if (!signal.aborted) setCheckedAt(new Date().toISOString())
+      })
     },
     [pages],
   )
 
   useEffect(() => {
     const controller = new AbortController()
-    run(controller.signal)
+    const all = recheck !== forced.current
+    forced.current = recheck
+    run(controller.signal, all)
     return () => controller.abort()
   }, [run, recheck])
 
@@ -139,6 +194,10 @@ export const SchemaTab: React.FC<{
         </div>
       )}
 
+      {done === pages.length && checkedAt ? (
+        <p className="cms-schema__checked">Checked {ago(checkedAt)}. Pages you change are checked again when you open this tab.</p>
+      ) : null}
+
       {siteWide.length > 0 && (
         <section className="cms-schema__site" aria-label="Site-wide schema">
           {siteWide.map(([type, entry]) => {
@@ -168,6 +227,7 @@ export const SchemaTab: React.FC<{
         </section>
       )}
 
+      <div className="cms-scroll">
       <table className="cms-table cms-seo__table cms-schema__table">
         <thead>
           <tr>
@@ -231,6 +291,7 @@ export const SchemaTab: React.FC<{
           })}
         </tbody>
       </table>
+      </div>
       {visible.length === 0 && done === pages.length && (
         <p className="cms-seo__empty">Nothing matches. Try clearing the search or filters.</p>
       )}

@@ -12,6 +12,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 
 import { Choice, FilterPanel } from './filters.js'
 import { SchemaTab } from './SchemaTab.js'
+import { Icon } from '../nav/icons.js'
 
 export type SeoRow = {
   id: string
@@ -24,6 +25,8 @@ export type SeoRow = {
   description: string
   indexed: boolean
   hasDraft: boolean
+  /** When the page last changed: the Schema tab re-reads only pages changed since its last check. */
+  updatedAt?: string
   editHref: string
 }
 
@@ -40,15 +43,24 @@ type Range = { min: number; max: number }
 const TITLE: Range = { min: 30, max: 60 }
 const DESCRIPTION: Range = { min: 70, max: 160 }
 
-/** empty: red. off (too short or too long): amber. good: green. */
+/** empty: red. off (too short, too long or all capitals): amber. good: green. */
 type LengthState = 'empty' | 'off' | 'good'
-const TIP: Record<string, string> = { empty: 'Empty', short: 'Too short', long: 'Too long', good: 'Good length' }
+const TIP: Record<string, string> = {
+  empty: 'Empty',
+  short: 'Too short',
+  long: 'Too long',
+  caps: 'All capitals: search engines show it as typed, so write it in normal case',
+  good: 'Good length',
+}
+/** Shouting: three or more letters and none of them lower case. */
+const allCaps = (text: string) => (text.match(/\p{L}/gu)?.length ?? 0) >= 3 && text === text.toUpperCase() && text !== text.toLowerCase()
 
 const verdict = (text: string, range: Range) => {
   const n = text.trim().length
   if (n === 0) return { state: 'empty' as LengthState, tip: TIP.empty, n }
   if (n < range.min) return { state: 'off' as LengthState, tip: TIP.short, n }
   if (n > range.max) return { state: 'off' as LengthState, tip: TIP.long, n }
+  if (allCaps(text)) return { state: 'off' as LengthState, tip: TIP.caps, n }
   return { state: 'good' as LengthState, tip: TIP.good, n }
 }
 
@@ -70,7 +82,7 @@ const LENGTH_OPTIONS = (rows: SeoRow[], pick: (r: SeoRow) => string, range: Rang
   { value: 'empty', label: 'Empty', count: rows.filter((r) => verdict(pick(r), range).state === 'empty').length },
   {
     value: 'off',
-    label: 'Too short or too long',
+    label: 'Too short, too long or all capitals',
     count: rows.filter((r) => verdict(pick(r), range).state === 'off').length,
   },
   { value: 'good', label: 'Good length', count: rows.filter((r) => verdict(pick(r), range).state === 'good').length },
@@ -336,7 +348,7 @@ export const SeoWorkspace: React.FC<{
             </button>
           )}
           <span className="cms-info" tabIndex={0} aria-label="About this page">
-            i
+            <Icon name="help" size={18} />
             <span className="cms-info__note" role="tooltip">
               {tab === 'listings'
                 ? `What search engines show for each page and post${localeLabel ? ` in ${localeLabel}` : ''}. Click any title or description to change it. Aim for title tags of ${TITLE.min} to ${TITLE.max} characters and meta descriptions of ${DESCRIPTION.min} to ${DESCRIPTION.max}.`
@@ -402,6 +414,7 @@ export const SeoWorkspace: React.FC<{
 
       {tab === 'listings' ? (
         <>
+          <div className="cms-scroll">
           <table className="cms-table cms-seo__table">
             <thead>
               <tr>
@@ -459,6 +472,7 @@ export const SeoWorkspace: React.FC<{
               ))}
             </tbody>
           </table>
+          </div>
           {visible.length === 0 && (
             <p className="cms-seo__empty">Nothing matches. Try clearing the search or filters.</p>
           )}
@@ -521,6 +535,7 @@ export const SeoWorkspace: React.FC<{
           recheck={recheck}
         />
       ) : (
+        <div className="cms-scroll">
         <table className="cms-table cms-seo__table cms-seo__table--redirects">
           <thead>
             <tr>
@@ -618,6 +633,7 @@ export const SeoWorkspace: React.FC<{
             ))}
           </tbody>
         </table>
+        </div>
       )}
       {tab === 'redirects' && shownRedirects.length === 0 && (
         <p className="cms-seo__empty">No redirects yet. Add one when a page moves or is removed.</p>

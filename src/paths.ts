@@ -30,6 +30,8 @@ export const VERSIONS_BUTTON = `${CLIENT}#VersionsButton`
 export const BLOCK_PALETTE = `${CLIENT}#BlockPalette`
 export const LIST_GRID_SWITCH = `${CLIENT}#ListGridSwitch`
 export const SERP_PREVIEW = `${CLIENT}#SerpPreview`
+export const YES_NO_CELL = `${CLIENT}#YesNoCell`
+export const LIST_PANELS = `${CLIENT}#ListPanels`
 
 /** Multi-site only: needs @payloadcms/plugin-multi-tenant. */
 export const SITE_MENU = `${MULTI_SITE}#SiteMenu`

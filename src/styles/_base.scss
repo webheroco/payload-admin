@@ -122,33 +122,14 @@ html:root {
   display: none;
 }
 
-/* Four across at most: smaller tiles cannot be told apart by eye, which is
-   the point of the grid. */
+/* As many tiles as fit, at least four across on a laptop and two on a phone. */
 .cms-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(200px, calc(50% - var(--base) / 2)), 1fr));
   gap: var(--base);
   margin: var(--base) 0 0;
   padding: 0;
   list-style: none;
-}
-
-@media (max-width: 1280px) {
-  .cms-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 900px) {
-  .cms-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 560px) {
-  .cms-grid {
-    grid-template-columns: minmax(0, 1fr);
-  }
 }
 
 .cms-grid__item a {

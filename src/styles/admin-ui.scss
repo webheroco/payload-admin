@@ -3,6 +3,7 @@
 // toolbar and list/overview layout. Imported after Payload's own CSS.
 
 @use 'base';
+@use 'lists';
 @use '../components/nav/rail';
 @use '../components/document/document';
 @use '../components/seo/seo';
@@ -53,22 +54,28 @@
   white-space: nowrap;
 }
 
-// A small "i" that opens a note on hover or focus. Pure CSS.
+// The "?" that explains a page or a status: the same icon, size and colour
+// as the guide's "?" top right. Opens a note on hover or focus. Pure CSS.
 .cms-info {
   position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  border: 1px solid var(--theme-elevation-250);
-  color: var(--theme-elevation-600);
-  font: 600 11px/1 var(--font-body, system-ui);
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: var(--cms-radius);
+  color: var(--theme-elevation-700);
   cursor: help;
   background: none;
   padding: 0;
   vertical-align: middle;
+
+  &:hover,
+  &:focus-visible {
+    color: var(--theme-text);
+    background: var(--theme-elevation-50);
+  }
 
   &__note {
     position: absolute;
@@ -76,8 +83,8 @@
     left: 50%;
     transform: translateX(-50%);
     z-index: 1000;
-    min-width: 240px;
-    max-width: 320px;
+    width: max-content;
+    max-width: min(320px, calc(100vw - 32px));
     padding: 10px 12px;
     border-radius: var(--cms-radius);
     background: var(--theme-elevation-900);
@@ -116,4 +123,13 @@
 .step-nav__home,
 .step-nav__home + span {
   display: none !important;
+}
+
+// Phones: a note opens from the right edge of its "?", so it never runs off the screen.
+@media (max-width: 600px) {
+  .cms-info__note {
+    left: auto;
+    right: -4px;
+    transform: none;
+  }
 }

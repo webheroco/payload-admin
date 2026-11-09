@@ -140,7 +140,7 @@ export const DocStatus: React.FC<{ help?: string }> = ({ help }) => {
         ) : null}
         <TranslationStatus />
         <span className="cms-info cms-status__info" tabIndex={0} aria-label="Dates and saving">
-          <Icon name="info" size={16} />
+          <Icon name="help" size={18} />
           <span className="cms-info__note" role="tooltip">
             <dl>
               <dt>Last changed</dt>

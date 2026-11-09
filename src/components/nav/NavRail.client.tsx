@@ -69,13 +69,15 @@ export const NavRailClient: React.FC<{
   performanceHref?: string
   reviewsHref?: string
   sectionsHref?: string
+  /** How to use the admin: the last item, so it is always in the same place. */
+  guideHref?: string
   /** 'performance': Performance is the home page, so there is no Dashboard link. */
   home?: 'performance' | 'dashboard'
   /** Whatever the config puts in beforeNavLinks: on multi-site, SiteMenu and TenantDefault. */
   beforeLinks?: React.ReactNode
   /** Links out of the admin, after the groups: "View website" and the project's `links`. */
   outLinks?: OutItem[]
-}> = ({ groups, adminRoute, seoHref, performanceHref, reviewsHref, sectionsHref, home, beforeLinks, outLinks = [] }) => {
+}> = ({ groups, adminRoute, seoHref, performanceHref, reviewsHref, sectionsHref, guideHref, home, beforeLinks, outLinks = [] }) => {
   const pathname = usePathname() ?? ''
   const [collapsed, setCollapsed] = useState(false)
 
@@ -167,6 +169,11 @@ export const NavRailClient: React.FC<{
               ))}
           </div>
         ))}
+        {guideHref ? (
+          <div className="cms-rail__group" aria-label="Help" role="group">
+            <RailLink href={guideHref} icon="help" label="How to use the admin" active={isActive(guideHref)} />
+          </div>
+        ) : null}
       </nav>
 
     </aside>
