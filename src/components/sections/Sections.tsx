@@ -15,6 +15,7 @@ import { formatAdminURL } from 'payload/shared'
 import React from 'react'
 
 import { BLOCK_PALETTE } from '../../paths.js'
+import { sectionUsage } from '../../sections-usage.js'
 import { selectedSiteID, siteWhere } from '../selectedSite.js'
 import { SectionsClient, type SectionCard } from './SectionsClient.js'
 
@@ -77,25 +78,59 @@ export const Sections = async ({ initPageResult, params, searchParams }: AdminVi
       })
     }
 
+    const slugsOf = (field: AnyField) => [
+      ...((field.blocks ?? []) as AnyField[]).map((b) => b.slug as string),
+      ...((field.blockReferences ?? []) as (string | AnyField)[]).map((b) => (typeof b === 'string' ? b : (b.slug as string))),
+    ]
+    const titleField = collection.admin?.useAsTitle
+    const drafts = Boolean((collection.versions as AnyField | undefined)?.drafts)
+    const where = siteWhere(payload, collection.slug, siteID)
+
+    // On Postgres: one quick query for which sections each page holds, and
+    // the page titles on their own (read as the signed-in user, so access and
+    // the site menu still decide which pages show). Elsewhere, or if the
+    // adapter's tables aren't as expected, Payload is asked as before.
+    const usage = await sectionUsage(payload.db, collection.slug, [...new Set(found.flatMap(({ field }) => slugsOf(field)))], drafts).catch(() => null)
+    if (usage) {
+      const select: Record<string, true> = {}
+      for (const k of [titleField, 'title', 'name']) if (k && collection.flattenedFields.some((f) => f.name === k)) select[k] = true
+      const { docs } = await payload
+        .find({
+          collection: collection.slug as CollectionSlug,
+          depth: 0,
+          draft: drafts,
+          limit: 0,
+          pagination: false,
+          req,
+          user,
+          overrideAccess: false,
+          select: select as any,
+          ...(where ? { where } : {}),
+        })
+        .catch(() => ({ docs: [] as unknown[] }))
+      for (const doc of docs as Record<string, unknown>[]) {
+        const raw = (titleField && doc[titleField]) || doc.title || doc.name
+        const title = typeof raw === 'string' && raw ? raw : 'Untitled'
+        for (const slug of usage.get(String(doc.id)) ?? [])
+          cards.get(slug)?.pages.push({ title, href: formatAdminURL({ adminRoute, path: `/collections/${collection.slug}/${doc.id}` }) })
+      }
+      continue
+    }
+
     // Which pages use each section, read as the signed-in user: only the
     // title and the blocks fields, so a big site doesn't load every page whole.
-    const titleField = collection.admin?.useAsTitle
     const select: Record<string, unknown> = { title: true, name: true }
     if (titleField) select[titleField] = true
     // Of each blocks field, only which sections it holds (their type and id),
     // not their text and pictures: on a big site that is most of the database.
     for (const { path, field } of found) {
-      const slugs = [
-        ...((field.blocks ?? []) as AnyField[]).map((b) => b.slug),
-        ...((field.blockReferences ?? []) as (string | AnyField)[]).map((b) => (typeof b === 'string' ? b : b.slug)),
-      ]
+      const slugs = slugsOf(field)
       let node = select
       path.forEach((key, i) => {
         if (i === path.length - 1) node[key] = Object.fromEntries(slugs.map((slug) => [slug, { id: true }]))
         else node = (node[key] = typeof node[key] === 'object' && node[key] ? node[key] : {}) as Record<string, unknown>
       })
     }
-    const where = siteWhere(payload, collection.slug, siteID)
     const { docs } = await payload
       .find({
         collection: collection.slug as CollectionSlug,

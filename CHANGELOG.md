@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.4.1
+
+No schema change. No config change.
+
+- Sections: on Postgres, which sections each page uses is read with one quick
+  query over the section tables, and the page titles on their own. Asking
+  Payload for it joined every section table into one query, which took over
+  half a minute on a site with a few hundred kinds of section. Other databases
+  keep the old way. Covered by `test/sections-usage.test.mjs`.
+- Menu: a click marks the row and names the screen in the breadcrumb at once,
+  and Payload's progress bar runs until the screen arrives. Before, the old
+  screen's name and row stayed until the new screen had loaded, so a slow
+  screen looked like a click that did nothing.
+
 ## 0.4.0
 
 No schema change. Run `payload generate:importmap` after updating (new
