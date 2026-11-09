@@ -1,7 +1,9 @@
 # Changelog
 
-## Unreleased
+## 0.2.0
 
+- Published as a file on each GitHub release (public), installed by its
+  URL: no registry, no token.
 - Nothing pushes the editor's fields down. The save help moves into the
   status "i" note, and the review banner is gone: the request's state is a
   pill in the status group ("Waiting for approval", "Changes requested",
@@ -64,7 +66,7 @@ First release, moved out of the `client-payload` skill's templates
   its picture, description, group and the pages using it. Read only.
 - Approvals (`approvals: true`, off by default): Submit for review, Send
   back, Schedule, a Reviews page with list and board, emails, and
-  `/api/reviews/publish-due` for scheduled changes. Ported from Quartix.
+  `/api/reviews/publish-due` for scheduled changes.
 - Every table cell is pinned to the top; Page and Slug columns are wider;
   slugs link to the live page in a new tab. Schema findings mark errors red
   and suggestions ("Could add image") amber.

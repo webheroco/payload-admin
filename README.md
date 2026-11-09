@@ -26,24 +26,16 @@ Only what differs per client:
 
 ## Install
 
-1. At the app's root (next to its `package.json`), add `.npmrc`:
+1. Install a release. Each version is a file attached to its GitHub
+   release, public, so nothing needs a token or a registry setting:
 
    ```
-   @webheroco:registry=https://npm.pkg.github.com
-   //npm.pkg.github.com/:_authToken=${GITHUB_PACKAGES_TOKEN}
+   npm install --save-exact https://github.com/webheroco/payload-admin/releases/download/v0.2.0/webheroco-payload-admin-0.2.0.tgz
    ```
 
-   `GITHUB_PACKAGES_TOKEN` is a read-only token for GitHub Packages, set once
-   for the whole Vercel team (a shared environment variable linked to every
-   project) and once in the Claude environment. Nothing per site.
+   To update, install the newer release's file the same way.
 
-2. Install it at an exact version:
-
-   ```
-   npm install --save-exact @webheroco/payload-admin
-   ```
-
-3. Add the plugin last in `plugins`, so collections from other plugins get the
+2. Add the plugin last in `plugins`, so collections from other plugins get the
    defaults too:
 
    ```ts
@@ -62,7 +54,7 @@ Only what differs per client:
    ],
    ```
 
-4. Load the styles in `app/(payload)/layout.tsx`, after Payload's and before
+3. Load the styles in `app/(payload)/layout.tsx`, after Payload's and before
    the site's own:
 
    ```ts
@@ -71,7 +63,7 @@ Only what differs per client:
    import './custom.css'
    ```
 
-5. Regenerate the import map: `npx payload generate:importmap`.
+4. Regenerate the import map: `npx payload generate:importmap`.
 
 ## Options
 

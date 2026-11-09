@@ -1,18 +1,18 @@
 name: Publish
 
-# A merge to main that raises the version in package.json publishes that
-# version to GitHub Packages. Nothing else to do: no tag, no token to set.
+# A merge to main that raises the version in package.json makes a GitHub
+# release, vX.Y.Z, with the built package attached. Sites install that file
+# by its URL (see README), so no registry and no token.
 on:
   push:
     branches: [main]
 
-permissions:
-  contents: write
-  packages: write
-
 concurrency:
   group: publish
   cancel-in-progress: false
+
+permissions:
+  contents: write
 
 jobs:
   publish:
@@ -23,28 +23,27 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          registry-url: https://npm.pkg.github.com
-          scope: '@webheroco'
-      - run: npm ci
+          cache: npm
       - name: Is this version new?
         id: version
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           VERSION=$(node -p "require('./package.json').version")
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          if npm view "@webheroco/payload-admin@$VERSION" version >/dev/null 2>&1; then
+          if gh release view "v$VERSION" >/dev/null 2>&1; then
             echo "new=false" >> "$GITHUB_OUTPUT"
           else
             echo "new=true" >> "$GITHUB_OUTPUT"
           fi
       - if: steps.version.outputs.new == 'true'
-        run: npm run typecheck && npm run build && npm test
+        run: npm ci && npm run typecheck && npm run build && npm test
       - if: steps.version.outputs.new == 'true'
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npm publish
-      - if: steps.version.outputs.new == 'true'
+          GH_TOKEN: ${{ github.token }}
         run: |
-          git tag "v${{ steps.version.outputs.version }}"
-          git push origin "v${{ steps.version.outputs.version }}"
+          FILE=$(npm pack --silent)
+          gh release create "v${{ steps.version.outputs.version }}" "$FILE" \
+            --target "$GITHUB_SHA" \
+            --title "v${{ steps.version.outputs.version }}" \
+            --notes "Install: npm install --save-exact https://github.com/${{ github.repository }}/releases/download/v${{ steps.version.outputs.version }}/$FILE"
