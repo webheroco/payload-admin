@@ -66,7 +66,14 @@ export const DocStatus: React.FC<{ help?: string }> = ({ help }) => {
         ? { cls: 'back', label: 'Changes requested', tip: `${personName(latest.reviewedBy, 'An approver')}, ${formatWhen(latest.reviewedAt)}${quote(latest.note)}` }
         : latest?.status === 'scheduled'
           ? { cls: 'scheduled', label: `Goes live ${formatWhen(latest.publishAt)}`, tip: `Approved by ${personName(latest.reviewedBy, 'an approver')}` }
-          : null
+          : // The author sees the approver's note for a week after it goes live.
+            latest?.status === 'published' && mine && (latest.approvalNote || latest.approverEdited) && Date.now() - new Date(latest.reviewedAt ?? 0).getTime() < 7 * 86_400_000
+            ? {
+                cls: 'good',
+                label: `Approved by ${personName(latest.reviewedBy, 'an approver')}`,
+                tip: [latest.approvalNote ? `“${latest.approvalNote}”` : '', latest.approverEdited ? 'They changed something before publishing: Versions shows what.' : ''].filter(Boolean).join(' '),
+              }
+            : null
 
   /** Same as Payload's "Revert to published": save the live version over the draft. */
   const undo = useCallback(async () => {

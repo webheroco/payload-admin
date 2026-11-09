@@ -10,6 +10,8 @@ export type Review = {
   status: 'waiting' | 'sentBack' | 'scheduled' | 'published' | 'replaced'
   title?: string | null
   note?: string | null
+  approvalNote?: string | null
+  approverEdited?: boolean | null
   message?: string | null
   publishAt?: string | null
   createdAt: string

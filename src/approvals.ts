@@ -56,6 +56,8 @@ type ReviewDoc = ReviewTarget & {
   status: ReviewStatus
   title?: string | null
   note?: string | null
+  approvalNote?: string | null
+  approverEdited?: boolean | null
   message?: string | null
   publishAt?: string | null
   submittedBy?: unknown
@@ -226,7 +228,10 @@ async function notifyAuthor(req: PayloadRequest, review: ReviewDoc, outcome: 'se
     await send(req, [author.email], `Approved: ${review.title || 'your change'}`, emailLayout(`${by} approved your change`, [`${what} goes live on ${escape(at)} (UK time).`], { label: 'Open it', href }))
     return
   }
-  await send(req, [author.email], `Live: ${review.title || 'your change'}`, emailLayout('Your change is live', [`${by} published ${what}.`], { label: 'Open it', href }))
+  const lines = [`${by} approved and published ${what}.`]
+  if (review.approvalNote) lines.push(`"${escape(review.approvalNote)}"`)
+  if (review.approverEdited) lines.push(`${by} made some changes before publishing. Versions on the page shows exactly what changed.`)
+  await send(req, [author.email], `Approved and live: ${review.title || 'your change'}`, emailLayout('Your change is live', lines, { label: 'Open it', href }))
 }
 
 /* The Reviews collection */
@@ -385,6 +390,9 @@ function reviewsCollection(a: ResolvedApprovals, usersSlug: string): CollectionC
       { name: 'status', type: 'select', required: true, defaultValue: 'waiting', index: true, options: [...REVIEW_STATUSES] },
       { name: 'message', type: 'textarea' },
       { name: 'note', type: 'textarea' },
+      // The approver's note when they approve and publish, and whether they changed it themselves.
+      { name: 'approvalNote', type: 'textarea' },
+      { name: 'approverEdited', type: 'checkbox', defaultValue: false },
       { name: 'publishAt', type: 'date', index: true, admin: { date: { pickerAppearance: 'dayAndTime' } } },
       { name: 'submittedBy', type: 'relationship', relationTo: usersSlug as CollectionSlug },
       { name: 'reviewedBy', type: 'relationship', relationTo: usersSlug as CollectionSlug },

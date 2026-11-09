@@ -10,6 +10,15 @@
   else's change see "Request changes", "Approve for a date" and "Approve and
   publish". The menu page is "Approvals". "Sent back" is "Changes requested"
   everywhere (emails too); stored values are unchanged.
+- Approve and publish asks for an optional note to the author, with quick
+  notes ("Great job, thank you!") and "I changed something myself before
+  publishing" (ticked when the approver has unsaved edits). The author's
+  email carries both, and for a week their status group shows "Approved by
+  …" with the note in its tip. New fields on the approval requests
+  collection (`approvalNote`, `approverEdited`): create a migration.
+- The SEO plugin's preview is replaced by a Google-style search result
+  (`SerpPreview`), and the social share image is Payload's own upload field
+  without the red "No image" tag. Run `payload generate:importmap`.
 - SEO tab fields read Title tag, Meta description and Social share image
   (the Open Graph image), matching the SEO overview.
   `ReviewBanner` still exports (it renders nothing) so old import maps work.

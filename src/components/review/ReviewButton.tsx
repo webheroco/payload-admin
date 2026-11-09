@@ -14,7 +14,7 @@
  * The server enforces the same rules; this only shows the right buttons.
  */
 import { Button, PublishButton, toast, useConfig, useDocumentInfo, useForm, useFormModified, useLocale } from '@payloadcms/ui'
-import React, { useState } from 'react'
+import React, { useRef, useState } from 'react'
 
 import { ReviewDialog } from './ReviewDialog.js'
 import { announceReviewChange, formatWhen, personName, sendReview, useReviewTarget, type ApproverProps } from './shared.js'
@@ -39,7 +39,12 @@ export const ReviewButton: React.FC<ApproverProps> = ({ approverRoles, roleField
     },
   } = useConfig()
   const [busy, setBusy] = useState(false)
-  const [dialog, setDialog] = useState<null | 'sendBack' | 'schedule'>(null)
+  const [dialog, setDialog] = useState<null | 'sendBack' | 'schedule' | 'approve'>(null)
+  const [edited, setEdited] = useState(false)
+  // Approve and publish: Payload's own Publish button does the publishing,
+  // after the approver's note is saved on the request.
+  const publishRef = useRef<HTMLDivElement>(null)
+  const approved = useRef(false)
   const [note, setNote] = useState('')
   const [when, setWhen] = useState(nextHour)
 
@@ -94,7 +99,60 @@ export const ReviewButton: React.FC<ApproverProps> = ({ approverRoles, roleField
         <Button buttonStyle="secondary" size="medium" disabled={busy || !ready} onClick={() => setDialog('schedule')}>
           {someoneElses ? 'Approve for a date' : 'Schedule'}
         </Button>
-        <PublishButton {...(someoneElses ? { label: 'Approve and publish' } : {})} />
+        {someoneElses ? (
+          <div
+            ref={publishRef}
+            className="review-actions__publish"
+            onClickCapture={(e) => {
+              if (approved.current) return
+              e.preventDefault()
+              e.stopPropagation()
+              setEdited(modified)
+              setDialog('approve')
+            }}
+          >
+            <PublishButton label="Approve and publish" />
+          </div>
+        ) : (
+          <PublishButton />
+        )}
+        {dialog === 'approve' && open && (
+          <ReviewDialog
+            title="Approve and publish"
+            intro={`It goes live now, and ${personName(open.submittedBy)} gets an email. A note is optional.`}
+            confirm="Approve and publish"
+            busy={busy}
+            onCancel={() => setDialog(null)}
+            onConfirm={async () => {
+              if (note.trim() || edited) {
+                setBusy(true)
+                const error = await sendReview(api, 'PATCH', `/${open.id}`, { approvalNote: note.trim() || null, approverEdited: edited })
+                setBusy(false)
+                if (error) return toast.error(error)
+              }
+              setDialog(null)
+              setNote('')
+              approved.current = true
+              publishRef.current?.querySelector('button')?.click()
+              approved.current = false
+            }}
+          >
+            <div className="review-dialog__chips" role="group" aria-label="Quick notes">
+              {['Great job, thank you!', 'Looks good, thanks.', 'Thanks! I tweaked a couple of small things.'].map((text) => (
+                <button key={text} type="button" className="review-dialog__chip" onClick={() => setNote(text)}>
+                  {text}
+                </button>
+              ))}
+            </div>
+            <label className="review-dialog__label">
+              Note to {personName(open.submittedBy)} (optional)
+              <textarea rows={3} value={note} onChange={(e) => setNote(e.target.value)} />
+            </label>
+            <label className="review-dialog__check">
+              <input type="checkbox" checked={edited} onChange={(e) => setEdited(e.target.checked)} />I changed something myself before publishing
+            </label>
+          </ReviewDialog>
+        )}
         {dialog === 'sendBack' && open && (
           <ReviewDialog
             title="Request changes"

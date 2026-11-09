@@ -27,6 +27,7 @@ import {
   LANGUAGES_CELL,
   LIST_GRID_SWITCH,
   PREVIEW_TOOLBAR,
+  SERP_PREVIEW,
   SWITCH_FIELD,
   VERSIONS_BUTTON,
 } from './paths.js'
@@ -60,18 +61,40 @@ const SEO_LABELS: Record<string, { label: string; description?: string }> = {
     description: 'Shown when the page is shared on social media or in a message (the Open Graph image). 1200 × 630 works everywhere.',
   },
 }
-const withSeoLabels = (fields: Field[]): Field[] =>
+/** The components without a Field key at all (an undefined Field renders nothing). */
+const withoutField = (components: Record<string, unknown> | undefined) => {
+  const { Field: _drop, ...rest } = components ?? {}
+  return rest
+}
+
+type SeoPreviewProps = { routes: Record<string, string>; homeSlug: string }
+
+const withSeoLabels = (fields: Field[], site?: SeoPreviewProps): Field[] =>
   fields.map((f) =>
     f.type === 'group' && 'name' in f && f.name === 'meta'
       ? {
           ...f,
           fields: f.fields.map((g) => {
-            const named = 'name' in g ? SEO_LABELS[g.name] : undefined
+            const name = 'name' in g ? g.name : ''
+            const admin = ('admin' in g ? g.admin : {}) as Record<string, any>
+            // The plugin's search-result preview looks nothing like Google's: ours does.
+            if (name === 'preview' && g.type === 'ui') {
+              const current = admin.components?.Field
+              const props = current && typeof current === 'object' ? current.clientProps : {}
+              return { ...g, admin: { ...admin, components: { ...admin.components, Field: { path: SERP_PREVIEW, clientProps: { ...props, ...site } } } } } as Field
+            }
+            const named = SEO_LABELS[name]
             if (!named) return g
             return {
               ...g,
               label: named.label,
-              ...(named.description ? { admin: { ...('admin' in g ? g.admin : {}), description: named.description } } : {}),
+              admin: {
+                ...admin,
+                ...(named.description ? { description: named.description } : {}),
+                // The image: Payload's own upload field. The plugin's adds a red
+                // "No image" tag, which says nothing the empty field doesn't.
+                ...(name === 'image' ? { components: withoutField(admin.components) } : {}),
+              },
             } as Field
           }),
         }
@@ -90,7 +113,7 @@ const isNoIndex = (f: Field) => f.type === 'checkbox' && f.name === 'noIndex'
  * it (top level or another tab). Moving a field between tabs changes no
  * data: an unnamed tab stores nothing of its own.
  */
-export function withPlainSeoTab(fields: Field[] | undefined): Field[] {
+export function withPlainSeoTab(fields: Field[] | undefined, site?: SeoPreviewProps): Field[] {
   const list = fields ?? []
   const seoTab = list.flatMap((f) => (f.type === 'tabs' ? f.tabs : [])).find(isSeoTab)
   // Only into an unnamed tab: a named one (`meta`) would change where the value is stored.
@@ -121,7 +144,7 @@ export function withPlainSeoTab(fields: Field[] | undefined): Field[] {
                   ...tab,
                   label: tab.label === 'SEO' || tab.label === 'Google' || !tab.label ? 'SEO' : tab.label,
                   description: tab.description ?? 'How this page appears in search results and when it is shared.',
-                  fields: withSeoLabels(moved ? [moved, ...tab.fields] : tab.fields.map((f) => (isNoIndex(f) ? asIndexed(f) : f))),
+                  fields: withSeoLabels(moved ? [moved, ...tab.fields] : tab.fields.map((f) => (isNoIndex(f) ? asIndexed(f) : f)), site),
                 }
               : { ...tab, fields: tab.fields.map((f) => (isNoIndex(f) ? asIndexed(f) : f)) },
           ),
@@ -253,7 +276,7 @@ export function collectionDefaults(
       },
     },
     fields: withLanguagesColumn(
-      withShallowRelations(withSwitches(withPlainSeoTab(collection.fields))),
+      withShallowRelations(withSwitches(withPlainSeoTab(collection.fields, { routes: options.routes, homeSlug: options.homeSlug }))),
       collection.slug,
       options,
     ),
@@ -290,6 +313,6 @@ export function globalDefaults(
           }
         : {}),
     },
-    fields: withShallowRelations(withSwitches(withPlainSeoTab(global.fields))),
+    fields: withShallowRelations(withSwitches(withPlainSeoTab(global.fields, { routes: options.routes, homeSlug: options.homeSlug }))),
   }
 }

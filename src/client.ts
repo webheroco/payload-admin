@@ -10,6 +10,7 @@ export { VersionsButton } from './components/document/VersionsButton.js'
 export { BlockPalette } from './components/palette/BlockPalette.js'
 export { ListGridSwitch } from './components/ListGridSwitch.js'
 export { ReviewButton } from './components/review/ReviewButton.js'
+export { SerpPreview } from './components/seo/SerpPreview.js'
 export { ReviewBanner } from './components/review/ReviewBanner.js'
 // Building blocks for a project's own admin pieces, so they match.
 export { Mark, useFilter, useMenu, useSites } from './components/header/menu.js'
