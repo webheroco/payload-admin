@@ -111,14 +111,17 @@ export const Sections = async ({ initPageResult, params, searchParams }: AdminVi
       const usage = await sectionUsage(
         plan,
         (docs as Record<string, unknown>[]).map((doc) => doc.id as string | number),
-      ).catch(() => new Map<string, Set<string>>())
-      for (const doc of docs as Record<string, unknown>[]) {
-        const raw = (titleField && doc[titleField]) || doc.title || doc.name
-        const title = typeof raw === 'string' && raw ? raw : 'Untitled'
-        for (const slug of usage.get(String(doc.id)) ?? [])
-          cards.get(slug)?.pages.push({ title, href: formatAdminURL({ adminRoute, path: `/collections/${collection.slug}/${doc.id}` }) })
+      ).catch(() => null)
+      // The query failed (a table not as expected): ask Payload, below.
+      if (usage) {
+        for (const doc of docs as Record<string, unknown>[]) {
+          const raw = (titleField && doc[titleField]) || doc.title || doc.name
+          const title = typeof raw === 'string' && raw ? raw : 'Untitled'
+          for (const slug of usage.get(String(doc.id)) ?? [])
+            cards.get(slug)?.pages.push({ title, href: formatAdminURL({ adminRoute, path: `/collections/${collection.slug}/${doc.id}` }) })
+        }
+        continue
       }
-      continue
     }
 
     // Which pages use each section, read as the signed-in user: only the
