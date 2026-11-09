@@ -347,6 +347,20 @@
       text-overflow: ellipsis;
     }
   }
+  // Brands whose logo is a wordmark: the image stands in for mark, name and domain.
+  &__wordmark {
+    flex: 1;
+    min-width: 0;
+    height: 28px;
+    object-fit: contain;
+    object-position: left center;
+  }
+  &__mark {
+    display: none;
+  }
+}
+.cms-menu__item .cms-sitemenu__wordmark {
+  height: 24px;
 }
 
 // Collapsed rail: the switcher is just the mark, and its list opens to the right.
@@ -358,8 +372,12 @@
     width: auto;
     padding: 4px;
     > svg,
-    .cms-sitemenu__text {
+    .cms-sitemenu__text,
+    .cms-sitemenu__wordmark {
       display: none;
+    }
+    .cms-sitemenu__mark {
+      display: flex;
     }
   }
   .cms-sitemenu__panel {
