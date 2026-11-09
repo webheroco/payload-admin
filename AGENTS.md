@@ -51,3 +51,17 @@ work (a separate PR there), so the rule and the code agree.
 For anything visible, also install the packed package (`npm pack`) into a
 Payload app and check the admin at 1440, 1024 and 390px wide, in light and
 dark, with screenshots in the PR.
+
+Check it against every shape of site the `client-payload` skill builds, not
+just one. Before a release, the packed package must work in:
+
+- a single-site app and a multi-site app (`@payloadcms/plugin-multi-tenant`,
+  two or more sites): every list, overview and page follows the site menu,
+  and nothing frames or fetches another site's pages;
+- an app whose sections are a shared library in the config's `blocks`, used
+  through `blockReferences` (the skill's default), and one with inline blocks;
+- an app with a shop on Medusa beside it (`links` to the shop's admin);
+- an app with `trailingSlash: true`.
+
+When a site's move onto the package turns up a gap, add the case to this list
+and to `test/`, so the next site isn't the one that finds it.
