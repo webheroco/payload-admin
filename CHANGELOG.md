@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.3.1
+
+Nothing changes for a site that sets none of the new options. Run
+`payload generate:importmap` after updating.
+
+- Site menu: `wordmarks` (by domain) shows a brand's wordmark image in place
+  of the small mark, name and domain, and `mark` is the square image used
+  when the menu is collapsed. For brands whose logo is a wordmark.
+- Phones: the editor's icon buttons keep their size when a site adds its own
+  button beside Publish; only the Publish button gives way.
+
 ## 0.3.0
 
 Multi-site fixes and room for what one site has that others don't, found
@@ -30,11 +41,6 @@ change. Run `payload generate:importmap` after updating.
 - The menu marks the current screen with or without a trailing slash
   (Next's `trailingSlash`).
 - Guide: the collapse arrow is beside the logo, not at the foot of the menu.
-- Site menu: `wordmarks` (by domain) shows a brand's wordmark image in place
-  of the small mark, name and domain, and `mark` is the square image used
-  when the menu is collapsed. For brands whose logo is a wordmark.
-- Phones: the editor's icon buttons keep their size when a site adds its own
-  button beside Publish; only the Publish button gives way.
 
 ## 0.2.0
 
