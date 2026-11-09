@@ -401,6 +401,20 @@ html.cms-headrow {
   white-space: normal;
 }
 
+// SaveNote: the same note beside Save, on a document without drafts. Like
+// the dates note, it is hidden on phones.
+.cms-status--note {
+  flex-shrink: 0;
+  @media (max-width: 768px) {
+    display: none;
+  }
+}
+.cms-info__note > .cms-status__help:first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
 // A request's message or note can be long: its tip wraps.
 .cms-pill--long-tip[data-tip]:hover::after,
 .cms-pill--long-tip[data-tip]:focus-visible::after {
