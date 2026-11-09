@@ -15,7 +15,7 @@ import { formatAdminURL } from 'payload/shared'
 import React from 'react'
 
 import { BLOCK_PALETTE } from '../../paths.js'
-import { sectionUsage } from '../../sections-usage.js'
+import { sectionUsage, usagePlan } from '../../sections-usage.js'
 import { selectedSiteID, siteWhere } from '../selectedSite.js'
 import { SectionsClient, type SectionCard } from './SectionsClient.js'
 
@@ -86,12 +86,12 @@ export const Sections = async ({ initPageResult, params, searchParams }: AdminVi
     const drafts = Boolean((collection.versions as AnyField | undefined)?.drafts)
     const where = siteWhere(payload, collection.slug, siteID)
 
-    // On Postgres: one quick query for which sections each page holds, and
-    // the page titles on their own (read as the signed-in user, so access and
-    // the site menu still decide which pages show). Elsewhere, or if the
+    // On Postgres: the page titles on their own (read as the signed-in user,
+    // so access and the site menu decide which pages show), then one quick
+    // query for which sections those pages hold. Elsewhere, or if the
     // adapter's tables aren't as expected, Payload is asked as before.
-    const usage = await sectionUsage(payload.db, collection.slug, [...new Set(found.flatMap(({ field }) => slugsOf(field)))], drafts).catch(() => null)
-    if (usage) {
+    const plan = usagePlan(payload.db, collection.slug, [...new Set(found.flatMap(({ field }) => slugsOf(field)))], drafts)
+    if (plan) {
       const select: Record<string, true> = {}
       for (const k of [titleField, 'title', 'name']) if (k && collection.flattenedFields.some((f) => f.name === k)) select[k] = true
       const { docs } = await payload
@@ -108,6 +108,10 @@ export const Sections = async ({ initPageResult, params, searchParams }: AdminVi
           ...(where ? { where } : {}),
         })
         .catch(() => ({ docs: [] as unknown[] }))
+      const usage = await sectionUsage(
+        plan,
+        (docs as Record<string, unknown>[]).map((doc) => doc.id as string | number),
+      ).catch(() => new Map<string, Set<string>>())
       for (const doc of docs as Record<string, unknown>[]) {
         const raw = (titleField && doc[titleField]) || doc.title || doc.name
         const title = typeof raw === 'string' && raw ? raw : 'Untitled'
