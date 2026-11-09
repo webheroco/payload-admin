@@ -3,7 +3,7 @@
 ## 0.3.0
 
 Multi-site fixes and room for what one site has that others don't, found
-moving the Europac 3D admin (three sites, a shop on Medusa) onto the package.
+moving a three-site admin with a Medusa shop onto the package.
 Nothing changes for a site that sets none of the new options. No schema
 change. Run `payload generate:importmap` after updating.
 
