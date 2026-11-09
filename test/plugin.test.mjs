@@ -130,3 +130,14 @@ test('links, the website link and guide cards are kept as plain options', () => 
   const plain = webheroAdmin()(base()).admin.custom.webheroAdmin
   assert.deepEqual([plain.links, plain.websiteLink, plain.guideCards], [[], false, []])
 })
+
+test('save help without drafts gets its own note beside Save', () => {
+  const config = webheroAdmin({ saveHelp: { pages: 'Drafts.', submissions: 'Saves live.', navigation: 'Menus.' } })(base())
+  const [pages, submissions] = config.collections
+  // With drafts the help stays in the status group, not beside Save.
+  assert.ok(!(pages.admin.components.edit.beforeDocumentControls ?? []).some((c) => c.path?.endsWith('#SaveNote')))
+  const note = submissions.admin.components.edit.beforeDocumentControls.find((c) => c.path?.endsWith('#SaveNote'))
+  assert.deepEqual(note.clientProps, { help: 'Saves live.' })
+  const nav = config.globals[0].admin.components.elements.beforeDocumentControls.find((c) => c.path?.endsWith('#SaveNote'))
+  assert.deepEqual(nav.clientProps, { help: 'Menus.' })
+})

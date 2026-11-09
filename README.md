@@ -75,7 +75,7 @@ Only what differs per client:
 | `enquiries` | the Form Builder if `form-submissions` exists, else `{ collection: 'submissions', formField: 'form', pageField: 'page' }` | Where Performance counts enquiries. |
 | `livePreview` | none | Collections and globals with Live Preview; they get the preview toolbar. |
 | `previewControls` | none | More components beside the preview toolbar, such as the site's click-to-edit bridge. |
-| `saveHelp` | none | Per slug, how saving works there. Shown in the status "i" note, so nothing pushes the form down. |
+| `saveHelp` | none | Per slug, how saving works there. Shown in the status "i" note (or an "i" beside Save where there are no drafts), so nothing pushes the form down. |
 | `translated` | none | Collections that get the Languages column. |
 | `listPageSize` | 25 | Rows per list page. |
 | `links` | none | Links out of the admin at the foot of the menu, in a new tab: `{ label, href, icon?, tip?, group? }`. |
@@ -110,7 +110,7 @@ of another site can't be framed from this domain) or a big site, pass
 | --- | --- |
 | `@webheroco/payload-admin` | the plugin, the option types, `publicPath`, the path constants. No React, so Payload's CLI can load it. |
 | `@webheroco/payload-admin/rsc` | server components: `NavRail`, `AccountMenu`, `SeoOverview`, `Performance`, `PerformanceHome`, `Sections`, `Reviews`, `Guide`, `LanguagesCell` |
-| `@webheroco/payload-admin/client` | client components: `HelpButton`, `LanguageMenu`, `HeaderRow`, `SwitchField`, `SaveHelp`, `PreviewToolbar`, `DocStatus`, `VersionsButton`, `BlockPalette`, `ListGridSwitch`, and `Mark`, `Icon`, `useMenu`, `useFilter`, `useSites` for a project's own pieces |
+| `@webheroco/payload-admin/client` | client components: `HelpButton`, `LanguageMenu`, `HeaderRow`, `SwitchField`, `SaveHelp`, `PreviewToolbar`, `DocStatus`, `SaveNote`, `VersionsButton`, `BlockPalette`, `ListGridSwitch`, and `Mark`, `Icon`, `useMenu`, `useFilter`, `useSites` for a project's own pieces |
 | `@webheroco/payload-admin/multi-site` | `SiteMenu` (needs `@payloadcms/plugin-multi-tenant`) |
 | `@webheroco/payload-admin/styles.css` | all the admin styles, compiled |
 | `@webheroco/payload-admin/styles.scss` | the same in Sass |
