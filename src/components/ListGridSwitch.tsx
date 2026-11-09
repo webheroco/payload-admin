@@ -104,7 +104,6 @@ function pictureOf(doc: GridDoc, paths: string[]): Ref {
   return null;
 }
 
-const refId = (ref: Ref): string | null => (ref == null ? null : typeof ref === "object" ? String(ref.id) : String(ref));
 
 /** Where a tile loads the live page from. */
 function tileUrl(routes: SiteRoutes, homeSlug: string, collectionSlug: string, doc: GridDoc): string | null {
@@ -155,30 +154,37 @@ export function ListGridSwitch({
   const grid = available && view === "grid";
   const isMedia = collectionSlug === "media";
   const usePictures = !isMedia && Boolean(picture?.length);
+  // Each tile's picture, by document id.
   const [pictures, setPictures] = useState<Record<string, GridDoc>>({});
 
-  // The pictures for the tiles on show, fetched once per page of results.
-  const pictureIds = useMemo(
-    () =>
-      usePictures
-        ? [...new Set(docs.map((doc) => refId(pictureOf(doc, picture ?? []))).filter((id): id is string => Boolean(id)))].sort().join(",")
-        : "",
-    [docs, picture, usePictures],
+  // The list's own query may hold only the visible columns, so the picture
+  // fields are read for the documents on show, with their images, in one
+  // request per page of results.
+  const docIds = useMemo(
+    () => (usePictures ? [...new Set(docs.map((doc) => String(doc.id)))].sort().join(",") : ""),
+    [docs, usePictures],
   );
   const apiRoute = config.routes.api;
   useEffect(() => {
-    if (!grid || !pictureIds) return;
-    const ids = pictureIds.split(",");
+    if (!grid || !docIds) return;
+    const ids = docIds.split(",");
     const controller = new AbortController();
-    const params = new URLSearchParams({ "where[id][in]": pictureIds, depth: "0", limit: String(ids.length), pagination: "false" });
-    fetch(`${apiRoute}/media?${params}`, { credentials: "include", signal: controller.signal })
+    const params = new URLSearchParams({ "where[id][in]": docIds, depth: "1", limit: String(ids.length), pagination: "false" });
+    for (const top of new Set((picture ?? []).map((path) => path.split(".")[0]))) params.set(`select[${top}]`, "true");
+    fetch(`${apiRoute}/${collectionSlug}?${params}`, { credentials: "include", signal: controller.signal })
       .then((res) => (res.ok ? res.json() : null))
       .then((body: { docs?: GridDoc[] } | null) => {
-        if (body?.docs) setPictures(Object.fromEntries(body.docs.map((m) => [String(m.id), m])));
+        if (!body?.docs) return;
+        const found: Record<string, GridDoc> = {};
+        for (const doc of body.docs) {
+          const ref = pictureOf(doc, picture ?? []);
+          if (ref && typeof ref === "object") found[String(doc.id)] = ref;
+        }
+        setPictures(found);
       })
       .catch(() => {});
     return () => controller.abort();
-  }, [apiRoute, grid, pictureIds]);
+  }, [apiRoute, collectionSlug, docIds, grid, picture]);
 
   useEffect(() => {
     if (!remember) return;
@@ -227,7 +233,7 @@ export function ListGridSwitch({
     }
     if (usePictures) {
       const ref = pictureOf(doc, picture ?? []);
-      const found = typeof ref === "object" && ref ? ref : pictures[refId(ref) ?? ""];
+      const found = typeof ref === "object" && ref ? ref : pictures[String(doc.id)];
       const src = found ? mediaImage(found) : null;
       return src ? (
         // eslint-disable-next-line @next/next/no-img-element -- admin thumbnail from the storage adapter

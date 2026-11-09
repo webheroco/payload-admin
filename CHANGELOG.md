@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.2
+
+No schema change.
+
+- List/Grid `picture`: the picture fields are read for the documents on show
+  in their own request, so tiles find pictures even when the list's query
+  holds only the visible columns.
+
 ## 0.3.1
 
 Nothing changes for a site that sets none of the new options. Run
