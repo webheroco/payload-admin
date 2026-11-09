@@ -30,6 +30,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useConfig, useListDrawerContext, useListQuery, usePreferences } from "@payloadcms/ui";
 import { DEFAULT_HOME_SLUG, DEFAULT_ROUTES, publicPath, type SiteRoutes } from "../routes.js";
+import { pictureOf, pictureQuery, picturesFrom } from "../grid-pictures.js";
 
 type View = "list" | "grid";
 
@@ -76,32 +77,6 @@ function mediaImage(doc: GridDoc): string | null {
   if (doc.mimeType && !doc.mimeType.startsWith("image/")) return null;
   const thumb = doc.sizes?.thumbnail?.url ?? doc.thumbnailURL ?? null;
   return isGraphic(doc) ? (doc.url ?? thumb) : (thumb ?? doc.url ?? null);
-}
-
-type Ref = GridDoc | number | string | null | undefined;
-
-/**
- * The first picture found along any of `paths` ("gallery.image" looks in
- * every gallery row for an image; "meta.image" in the SEO group).
- */
-function pictureOf(doc: GridDoc, paths: string[]): Ref {
-  const walk = (value: unknown, keys: string[]): Ref => {
-    if (value == null) return null;
-    if (Array.isArray(value)) {
-      for (const item of value) {
-        const found = walk(item, keys);
-        if (found != null) return found;
-      }
-      return null;
-    }
-    if (!keys.length) return value as Ref;
-    return typeof value === "object" ? walk((value as Record<string, unknown>)[keys[0]], keys.slice(1)) : null;
-  };
-  for (const path of paths) {
-    const found = walk(doc, path.split("."));
-    if (found != null && found !== "") return found;
-  }
-  return null;
 }
 
 
@@ -167,20 +142,11 @@ export function ListGridSwitch({
   const apiRoute = config.routes.api;
   useEffect(() => {
     if (!grid || !docIds) return;
-    const ids = docIds.split(",");
     const controller = new AbortController();
-    const params = new URLSearchParams({ "where[id][in]": docIds, depth: "1", limit: String(ids.length), pagination: "false" });
-    for (const top of new Set((picture ?? []).map((path) => path.split(".")[0]))) params.set(`select[${top}]`, "true");
-    fetch(`${apiRoute}/${collectionSlug}?${params}`, { credentials: "include", signal: controller.signal })
+    fetch(`${apiRoute}/${pictureQuery(collectionSlug, docIds.split(","), picture ?? [])}`, { credentials: "include", signal: controller.signal })
       .then((res) => (res.ok ? res.json() : null))
       .then((body: { docs?: GridDoc[] } | null) => {
-        if (!body?.docs) return;
-        const found: Record<string, GridDoc> = {};
-        for (const doc of body.docs) {
-          const ref = pictureOf(doc, picture ?? []);
-          if (ref && typeof ref === "object") found[String(doc.id)] = ref;
-        }
-        setPictures(found);
+        if (body?.docs) setPictures(picturesFrom(body.docs, picture ?? []) as Record<string, GridDoc>);
       })
       .catch(() => {});
     return () => controller.abort();

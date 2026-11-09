@@ -5,8 +5,9 @@
 No schema change.
 
 - List/Grid `picture`: the picture fields are read for the documents on show
-  in their own request, so tiles find pictures even when the list's query
-  holds only the visible columns.
+  in their own request (latest draft, as the list shows it), so tiles find
+  pictures even when the list's query holds only the visible columns.
+  Covered by `test/grid-pictures.test.mjs`.
 
 ## 0.3.1
 
