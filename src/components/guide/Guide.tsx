@@ -1,0 +1,163 @@
+// @webheroco/payload-admin. The rules behind it: client-payload references/admin-ui.md.
+/**
+ * How to use the admin (admin.components.views.guide, path /guide), opened
+ * from the "?" top right. Short, task-by-task, in the editor's words, with a
+ * button to the screen each step is about. Sections for sites and languages
+ * only appear when the CMS has more than one.
+ */
+import type { AdminViewServerProps } from 'payload'
+
+import { DefaultTemplate } from '@payloadcms/next/templates'
+import { Gutter } from '@payloadcms/ui'
+import { redirect } from 'next/navigation'
+import { formatAdminURL } from 'payload/shared'
+import React from 'react'
+
+import { readOptions } from '../../options.js'
+
+import { GuideClient, type GuideSection } from './GuideClient.js'
+
+export const Guide = async ({ initPageResult, params, searchParams }: AdminViewServerProps) => {
+  const { locale, permissions, req, visibleEntities } = initPageResult
+  const { payload, user } = req
+  const adminRoute = payload.config.routes.admin
+  if (!user) redirect(formatAdminURL({ adminRoute, path: '/login' }))
+
+  const url = (path: `/${string}`) => formatAdminURL({ adminRoute, path })
+  const { home } = readOptions(payload.config)
+  const can = (slug: string) => Boolean(permissions?.collections?.[slug]?.read)
+  const locales = payload.config.localization ? payload.config.localization.locales : []
+  const sites = can('tenants') ? (await payload.count({ collection: 'tenants', req })).totalDocs : 0
+
+  const sections: GuideSection[] = [
+    {
+      id: 'around',
+      icon: 'home',
+      title: 'Finding your way around',
+      steps: [
+        'The menu on the left has everything you edit, grouped the same way every time.',
+        'Top right: the language you are editing, this guide, and your picture, which holds the theme, Settings, your profile and Log out.',
+        'Click the arrow at the foot of the menu to fold it down to icons. Hover over it to see it in full.',
+      ],
+    },
+    {
+      id: 'edit',
+      icon: 'file',
+      title: 'Change a page',
+      steps: [
+        'Open Pages and click the page. The preview on the right shows the page as visitors will see it, and updates as you type.',
+        'Your changes save on their own as a draft. Nothing changes on the website until you publish.',
+        'Use the Phone, Tablet and Laptop buttons above the preview to check each size.',
+      ],
+      action: can('pages') ? { label: 'Open Pages', href: url('/collections/pages') } : undefined,
+    },
+    {
+      id: 'sections',
+      icon: 'form',
+      title: 'Add, move or remove a section',
+      steps: [
+        'On a page, the "Add a section" panel lists every kind of section with a picture of it.',
+        'Drag one into the page where you want it, or click it to add it at the end.',
+        'Drag a section by its handle to move it. Its three-dot menu duplicates or removes it.',
+      ],
+    },
+    {
+      id: 'publish',
+      icon: 'check',
+      title: 'Publish your changes',
+      steps: [
+        '"Publish changes" puts the page live. The label beside the title always says what the website shows.',
+        '"Unpublished changes" means the website still shows the last published version.',
+        '"Undo changes" goes back to what is live. The clock icon shows every earlier version, and any of them can be restored.',
+      ],
+    },
+    {
+      id: 'media',
+      icon: 'image',
+      title: 'Pictures and videos',
+      steps: [
+        'Upload in Media, or straight from the field on a page.',
+        'Describe each picture for people who cannot see it. It also helps Google.',
+        'Click the part of a photo that matters most, so it stays in view when the photo is cropped.',
+      ],
+      action: can('media') ? { label: 'Open Media', href: url('/collections/media') } : undefined,
+    },
+    ...(sites > 1
+      ? [
+          {
+            id: 'sites',
+            icon: 'globe',
+            title: 'Your websites',
+            steps: [
+              'This admin runs more than one website. The name at the top of the menu is the one you are working on.',
+              'Click it to switch. Lists, new pages and Performance all follow your choice.',
+              'Inside a page you stay on that page’s website. Go back to a list to switch.',
+            ],
+          },
+        ]
+      : []),
+    ...(locales.length > 1
+      ? [
+          {
+            id: 'languages',
+            icon: 'language',
+            title: 'Other languages',
+            steps: [
+              'Choose the language to edit with the language icon top right. A small dot on it shows you are editing a translation, and the page says which.',
+              'Only the words are translated. Sections, pictures and links are shared by every language.',
+              'Anything not yet translated shows in the main language on the website. The coloured labels beside each page show how much is done.',
+            ],
+          },
+        ]
+      : []),
+    {
+      id: 'seo',
+      icon: 'seo',
+      title: 'How you appear on Google',
+      steps: [
+        'SEO overview lists every page’s search title and description. Click one to change it there and then.',
+        'The Redirects tab sends an old address to a new page, so old links keep working.',
+      ],
+      action: { label: 'Open SEO overview', href: url('/seo') },
+    },
+    {
+      id: 'performance',
+      icon: 'chart',
+      title: 'Performance and enquiries',
+      steps: [
+        home === 'performance'
+          ? 'Performance is the first page you see when you sign in. It shows every enquiry sent from the website, by form, by page and by day.'
+          : 'Performance shows every enquiry sent from the website, by form, by page and by day.',
+        'Each enquiry is also kept in Form Submissions, with everything the visitor filled in.',
+      ],
+      action: { label: 'Open Performance', href: home === 'performance' ? adminRoute : url('/performance') },
+    },
+    {
+      id: 'account',
+      icon: 'account',
+      title: 'Your profile',
+      steps: [
+        'Click your picture top right for the theme, Settings, your profile and Log out.',
+        'Add a photo on your profile. Without one, the admin shows your company’s logo or your initials.',
+      ],
+      action: { label: 'Open your profile', href: url('/account') },
+    },
+  ]
+
+  return (
+    <DefaultTemplate
+      i18n={req.i18n}
+      locale={locale}
+      params={params}
+      payload={payload}
+      permissions={permissions}
+      searchParams={searchParams}
+      user={user ?? undefined}
+      visibleEntities={visibleEntities}
+    >
+      <Gutter>
+        <GuideClient name={(user as { name?: string } | null)?.name?.split(' ')[0]} sections={sections} />
+      </Gutter>
+    </DefaultTemplate>
+  )
+}

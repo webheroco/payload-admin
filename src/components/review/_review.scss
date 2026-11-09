@@ -1,0 +1,233 @@
+// Review buttons, the review line on a document, and the review dialog
+// (approvals.ts).
+
+.review-actions {
+  display: inline-flex;
+  // A wider gap from the icon buttons: icons, then the decisions.
+  margin-left: 8px;
+  align-items: center;
+  gap: 8px;
+
+  // Every button here matches Publish: 34px high, the same corners.
+  .btn {
+    margin: 0;
+    height: 34px;
+    padding: 0 14px;
+    border-radius: var(--cms-radius);
+    font-size: 13px;
+    font-weight: 600;
+  }
+}
+
+.review-dialog {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: color-mix(in srgb, #151515 45%, transparent);
+
+  &__box {
+    width: min(520px, 100%);
+    box-sizing: border-box;
+    padding: 24px;
+    border-radius: var(--cms-radius-lg);
+    background: var(--theme-elevation-0);
+    box-shadow: 0 20px 60px rgb(0 0 0 / 0.25);
+  }
+
+  &__title {
+    margin: 0 0 8px;
+    font-size: 20px;
+  }
+
+  &__intro {
+    margin: 0 0 16px;
+    color: var(--theme-elevation-650);
+    line-height: 1.5;
+  }
+
+  &__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0 0 12px;
+  }
+  &__chip {
+    all: unset;
+    box-sizing: border-box;
+    height: 30px;
+    padding: 0 12px;
+    border: 1px solid var(--theme-elevation-150);
+    border-radius: var(--cms-radius);
+    font-size: 13px;
+    color: var(--theme-elevation-800);
+    cursor: pointer;
+    &:hover,
+    &:focus-visible {
+      background: var(--theme-elevation-50);
+      border-color: var(--theme-elevation-250);
+    }
+  }
+  &__check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+    font-size: 14px;
+    cursor: pointer;
+    input {
+      width: 16px;
+      height: 16px;
+      margin: 0;
+      accent-color: var(--theme-elevation-900);
+    }
+  }
+
+  &__label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-weight: 600;
+    font-size: 14px;
+
+    textarea,
+    input {
+      box-sizing: border-box;
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--theme-elevation-200);
+      border-radius: var(--cms-radius);
+      background: var(--theme-elevation-0);
+      color: var(--theme-elevation-1000);
+      font: inherit;
+      font-weight: 400;
+      resize: vertical;
+    }
+  }
+
+  &__buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 20px;
+
+    .btn {
+      margin: 0;
+    }
+  }
+}
+
+
+
+// Reviews page (Reviews.tsx): the list uses the SEO overview's table and
+// filters; the board is a column per stage.
+.cms-reviews {
+  // Five stage tabs share the row with the tools, so the search box is narrower here.
+  .cms-seo__search {
+    width: 160px;
+  }
+  .cms-seo__bar {
+    column-gap: 16px;
+  }
+  &__switch {
+    display: inline-flex;
+    padding: 3px;
+    border-radius: var(--cms-radius);
+    background: var(--theme-elevation-100);
+    a {
+      padding: 6px 12px;
+      border-radius: var(--cms-radius);
+      color: var(--theme-elevation-700);
+      font-size: 14px;
+      text-decoration: none;
+      &.is-on {
+        background: var(--theme-elevation-0);
+        color: var(--theme-text);
+        font-weight: 600;
+      }
+    }
+  }
+  &__status {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+  }
+  &__meta {
+    display: block;
+    margin-top: 3px;
+    font-size: 13px;
+    color: var(--theme-elevation-600);
+  }
+}
+
+.reviews-board {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(200px, 1fr));
+  gap: 14px;
+  margin-top: 20px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+
+  &__col {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 0;
+    min-height: 320px;
+    padding: 14px;
+    border: 2px solid transparent;
+    border-radius: var(--cms-radius-lg);
+    background: var(--theme-elevation-50);
+    &.is-over {
+      border-color: var(--theme-text);
+    }
+  }
+  &__head {
+    display: flex;
+    justify-content: space-between;
+    margin: 0;
+    font-size: 15px;
+    span {
+      color: var(--theme-elevation-600);
+      font-weight: 500;
+    }
+  }
+  &__empty {
+    margin: 0;
+    font-size: 13px;
+    color: var(--theme-elevation-500);
+  }
+}
+
+.reviews-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px;
+  border: 1px solid var(--theme-elevation-150);
+  border-radius: var(--cms-radius-lg);
+  background: var(--theme-elevation-0);
+  color: var(--theme-text);
+  font-size: 14px;
+  text-decoration: none;
+  &.is-highlight {
+    border-color: #f59e0b;
+  }
+  &[draggable='true'] {
+    cursor: grab;
+  }
+  small {
+    color: var(--theme-elevation-600);
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 900px) {
+  .reviews-board {
+    grid-template-columns: repeat(5, minmax(240px, 80vw));
+  }
+}

@@ -1,0 +1,407 @@
+// @webheroco/payload-admin. The rules behind it: client-payload references/admin-ui.md.
+// Document header: one status line, dates behind "i", one "open in new tab".
+
+.doc-controls {
+  // Last modified and Created move into the status "i" note.
+  .doc-controls__list-item.doc-controls__value-wrap {
+    display: none;
+  }
+  // "Last saved less than a minute ago": the status pill already says the
+  // edits are kept as unpublished changes, and its tip says so.
+  .doc-controls__list-item:has(> .autosave) {
+    display: none;
+  }
+  // Payload clips this row, which cut off the tips under the status chips.
+  .doc-controls__wrapper,
+  .doc-controls__content,
+  .doc-controls__status {
+    overflow: visible;
+  }
+}
+
+// Live Preview has its own "open in a new tab"; drop the second one.
+.document-fields--live-preview ~ * .preview-btn,
+body:has(.live-preview-window) .doc-controls .preview-btn {
+  display: none;
+}
+
+// Every control in the document row is 34px high with 8px corners: the
+// status group, the icon buttons, Publish, and the menus top right.
+.cms-status {
+  display: inline-flex;
+  align-items: center;
+  width: max-content;
+  height: 34px;
+  box-sizing: border-box;
+  padding: 0 3px;
+  border: 1px solid var(--theme-elevation-150);
+  border-radius: var(--cms-radius);
+  white-space: nowrap;
+
+  // Hairlines between status, translations and dates: a 1px sliver of
+  // shadow just left of each part, inset top and bottom.
+  > * + * {
+    margin-left: 7px;
+    box-shadow: -4px 0 0 -3px var(--theme-elevation-150);
+  }
+  &__part {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+  }
+  .cms-pill {
+    border: 0;
+  }
+  .cms-langs {
+    gap: 2px;
+  }
+  .cms-langs__chip {
+    border: 0;
+  }
+  button.cms-langs__chip:hover {
+    background: var(--theme-elevation-50);
+  }
+  // The dates note: an info icon like the others, not a circled letter.
+  .cms-status__info {
+    width: 26px;
+    height: 26px;
+    border: 0;
+    border-radius: var(--cms-radius);
+    &:hover,
+    &:focus-visible {
+      background: var(--theme-elevation-50);
+    }
+  }
+}
+
+// Status pills: a coloured dot and plain words. Outlined when they stand
+// alone (lists, SEO), borderless inside the status group.
+.cms-pill {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 9px;
+  box-sizing: border-box;
+  border-radius: var(--cms-radius);
+  border: 1px solid var(--theme-elevation-150);
+  font-size: 12.5px;
+  font-weight: 500;
+  white-space: nowrap;
+  color: var(--theme-elevation-800);
+
+  &::before {
+    content: '';
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--theme-elevation-400);
+  }
+  small {
+    font-size: 11.5px;
+    color: var(--theme-elevation-500);
+    font-variant-numeric: tabular-nums;
+  }
+  &--live::before,
+  &--good::before {
+    background: #16a34a;
+  }
+  &--changes::before,
+  &--warn::before {
+    background: #f59e0b;
+  }
+  // Approvals: waiting blue, changes requested red, approved for later grey.
+  &--waiting::before {
+    background: #2563eb;
+  }
+  &--back::before {
+    background: #dc2626;
+  }
+  &--long-tip {
+    cursor: help;
+  }
+}
+
+// Tips under pills and small icon buttons.
+.cms-pill[data-tip]:hover::after,
+.cms-pill[data-tip]:focus-visible::after,
+.cms-icon-button[data-tip]:hover::after,
+.cms-seo__dot[data-tip]:hover::after {
+  content: attr(data-tip);
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  padding: 5px 10px;
+  border-radius: var(--cms-radius);
+  background: var(--theme-elevation-900);
+  color: var(--theme-bg);
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+// Preview toolbar: our size icons replace Payload's breakpoint menu; the
+// width, height and zoom inputs only show under Custom.
+.live-preview-toolbar {
+  gap: 10px;
+
+  // Same side padding as the top bar, so "open in a new tab" lines up
+  // under the menus.
+  padding-right: 16px;
+
+  // "Open in a new tab" sits at the right-hand end.
+  .live-preview-toolbar-controls {
+    margin-left: auto;
+  }
+
+  .live-preview-toolbar-controls__breakpoint {
+    display: none !important;
+  }
+  &:not([data-custom]) {
+    .live-preview-toolbar-controls__device-size,
+    .live-preview-toolbar-controls__zoom {
+      display: none !important;
+    }
+  }
+}
+
+.cms-preview-sizes {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  order: -1;
+  margin-right: auto;
+
+  &__button,
+  &__custom {
+    all: unset;
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    height: 32px;
+    min-width: 34px;
+    padding: 0 6px;
+    border-radius: var(--cms-radius);
+    color: var(--theme-elevation-600);
+    cursor: pointer;
+    font-size: 13px;
+    box-sizing: border-box;
+
+    &:hover {
+      background: var(--theme-elevation-50);
+      color: var(--theme-text);
+    }
+    &.is-active {
+      background: var(--theme-elevation-100);
+      color: var(--theme-text);
+    }
+  }
+
+  &__custom {
+    padding: 0 10px;
+    margin-left: 6px;
+  }
+
+  &__button[data-tip]:hover::after {
+    content: attr(data-tip);
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    padding: 4px 8px;
+    border-radius: var(--cms-radius);
+    background: var(--theme-elevation-900);
+    color: var(--theme-bg);
+    font-size: 12px;
+    white-space: nowrap;
+    pointer-events: none;
+  }
+}
+
+// One row for the whole document header. The title is already in the
+// breadcrumb, and Versions is an icon beside Publish, so the title and tabs
+// row goes. (The API tab is off: admin.hideAPIURL.)
+body:has(.doc-controls) .doc-header {
+  display: none;
+}
+
+.cms-icon-button {
+  all: unset;
+  box-sizing: border-box;
+  cursor: pointer;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--cms-radius);
+  color: var(--theme-elevation-700);
+  text-decoration: none;
+
+  &:hover {
+    background: var(--theme-elevation-50);
+    color: var(--theme-text);
+  }
+  &.is-small {
+    width: 26px;
+    height: 26px;
+    border-radius: var(--cms-radius);
+  }
+}
+
+// The document's buttons: one height, one radius, icons borderless, and
+// the same 8px between every one of them (the menus top right use 8px too).
+// The row ends where the top bar ends, so the ⋮ menu lines up under the
+// picture.
+.doc-controls {
+  padding-right: 16px !important;
+}
+.doc-controls__wrapper {
+  padding-right: 0 !important;
+}
+.doc-controls__controls-wrapper {
+  gap: 8px !important;
+}
+.doc-controls__controls {
+  gap: 8px;
+  align-items: center;
+}
+.doc-controls__controls-wrapper {
+
+  .live-preview-toggler,
+  .preview-btn,
+  .doc-controls__popup .popup-button {
+    box-sizing: border-box;
+    width: 34px;
+    height: 34px;
+    margin: 0;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: var(--cms-radius);
+    background: none;
+    color: var(--theme-elevation-700);
+    &:hover {
+      background: var(--theme-elevation-50);
+      color: var(--theme-text);
+    }
+  }
+  .doc-controls__popup {
+    margin: 0;
+  }
+  .doc-controls__dots {
+    width: 100%;
+    height: 100%;
+    border: 0 !important;
+    background: none !important;
+  }
+  .popup--active .popup-button {
+    background: var(--theme-elevation-100);
+  }
+  .live-preview-toggler--active {
+    background: var(--theme-elevation-100);
+    color: var(--theme-text);
+  }
+  .form-submit {
+    margin: 0;
+    .btn {
+      margin: 0;
+      height: 34px;
+      padding: 0 14px;
+      border-radius: var(--cms-radius) 0 0 var(--cms-radius);
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .btn:not(.btn--withPopup) .btn,
+    > .btn {
+      border-radius: var(--cms-radius);
+    }
+    .popup-button {
+      height: 34px;
+      width: 30px;
+      border-radius: 0 var(--cms-radius) var(--cms-radius) 0;
+      border-left: 1px solid color-mix(in srgb, var(--theme-bg) 25%, transparent);
+    }
+  }
+}
+
+// One top row on wide screens: the document's controls sit in the top bar
+// between the breadcrumb and the menus (header/HeaderRow measures the room
+// and sets html.cms-headrow only when it all fits).
+html.cms-headrow {
+  .app-header {
+    position: sticky;
+    top: 0;
+    background: var(--theme-bg);
+    border-bottom: 1px solid var(--theme-elevation-100);
+  }
+  .doc-controls {
+    height: var(--app-header-height);
+    margin-top: calc(-1 * var(--app-header-height));
+    // Above the top bar (z-index 30), but clicks pass through the empty parts.
+    z-index: 31;
+    pointer-events: none;
+    background: none;
+    padding-left: var(--cms-row-left) !important;
+    padding-right: var(--cms-row-right) !important;
+    // Payload's frosted backing would blur the breadcrumb and menus.
+    &::before,
+    &::after {
+      display: none;
+    }
+  }
+  .doc-controls__wrapper {
+    height: 100%;
+    padding: 0;
+    gap: 12px;
+  }
+  .doc-controls__content,
+  .doc-controls__controls-wrapper {
+    pointer-events: auto;
+  }
+  .doc-controls__divider {
+    display: none;
+  }
+  // A hairline between the document's buttons and the menus.
+  .app-header__actions::before {
+    content: '';
+    width: 1px;
+    height: 24px;
+    margin-right: 8px;
+    background: var(--theme-elevation-150);
+  }
+}
+
+// Phones: the dates note is not worth a line of its own.
+@media (max-width: 768px) {
+  .cms-status .cms-info {
+    display: none;
+  }
+}
+
+// How saving works (webheroAdmin `saveHelp`), under the dates in the "i" note.
+.cms-status__help {
+  margin: 8px 0 0;
+  padding-top: 8px;
+  border-top: 1px solid color-mix(in srgb, var(--theme-bg) 20%, transparent);
+  white-space: normal;
+}
+
+// A request's message or note can be long: its tip wraps.
+.cms-pill--long-tip[data-tip]:hover::after,
+.cms-pill--long-tip[data-tip]:focus-visible::after {
+  width: max-content;
+  max-width: 320px;
+  white-space: normal;
+  line-height: 1.45;
+}

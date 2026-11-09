@@ -1,0 +1,246 @@
+// @webheroco/payload-admin. The rules behind it: client-payload references/admin-ui.md.
+// The admin menu (NavRail). Open: icon and label. Collapsed: icons only, with
+// the label in a tip on hover. Screens under 1024px always get the icons.
+$open: 232px;
+$closed: 64px;
+
+:root {
+  --cms-rail-w: #{$open};
+}
+html[data-rail='collapsed'],
+html[data-palette] {
+  --cms-rail-w: #{$closed};
+}
+@media (max-width: 1024px) {
+  :root {
+    --cms-rail-w: #{$closed};
+  }
+}
+
+// Our rail replaces Payload's menu, hamburger and overlay.
+.template-default,
+.template-default--nav-open {
+  grid-template-columns: var(--cms-rail-w) minmax(0, 1fr) !important;
+}
+.template-default__nav-toggler-wrapper,
+.template-default__nav-overlay,
+.app-header__mobile-nav-toggler {
+  display: none !important;
+}
+
+@mixin collapsed {
+  .cms-rail__text,
+  .cms-rail__toggle {
+    display: none;
+  }
+  .cms-rail__top {
+    flex-direction: column;
+    justify-content: center;
+    gap: 10px;
+    padding-inline: 0;
+  }
+  .cms-rail__link {
+    justify-content: center;
+    padding: 0;
+    width: 40px;
+    margin-inline: auto;
+  }
+  .cms-rail__scroll {
+    overflow: visible; // tips must escape the rail
+  }
+  [data-tip]:hover::after,
+  [data-tip]:focus-visible::after {
+    content: attr(data-tip);
+    position: absolute;
+    left: calc(100% + 12px);
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 1000;
+    padding: 5px 10px;
+    border-radius: var(--cms-radius);
+    background: var(--theme-elevation-900);
+    color: var(--theme-bg);
+    font: 500 12px/1.3 var(--font-body, system-ui);
+    white-space: nowrap;
+    pointer-events: none;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+  }
+}
+
+.cms-rail {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  width: var(--cms-rail-w);
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  padding: 14px 12px;
+  background: var(--theme-bg);
+  border-right: 1px solid var(--theme-elevation-100);
+  transition: width 160ms ease;
+
+  // The same height open and collapsed, so the links below never move.
+  &__top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    height: 36px;
+    padding: 0 4px 14px;
+  }
+
+  // Collapse: an icon at the right of the open menu's top row.
+  &__toggle {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    width: 32px;
+    height: 32px;
+    margin-left: auto;
+    border: 0;
+    border-radius: var(--cms-radius);
+    background: none;
+    color: var(--theme-elevation-500);
+    cursor: pointer;
+    &:hover {
+      background: var(--theme-elevation-50);
+      color: var(--theme-text);
+    }
+    &[data-tip]:hover::after {
+      content: attr(data-tip);
+      position: absolute;
+      top: calc(100% + 6px);
+      right: 0;
+      z-index: 1000;
+      padding: 5px 10px;
+      border-radius: var(--cms-radius);
+      background: var(--theme-elevation-900);
+      color: var(--theme-bg);
+      font: 500 12px/1.3 var(--font-body, system-ui);
+      white-space: nowrap;
+      pointer-events: none;
+    }
+  }
+
+  &__logo {
+    position: relative;
+    display: flex;
+    color: var(--theme-elevation-1000);
+  }
+
+  &__scroll {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  &__group + &__group {
+    margin-top: 14px;
+  }
+
+  &__link {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 36px;
+    padding: 0 10px;
+    border-radius: var(--cms-radius);
+    color: var(--theme-elevation-800);
+    text-decoration: none;
+    font-size: 14px;
+    background: none;
+    border: 0;
+    cursor: pointer;
+    box-sizing: border-box;
+    width: 100%;
+
+    svg {
+      flex: none;
+    }
+    &:hover {
+      background: var(--theme-elevation-50);
+      color: var(--theme-text);
+    }
+    &.is-active {
+      background: var(--theme-elevation-100);
+      color: var(--theme-text);
+      font-weight: 600;
+    }
+  }
+
+  &__text {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &.is-collapsed {
+    @include collapsed;
+  }
+  @media (max-width: 1024px) {
+    @include collapsed;
+  }
+}
+
+// Collapsed, or with the section palette open, the rail stays as icons and,
+// on hover, slides out in full over the page (or the palette) without
+// moving it: every label, heading and the site menu, as when it is open.
+@mixin peek {
+  [data-tip]:hover::after {
+    display: none;
+  }
+  // Also held open while the site menu's list is open.
+  &:hover,
+  &:has(.cms-sitemenu__button[aria-expanded='true']) {
+    width: $open;
+    z-index: 300;
+    box-shadow: 12px 0 40px rgba(0, 0, 0, 0.18);
+    transition: width 160ms ease 200ms;
+
+    .cms-rail__text {
+      display: block;
+    }
+    .cms-rail__toggle {
+      display: flex;
+    }
+    .cms-rail__link {
+      justify-content: flex-start;
+      padding: 0 10px;
+      width: 100%;
+    }
+    .cms-rail__top {
+      flex-direction: row;
+      justify-content: space-between;
+      padding-inline: 4px;
+    }
+    .cms-rail__scroll {
+      overflow-y: auto;
+    }
+  }
+}
+.cms-rail.is-collapsed {
+  @include peek;
+}
+html[data-palette] .cms-rail {
+  @include collapsed;
+  @include peek;
+}
+@media (max-width: 1024px) {
+  .cms-rail {
+    @include peek;
+  }
+}
+// Where the rail is always icons, there is nothing to pin open.
+html[data-palette] .cms-rail .cms-rail__toggle {
+  display: none !important;
+}
+@media (max-width: 1024px) {
+  .cms-rail .cms-rail__toggle {
+    display: none !important;
+  }
+}
