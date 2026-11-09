@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.3.2
+## 0.3.3
 
 No schema change.
 
@@ -8,6 +8,13 @@ No schema change.
   in their own request (latest draft, as the list shows it), so tiles find
   pictures even when the list's query holds only the visible columns.
   Covered by `test/grid-pictures.test.mjs`.
+
+## 0.3.2
+
+- `saveHelp` now shows on collections and globals without drafts (Media,
+  Team, settings) too: an "i" beside Save holds it, since they have no status
+  group. Hidden on phones, like the dates note. Run
+  `payload generate:importmap` after updating (new `SaveNote`).
 
 ## 0.3.1
 

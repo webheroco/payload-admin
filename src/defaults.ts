@@ -24,6 +24,7 @@ import type { ResolvedOptions } from './options.js'
 
 import {
   DOC_STATUS,
+  SAVE_NOTE,
   LANGUAGES_CELL,
   LIST_GRID_SWITCH,
   PREVIEW_TOOLBAR,
@@ -243,6 +244,11 @@ export function collectionDefaults(
   const hasDrafts = Boolean(
     collection.versions && typeof collection.versions === 'object' && collection.versions.drafts,
   )
+  // Without drafts there is no status group to hold the save help, so it gets
+  // its own "i" beside Save.
+  if (!hasDrafts && options.saveHelp[collection.slug]) {
+    beforeControls.unshift({ path: SAVE_NOTE, clientProps: { help: options.saveHelp[collection.slug] } })
+  }
   const beforeListTable = withGridRoutes(components?.beforeListTable, options)
   return {
     ...collection,
@@ -295,6 +301,10 @@ export function globalDefaults(
     ...(previewable ? [PREVIEW_TOOLBAR, ...previewControls] : []),
     ...(global.versions ? [VERSIONS_BUTTON] : []),
   ]
+  // Globals have no status group of ours, so the save help gets its own "i".
+  if (options.saveHelp[global.slug]) {
+    beforeControls.unshift({ path: SAVE_NOTE, clientProps: { help: options.saveHelp[global.slug] } })
+  }
   return {
     ...global,
     ...(global.versions

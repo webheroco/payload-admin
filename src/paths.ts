@@ -25,6 +25,7 @@ export const SWITCH_FIELD = `${CLIENT}#SwitchField`
 export const SAVE_HELP = `${CLIENT}#SaveHelp`
 export const PREVIEW_TOOLBAR = `${CLIENT}#PreviewToolbar`
 export const DOC_STATUS = `${CLIENT}#DocStatus`
+export const SAVE_NOTE = `${CLIENT}#SaveNote`
 export const VERSIONS_BUTTON = `${CLIENT}#VersionsButton`
 export const BLOCK_PALETTE = `${CLIENT}#BlockPalette`
 export const LIST_GRID_SWITCH = `${CLIENT}#ListGridSwitch`
