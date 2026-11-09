@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.4.2
+
+No schema change. No config change.
+
+- Sections: the quick query reads only the pages the signed-in user may see
+  on the site picked in the site menu (found first, then their sections), so
+  one site's screen never reads another site's pages. The page list is
+  written once in the query however many kinds of section there are.
+- Menu: a Ctrl, Cmd, Shift or middle click (a new tab or window) no longer
+  marks the row or changes the breadcrumb of the screen you are on.
+
 ## 0.4.1
 
 No schema change. No config change.

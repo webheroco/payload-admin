@@ -37,26 +37,31 @@ export function blockTables(relations: Record<string, Relation> | undefined, slu
   return out
 }
 
-/** The SQL: each block table's rows as (slug, owner id), the owner being the document (or its latest version's document). */
-export function usageSql(tables: Map<string, string>, versionsTable?: string): string | null {
-  if (!tables.size) return null
-  const parts = [...tables].map(([slug, table]) => `select ${literal(slug)} as slug, _parent_id from ${quote(table)}`)
-  const union = parts.join('\nunion all\n')
-  if (!versionsTable) return `select distinct b.slug, b._parent_id as id from (${union}) b`
-  return `select distinct b.slug, v.parent_id as id from (${union}) b join ${quote(versionsTable)} v on v.id = b._parent_id where v.latest = true`
+/**
+ * The SQL: each block table's rows as (slug, owner id), the owner being the
+ * document (or its latest version's document), for the documents in `ids`
+ * only, so one site's screen never reads another site's pages. The id list
+ * is written once, in a `with`, however many kinds of section there are.
+ */
+export function usageSql(tables: Map<string, string>, ids: (string | number)[], owners: { table: string; versions?: boolean }): string | null {
+  if (!tables.size || !ids.length) return null
+  const list = ids.map((id) => literal(String(id))).join(', ')
+  const owner = owners.versions
+    ? `select id, parent_id as doc from ${quote(owners.table)} where latest = true and parent_id in (${list})`
+    : `select id, id as doc from ${quote(owners.table)} where id in (${list})`
+  const parts = [...tables].map(([slug, table]) => `select ${literal(slug)} as slug, _parent_id from ${quote(table)} where _parent_id in (select id from o)`)
+  return `with o as (${owner})\nselect distinct b.slug, o.doc as id from (${parts.join('\nunion all\n')}) b join o on o.id = b._parent_id`
 }
 
+export type UsagePlan = { pool: Pool; tables: Map<string, string>; owners: { table: string; versions?: boolean } }
+
 /**
- * Document id → the section slugs it uses, for `collectionSlug`, or null
- * when the shortcut doesn't apply. `drafts`: read the latest version (what
- * the editor sees), as the list does.
+ * Whether the shortcut applies to `collectionSlug`, and the tables it reads;
+ * null otherwise (another database, or the adapter's tables aren't where we
+ * expect), and the caller asks Payload instead. `drafts`: read the latest
+ * version (what the editor sees), as the list does.
  */
-export async function sectionUsage(
-  db: unknown,
-  collectionSlug: string,
-  slugs: string[],
-  drafts: boolean,
-): Promise<Map<string, Set<string>> | null> {
+export function usagePlan(db: unknown, collectionSlug: string, slugs: string[], drafts: boolean): UsagePlan | null {
   const adapter = db as DrizzleAdapter
   if (typeof adapter?.pool?.query !== 'function' || !adapter.rawRelations || !(adapter.tableNameMap instanceof Map)) return null
   const table = adapter.tableNameMap.get(collectionSlug.replace(/-/g, '_')) ?? collectionSlug.replace(/-/g, '_')
@@ -65,9 +70,17 @@ export async function sectionUsage(
   const tables = blockTables(relations, slugs)
   // Every kind must be found, or the answer would quietly miss some.
   if (tables.size !== new Set(slugs).size) return null
-  const text = usageSql(tables, versionsTable)
+  return { pool: adapter.pool, tables, owners: versionsTable ? { table: versionsTable, versions: true } : { table } }
+}
+
+/**
+ * Document id → the section slugs it uses, for the documents in `ids` (the
+ * ones the signed-in user may see on the selected site, found first).
+ */
+export async function sectionUsage(plan: UsagePlan, ids: (string | number)[]): Promise<Map<string, Set<string>>> {
+  const text = usageSql(plan.tables, ids, plan.owners)
   if (!text) return new Map()
-  const { rows } = await adapter.pool.query(text)
+  const { rows } = await plan.pool.query(text)
   const out = new Map<string, Set<string>>()
   for (const row of rows) {
     const id = String(row.id)

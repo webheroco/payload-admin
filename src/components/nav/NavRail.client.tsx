@@ -62,7 +62,11 @@ const RailLink: React.FC<{ href: string; icon: string; label: string; active: bo
       aria-current={shown ? 'page' : undefined}
       aria-busy={pending && trim(pending) === trim(href) ? true : undefined}
       data-tip={label}
-      onClick={() => start(href, label)}
+      onClick={(event: React.MouseEvent<HTMLAnchorElement>) => {
+        // A new tab or window (Ctrl, Cmd, Shift or middle click) leaves this screen as it is.
+        if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
+        start(href, label)
+      }}
     >
       <Icon name={icon} />
       <span className="cms-rail__text">{label}</span>
@@ -138,7 +142,7 @@ export const NavRailClient: React.FC<{
           className="cms-rail__logo"
           aria-label={collapsed ? 'Open menu' : 'Home'}
           data-tip={collapsed ? 'Open menu' : 'Home'}
-          onClick={(event) => {
+          onClick={(event: React.MouseEvent<HTMLAnchorElement>) => {
             // Collapsed, the logo opens the menu. Where the rail is always icons
             // (narrow screens, the section palette) it goes to the dashboard.
             if (collapsed && canPin()) {
