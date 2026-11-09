@@ -1,6 +1,6 @@
 /**
  * Approvals: sign-off before anything goes live. Optional, turned on with
- * `webheroAdmin({ approvals: true })`. First built for Quartix.
+ * `webheroAdmin({ approvals: true })`.
  *
  *  - Editors keep saving drafts, but their Publish button is "Submit for
  *    review"; the server refuses a publish from anyone who isn't an approver.
