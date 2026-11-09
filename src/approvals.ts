@@ -282,7 +282,8 @@ function reviewsCollection(a: ResolvedApprovals, usersSlug: string): CollectionC
     labels: { singular: 'Approval request', plural: 'Approval requests' },
     admin: { useAsTitle: 'title', hidden: true, defaultColumns: ['title', 'status', 'submittedBy', 'createdAt'] },
     access: {
-      read: ({ req }) => Boolean(req.user),
+      // Approvers see every request; everyone else only the ones they submitted.
+      read: ({ req }) => (!req.user ? false : approver(req) ? true : { submittedBy: { equals: req.user.id } }),
       create: ({ req }) => Boolean(req.user),
       // Only approvers change a request: send it back, schedule or publish it.
       update: ({ req }) => approver(req),
