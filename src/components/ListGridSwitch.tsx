@@ -30,6 +30,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useConfig, useListDrawerContext, useListQuery, usePreferences } from "@payloadcms/ui";
 import { DEFAULT_HOME_SLUG, DEFAULT_ROUTES, publicPath, type SiteRoutes } from "../routes.js";
+import { pictureOf, pictureQuery, picturesFrom } from "../grid-pictures.js";
 
 type View = "list" | "grid";
 
@@ -78,33 +79,6 @@ function mediaImage(doc: GridDoc): string | null {
   return isGraphic(doc) ? (doc.url ?? thumb) : (thumb ?? doc.url ?? null);
 }
 
-type Ref = GridDoc | number | string | null | undefined;
-
-/**
- * The first picture found along any of `paths` ("gallery.image" looks in
- * every gallery row for an image; "meta.image" in the SEO group).
- */
-function pictureOf(doc: GridDoc, paths: string[]): Ref {
-  const walk = (value: unknown, keys: string[]): Ref => {
-    if (value == null) return null;
-    if (Array.isArray(value)) {
-      for (const item of value) {
-        const found = walk(item, keys);
-        if (found != null) return found;
-      }
-      return null;
-    }
-    if (!keys.length) return value as Ref;
-    return typeof value === "object" ? walk((value as Record<string, unknown>)[keys[0]], keys.slice(1)) : null;
-  };
-  for (const path of paths) {
-    const found = walk(doc, path.split("."));
-    if (found != null && found !== "") return found;
-  }
-  return null;
-}
-
-const refId = (ref: Ref): string | null => (ref == null ? null : typeof ref === "object" ? String(ref.id) : String(ref));
 
 /** Where a tile loads the live page from. */
 function tileUrl(routes: SiteRoutes, homeSlug: string, collectionSlug: string, doc: GridDoc): string | null {
@@ -155,30 +129,28 @@ export function ListGridSwitch({
   const grid = available && view === "grid";
   const isMedia = collectionSlug === "media";
   const usePictures = !isMedia && Boolean(picture?.length);
+  // Each tile's picture, by document id.
   const [pictures, setPictures] = useState<Record<string, GridDoc>>({});
 
-  // The pictures for the tiles on show, fetched once per page of results.
-  const pictureIds = useMemo(
-    () =>
-      usePictures
-        ? [...new Set(docs.map((doc) => refId(pictureOf(doc, picture ?? []))).filter((id): id is string => Boolean(id)))].sort().join(",")
-        : "",
-    [docs, picture, usePictures],
+  // The list's own query may hold only the visible columns, so the picture
+  // fields are read for the documents on show, with their images, in one
+  // request per page of results.
+  const docIds = useMemo(
+    () => (usePictures ? [...new Set(docs.map((doc) => String(doc.id)))].sort().join(",") : ""),
+    [docs, usePictures],
   );
   const apiRoute = config.routes.api;
   useEffect(() => {
-    if (!grid || !pictureIds) return;
-    const ids = pictureIds.split(",");
+    if (!grid || !docIds) return;
     const controller = new AbortController();
-    const params = new URLSearchParams({ "where[id][in]": pictureIds, depth: "0", limit: String(ids.length), pagination: "false" });
-    fetch(`${apiRoute}/media?${params}`, { credentials: "include", signal: controller.signal })
+    fetch(`${apiRoute}/${pictureQuery(collectionSlug, docIds.split(","), picture ?? [])}`, { credentials: "include", signal: controller.signal })
       .then((res) => (res.ok ? res.json() : null))
       .then((body: { docs?: GridDoc[] } | null) => {
-        if (body?.docs) setPictures(Object.fromEntries(body.docs.map((m) => [String(m.id), m])));
+        if (body?.docs) setPictures(picturesFrom(body.docs, picture ?? []) as Record<string, GridDoc>);
       })
       .catch(() => {});
     return () => controller.abort();
-  }, [apiRoute, grid, pictureIds]);
+  }, [apiRoute, collectionSlug, docIds, grid, picture]);
 
   useEffect(() => {
     if (!remember) return;
@@ -227,7 +199,7 @@ export function ListGridSwitch({
     }
     if (usePictures) {
       const ref = pictureOf(doc, picture ?? []);
-      const found = typeof ref === "object" && ref ? ref : pictures[refId(ref) ?? ""];
+      const found = typeof ref === "object" && ref ? ref : pictures[String(doc.id)];
       const src = found ? mediaImage(found) : null;
       return src ? (
         // eslint-disable-next-line @next/next/no-img-element -- admin thumbnail from the storage adapter

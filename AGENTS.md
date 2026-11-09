@@ -61,7 +61,9 @@ just one. Before a release, the packed package must work in:
 - an app whose sections are a shared library in the config's `blocks`, used
   through `blockReferences` (the skill's default), and one with inline blocks;
 - an app with a shop on Medusa beside it (`links` to the shop's admin);
-- an app with `trailingSlash: true`.
+- an app with `trailingSlash: true`;
+- a list whose query holds only the visible columns (List/Grid `picture`
+  must still find each page's picture).
 
 When a site's move onto the package turns up a gap, add the case to this list
 and to `test/`, so the next site isn't the one that finds it.

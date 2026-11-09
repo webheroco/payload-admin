@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.3
+
+No schema change.
+
+- List/Grid `picture`: the picture fields are read for the documents on show
+  in their own request (latest draft, as the list shows it), so tiles find
+  pictures even when the list's query holds only the visible columns.
+  Covered by `test/grid-pictures.test.mjs`.
+
 ## 0.3.2
 
 - `saveHelp` now shows on collections and globals without drafts (Media,
