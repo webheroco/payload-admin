@@ -126,7 +126,7 @@ export const NavRailClient: React.FC<{
           ) : null}
           {seoHref ? <RailLink href={seoHref} icon="seo" label="SEO overview" active={isActive(seoHref)} /> : null}
           {sectionsHref ? <RailLink href={sectionsHref} icon="blocks" label="Sections" active={isActive(sectionsHref)} /> : null}
-          {reviewsHref ? <RailLink href={reviewsHref} icon="check" label="Reviews" active={isActive(reviewsHref)} /> : null}
+          {reviewsHref ? <RailLink href={reviewsHref} icon="check" label="Approvals" active={isActive(reviewsHref)} /> : null}
         </div>
         {groups.map((group) => (
           // No group headings: the menu keeps the same shape open and collapsed, so nothing jumps.

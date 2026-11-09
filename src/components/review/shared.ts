@@ -43,7 +43,7 @@ export const isApprover = (user: unknown, { approverRoles = ['super-admin', 'cli
  * newest review about it in the market being edited. Refetches after a save
  * and whenever a review button changes something.
  */
-export function useReviewTarget(who: ApproverProps = {}) {
+export function useReviewTarget(who: ApproverProps = {}, enabled = true) {
   const { id, collectionSlug, globalSlug, lastUpdateTime } = useDocumentInfo()
   const { code: locale } = useLocale()
   const { user } = useAuth()
@@ -56,7 +56,7 @@ export function useReviewTarget(who: ApproverProps = {}) {
   const [latest, setLatest] = useState<Review | null>(null)
 
   const load = useCallback(async () => {
-    if (!ready) return setLatest(null)
+    if (!ready || !enabled) return setLatest(null)
     const params = new URLSearchParams({ limit: '1', depth: '1', sort: '-createdAt' })
     params.set('where[and][0][kind][equals]', target.kind)
     params.set('where[and][1][entity][equals]', target.entity)
@@ -70,7 +70,7 @@ export function useReviewTarget(who: ApproverProps = {}) {
     } catch {
       setLatest(null)
     }
-  }, [api, ready, target.kind, target.entity, target.docId, locale])
+  }, [api, ready, enabled, target.kind, target.entity, target.docId, locale])
 
   useEffect(() => {
     void load()

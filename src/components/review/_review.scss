@@ -3,6 +3,8 @@
 
 .review-actions {
   display: inline-flex;
+  // A wider gap from the icon buttons: icons, then the decisions.
+  margin-left: 8px;
   align-items: center;
   gap: 8px;
 
@@ -14,37 +16,6 @@
     border-radius: var(--cms-radius);
     font-size: 13px;
     font-weight: 600;
-  }
-
-  // The review's state, one quiet line before the buttons. Its tip holds
-  // the message or the approver's note.
-  &__note {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 13px;
-    color: var(--theme-elevation-650);
-    white-space: nowrap;
-
-    &::before {
-      content: '';
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: #16a34a;
-    }
-    &.is-back::before {
-      background: #f59e0b;
-    }
-    &.is-scheduled::before {
-      background: var(--theme-elevation-400);
-    }
-    &[data-tip] {
-      cursor: help;
-      text-decoration: underline dotted var(--theme-elevation-300);
-      text-underline-offset: 3px;
-    }
   }
 }
 
@@ -119,7 +90,10 @@
 .cms-reviews {
   // Five stage tabs share the row with the tools, so the search box is narrower here.
   .cms-seo__search {
-    width: 200px;
+    width: 160px;
+  }
+  .cms-seo__bar {
+    column-gap: 16px;
   }
   &__switch {
     display: inline-flex;

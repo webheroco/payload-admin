@@ -21,6 +21,7 @@ import { formatAdminURL } from 'payload/shared'
 import React, { useCallback } from 'react'
 
 import { TranslationStatus } from '../i18n/TranslationStatus.js'
+import { formatWhen, personName, useReviewTarget } from '../review/shared.js'
 import { Icon } from '../nav/icons.js'
 
 const when = (value: unknown) => {
@@ -52,6 +53,20 @@ export const DocStatus: React.FC<{ help?: string }> = ({ help }) => {
   const modalSlug = `undo-changes-${id ?? globalSlug}`
 
   const changed = hasPublishedDoc && unpublishedVersionCount > 0
+
+  // With approvals on, the request's state is part of the same group.
+  const approvals = config.collections.some((c) => c.slug === 'reviews')
+  const { latest, user } = useReviewTarget({}, approvals)
+  const mine = latest && (typeof latest.submittedBy === 'object' ? latest.submittedBy?.id : latest.submittedBy) === user?.id
+  const quote = (text?: string | null) => (text ? `: “${text}”` : '')
+  const review =
+    latest?.status === 'waiting'
+      ? { cls: 'waiting', label: 'Waiting for approval', tip: `${mine ? 'You' : personName(latest.submittedBy)} asked on ${formatWhen(latest.createdAt)}${quote(latest.message)}` }
+      : latest?.status === 'sentBack'
+        ? { cls: 'back', label: 'Changes requested', tip: `${personName(latest.reviewedBy, 'An approver')}, ${formatWhen(latest.reviewedAt)}${quote(latest.note)}` }
+        : latest?.status === 'scheduled'
+          ? { cls: 'scheduled', label: `Goes live ${formatWhen(latest.publishAt)}`, tip: `Approved by ${personName(latest.reviewedBy, 'an approver')}` }
+          : null
 
   /** Same as Payload's "Revert to published": save the live version over the draft. */
   const undo = useCallback(async () => {
@@ -109,6 +124,13 @@ export const DocStatus: React.FC<{ help?: string }> = ({ help }) => {
             </button>
           )}
         </span>
+        {review ? (
+          <span className="cms-status__part">
+            <span className={`cms-pill cms-pill--${review.cls} cms-pill--long-tip`} data-tip={review.tip} tabIndex={0}>
+              {review.label}
+            </span>
+          </span>
+        ) : null}
         <TranslationStatus />
         <span className="cms-info cms-status__info" tabIndex={0} aria-label="Dates and saving">
           <Icon name="info" size={16} />

@@ -111,12 +111,21 @@ body:has(.live-preview-window) .doc-controls .preview-btn {
   &--warn::before {
     background: #f59e0b;
   }
+  // Approvals: waiting blue, changes requested red, approved for later grey.
+  &--waiting::before {
+    background: #2563eb;
+  }
+  &--back::before {
+    background: #dc2626;
+  }
+  &--long-tip {
+    cursor: help;
+  }
 }
 
 // Tips under pills and small icon buttons.
-.review-actions__note[data-tip]:hover::after,
-.review-actions__note[data-tip]:focus-visible::after,
 .cms-pill[data-tip]:hover::after,
+.cms-pill[data-tip]:focus-visible::after,
 .cms-icon-button[data-tip]:hover::after,
 .cms-seo__dot[data-tip]:hover::after {
   content: attr(data-tip);
@@ -388,13 +397,11 @@ html.cms-headrow {
   white-space: normal;
 }
 
-// A review message can be long: let its tip wrap, opening to the left.
-.review-actions__note[data-tip]:hover::after,
-.review-actions__note[data-tip]:focus-visible::after {
-  left: auto;
-  right: 0;
-  transform: none;
+// A request's message or note can be long: its tip wraps.
+.cms-pill--long-tip[data-tip]:hover::after,
+.cms-pill--long-tip[data-tip]:focus-visible::after {
   width: max-content;
   max-width: 320px;
   white-space: normal;
+  line-height: 1.45;
 }

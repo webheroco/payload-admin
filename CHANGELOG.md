@@ -3,9 +3,15 @@
 ## Unreleased
 
 - Nothing pushes the editor's fields down. The save help moves into the
-  status "i" note, and the review banner is gone: the review's state is one
-  short line beside the review buttons ("From Hannah, Sun 8 Nov, 15:09",
-  "Sent back by Callum"), with the message or note in its tip.
+  status "i" note, and the review banner is gone: the request's state is a
+  pill in the status group ("Waiting for approval", "Changes requested",
+  "Goes live …") with who, when and the message or note in its tip.
+- Approval wording: "Submit for approval"; approvers deciding on someone
+  else's change see "Request changes", "Approve for a date" and "Approve and
+  publish". The menu page is "Approvals". "Sent back" is "Changes requested"
+  everywhere (emails too); stored values are unchanged.
+- SEO tab fields read Title tag, Meta description and Social share image
+  (the Open Graph image), matching the SEO overview.
   `ReviewBanner` still exports (it renders nothing) so old import maps work.
 - The SEO plugin's tab is "SEO" (was "Google"). A `noIndex` checkbox moves
   into it from the Content tab and shows as an "Indexed" switch (on = search

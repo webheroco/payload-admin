@@ -69,7 +69,7 @@ export type WebheroAdminOptions = {
 }
 
 export type ApprovalOptions = {
-  /** Role values that may publish, schedule and send back. Default super-admin, client-admin. */
+  /** Role values that may approve: publish, schedule and request changes. Default super-admin, client-admin. */
   approverRoles?: string[]
   /** The users field holding the role (a select, single or many). Default `role`. */
   roleField?: string

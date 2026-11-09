@@ -4,7 +4,7 @@
  *
  *  - Editors keep saving drafts, but their Publish button is "Submit for
  *    review"; the server refuses a publish from anyone who isn't an approver.
- *  - Approvers publish as before, and can schedule or send back a request.
+ *  - Approvers publish as before, and can approve for a date or request changes.
  *  - Publishing from the document closes its open request, and an
  *    approver's own direct publish is recorded, so the Reviews page is the
  *    record of who approved what.
@@ -42,8 +42,8 @@ export const REVIEWS_SLUG = 'reviews'
 export type ReviewTarget = { kind: 'collection' | 'global'; entity: string; docId?: string | null; locale?: string | null }
 
 export const REVIEW_STATUSES = [
-  { label: 'Waiting for review', value: 'waiting' },
-  { label: 'Sent back', value: 'sentBack' },
+  { label: 'Waiting for approval', value: 'waiting' },
+  { label: 'Changes requested', value: 'sentBack' },
   { label: 'Scheduled', value: 'scheduled' },
   { label: 'Published', value: 'published' },
   { label: 'Replaced by a newer request', value: 'replaced' },
@@ -205,10 +205,10 @@ async function notifySubmitted(req: PayloadRequest, review: ReviewDoc, a: Resolv
     req,
   })
   const to = (users.docs as unknown as Person[]).filter((u) => u.email && u.id !== author?.id).map((u) => u.email as string)
-  const lines = [`${escape(nameOf(author, 'Someone'))} submitted <b>${escape(review.title || 'a change')}</b> for review.`]
+  const lines = [`${escape(nameOf(author, 'Someone'))} submitted <b>${escape(review.title || 'a change')}</b> for approval.`]
   if (review.message) lines.push(`Their note: "${escape(review.message)}"`)
-  lines.push('You can publish it, schedule it or send it back with a note. Nothing goes live until you do.')
-  await send(req, to, `Waiting for your review: ${review.title || 'a change'}`, emailLayout('A change is waiting for your review', lines, { label: 'Review it', href: `${origin(req)}${adminPath(req.payload.config.routes.admin, review)}` }))
+  lines.push('You can approve and publish it, approve it for a date, or request changes. Nothing goes live until you do.')
+  await send(req, to, `Waiting for your approval: ${review.title || 'a change'}`, emailLayout('A change is waiting for your approval', lines, { label: 'Open it', href: `${origin(req)}${adminPath(req.payload.config.routes.admin, review)}` }))
 }
 
 async function notifyAuthor(req: PayloadRequest, review: ReviewDoc, outcome: 'sentBack' | 'scheduled' | 'published') {
@@ -218,7 +218,7 @@ async function notifyAuthor(req: PayloadRequest, review: ReviewDoc, outcome: 'se
   const what = `<b>${escape(review.title || 'Your change')}</b>`
   const href = `${origin(req)}${adminPath(req.payload.config.routes.admin, review)}`
   if (outcome === 'sentBack') {
-    await send(req, [author.email], `Sent back: ${review.title || 'your change'}`, emailLayout(`${by} sent your change back`, [`${what} needs another look before it goes live.`, `"${escape(review.note || '')}"`, 'Make the changes, then submit it for review again.'], { label: 'Open it', href }))
+    await send(req, [author.email], `Changes requested: ${review.title || 'your change'}`, emailLayout(`${by} asked for changes`, [`${what} needs changes before it goes live.`, `"${escape(review.note || '')}"`, 'Make the changes, then submit it for approval again.'], { label: 'Open it', href }))
     return
   }
   if (outcome === 'scheduled') {
@@ -274,7 +274,7 @@ function reviewsCollection(a: ResolvedApprovals, usersSlug: string): CollectionC
   const approver = (req: PayloadRequest) => canApprove(req.user, a)
   return {
     slug: REVIEWS_SLUG,
-    labels: { singular: 'Review', plural: 'Reviews' },
+    labels: { singular: 'Approval request', plural: 'Approval requests' },
     admin: { useAsTitle: 'title', hidden: true, defaultColumns: ['title', 'status', 'submittedBy', 'createdAt'] },
     access: {
       read: ({ req }) => Boolean(req.user),
@@ -413,7 +413,7 @@ export function withApprovals(config: Config, a: ResolvedApprovals): Config {
   const button = { path: REVIEW_BUTTON, clientProps }
   const included = (slug: string, entity: { versions?: unknown }) => hasDrafts(entity) && (!a.only || a.only.includes(slug))
   const refuse = () => {
-    throw new APIError('Only an approver can publish. Use Submit for review, and an approver will publish it.', 403)
+    throw new APIError('Only an approver can publish. Use Submit for approval, and an approver will publish it.', 403)
   }
 
   const collection = (c: CollectionConfig): CollectionConfig => {

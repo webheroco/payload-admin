@@ -5,9 +5,11 @@
  * Replaces Payload's Publish button on everything that goes through review
  * (approvals.ts).
  *
- *  - Editors: "Submit for review", or the state of their request.
- *  - Approvers: Payload's own Publish, plus Schedule, plus Send back when
- *    someone else's change is waiting.
+ *  - Editors: "Submit for approval", or the state of their request.
+ *  - Approvers: Publish and Schedule; when someone else's change is
+ *    waiting they read "Approve and publish", "Approve for a date" and
+ *    "Request changes". The request's state is in the status group
+ *    (DocStatus), not here.
  *
  * The server enforces the same rules; this only shows the right buttons.
  */
@@ -26,7 +28,7 @@ const nextHour = () => {
 }
 
 export const ReviewButton: React.FC<ApproverProps> = ({ approverRoles, roleField }) => {
-  const { api, target, ready, open, latest, user, approver } = useReviewTarget({ approverRoles, roleField })
+  const { api, target, ready, open, user, approver } = useReviewTarget({ approverRoles, roleField })
   const modified = useFormModified()
   const { submit: submitForm } = useForm()
   const { id, collectionSlug, globalSlug } = useDocumentInfo()
@@ -79,65 +81,40 @@ export const ReviewButton: React.FC<ApproverProps> = ({ approverRoles, roleField
       : run('POST', '', { ...target, status: 'scheduled', publishAt }, `Scheduled for ${formatWhen(publishAt)}.`)
   }
 
-  /**
-   * The review's state as one short line before the buttons (a pre-header,
-   * not a banner): who asked and when, or who sent it back. The full
-   * message or note is in its tip and on the Reviews page.
-   */
-  const stateLine = (() => {
-    if (!latest) return null
-    if (latest.status === 'sentBack') {
-      const note = latest.note ? `“${latest.note}”` : ''
-      return { text: `Sent back by ${personName(latest.reviewedBy, 'an approver')}`, tip: note, tone: 'back' }
-    }
-    if (latest.status === 'waiting') {
-      const mine = (typeof latest.submittedBy === 'object' ? latest.submittedBy?.id : latest.submittedBy) === user?.id
-      return { text: `${mine ? 'Submitted' : `From ${personName(latest.submittedBy)}`}, ${formatWhen(latest.createdAt)}`, tip: latest.message ? `“${latest.message}”` : '', tone: 'waiting' }
-    }
-    if (latest.status === 'scheduled') return { text: `Goes live ${formatWhen(latest.publishAt)}`, tip: '', tone: 'scheduled' }
-    return null
-  })()
-  const line = stateLine && (
-    <span className={`review-actions__note is-${stateLine.tone}`} data-tip={stateLine.tip || undefined} tabIndex={stateLine.tip ? 0 : undefined}>
-      {stateLine.text}
-    </span>
-  )
-
   const someoneElses = open && open.status === 'waiting' && (typeof open.submittedBy === 'object' ? open.submittedBy?.id : open.submittedBy) !== user?.id
 
   if (approver) {
     return (
       <div className="review-actions">
-        {line}
         {someoneElses && (
           <Button buttonStyle="secondary" size="medium" className="review-actions__back" disabled={busy} onClick={() => setDialog('sendBack')}>
-            Send back
+            Request changes
           </Button>
         )}
         <Button buttonStyle="secondary" size="medium" disabled={busy || !ready} onClick={() => setDialog('schedule')}>
-          Schedule
+          {someoneElses ? 'Approve for a date' : 'Schedule'}
         </Button>
-        <PublishButton />
+        <PublishButton {...(someoneElses ? { label: 'Approve and publish' } : {})} />
         {dialog === 'sendBack' && open && (
           <ReviewDialog
-            title="Send back to the author"
-            intro={`Say what needs changing. ${personName(open.submittedBy)} gets your note by email, and nothing goes live.`}
-            confirm="Send back"
+            title="Request changes"
+            intro={`${personName(open.submittedBy)} gets your note by email and sees it on the page. Nothing goes live.`}
+            confirm="Request changes"
             busy={busy}
             onCancel={() => setDialog(null)}
-            onConfirm={() => run('PATCH', `/${open.id}`, { status: 'sentBack', note }, 'Sent back with your note.')}
+            onConfirm={() => run('PATCH', `/${open.id}`, { status: 'sentBack', note }, 'Changes requested. They have your note by email.')}
           >
             <label className="review-dialog__label">
-              Note to the author
+              What needs changing?
               <textarea rows={4} value={note} onChange={(e) => setNote(e.target.value)} autoFocus />
             </label>
           </ReviewDialog>
         )}
         {dialog === 'schedule' && (
           <ReviewDialog
-            title="Schedule"
+            title={someoneElses ? 'Approve for a date' : 'Schedule'}
             intro="The latest saved version goes live at this time. If an editor changes it before then, it comes back to you for another look."
-            confirm="Schedule"
+            confirm={someoneElses ? 'Approve' : 'Schedule'}
             busy={busy}
             onCancel={() => setDialog(null)}
             onConfirm={schedule}
@@ -155,9 +132,8 @@ export const ReviewButton: React.FC<ApproverProps> = ({ approverRoles, roleField
   if (open?.status === 'waiting') {
     return (
       <div className="review-actions">
-        {line}
         <Button buttonStyle="primary" size="medium" disabled>
-          Waiting for review
+          Waiting for approval
         </Button>
       </div>
     )
@@ -173,9 +149,8 @@ export const ReviewButton: React.FC<ApproverProps> = ({ approverRoles, roleField
   }
   return (
     <div className="review-actions">
-      {line}
       <Button buttonStyle="primary" size="medium" disabled={busy || !ready} onClick={submit}>
-        Submit for review
+        Submit for approval
       </Button>
     </div>
   )

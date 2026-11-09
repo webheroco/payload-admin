@@ -3,7 +3,7 @@
 
 /**
  * The Reviews page's board view: a column per stage. Approvers can drag a
- * waiting card to Sent back (asks for a note) or Scheduled (asks for a
+ * waiting card to Changes requested (asks what needs changing) or Scheduled (asks for a
  * time); everything else moves by itself as people work.
  */
 import { toast } from '@payloadcms/ui'
@@ -39,7 +39,7 @@ export const ReviewsBoard: React.FC<{ columns: BoardColumn[]; apiRoute: string; 
     const error = await sendReview(apiRoute, 'PATCH', `/${pending.card.id}`, body)
     setBusy(false)
     if (error) return toast.error(error)
-    toast.success(pending.to === 'sentBack' ? 'Sent back with your note.' : 'Scheduled.')
+    toast.success(pending.to === 'sentBack' ? 'Changes requested. They have your note by email.' : 'Scheduled.')
     setPending(null)
     setNote('')
     router.refresh()
@@ -101,15 +101,15 @@ export const ReviewsBoard: React.FC<{ columns: BoardColumn[]; apiRoute: string; 
       </div>
       {pending?.to === 'sentBack' && (
         <ReviewDialog
-          title="Send back to the author"
+          title="Request changes"
           intro={`Say what needs changing on "${pending.card.title}". The author gets your note by email, and nothing goes live.`}
-          confirm="Send back"
+          confirm="Request changes"
           busy={busy}
           onCancel={() => setPending(null)}
           onConfirm={confirm}
         >
           <label className="review-dialog__label">
-            Note to the author
+            What needs changing?
             <textarea rows={4} value={note} onChange={(e) => setNote(e.target.value)} autoFocus />
           </label>
         </ReviewDialog>

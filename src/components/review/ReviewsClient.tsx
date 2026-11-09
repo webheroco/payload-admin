@@ -35,7 +35,7 @@ type Draft = { key: string; title: string; type: string; entity: string; updated
 
 const TABS = [
   { value: 'waiting', label: 'Waiting' },
-  { value: 'sentBack', label: 'Sent back' },
+  { value: 'sentBack', label: 'Changes requested' },
   { value: 'scheduled', label: 'Scheduled' },
   { value: 'published', label: 'Published' },
   { value: 'all', label: 'All' },
@@ -43,8 +43,8 @@ const TABS = [
 type Tab = (typeof TABS)[number]['value']
 
 const STATUS: Record<ReviewItem['status'], { label: string; dot: string }> = {
-  waiting: { label: 'Waiting', dot: 'off' },
-  sentBack: { label: 'Sent back', dot: 'empty' },
+  waiting: { label: 'Waiting', dot: 'waiting' },
+  sentBack: { label: 'Changes requested', dot: 'empty' },
   scheduled: { label: 'Scheduled', dot: 'none' },
   published: { label: 'Published', dot: 'good' },
   replaced: { label: 'Replaced', dot: 'none' },
@@ -62,7 +62,7 @@ export const ReviewsClient: React.FC<{
   types: { value: string; label: string }[]
 }> = ({ apiRoute, approver, drafts, initialView, items, showLanguage, types }) => {
   const { setStepNav } = useStepNav()
-  useEffect(() => setStepNav([{ label: 'Reviews' }]), [setStepNav])
+  useEffect(() => setStepNav([{ label: 'Approvals' }]), [setStepNav])
   const [view, setView] = useState(initialView)
   const [tab, setTab] = useState<Tab>('waiting')
   const [query, setQuery] = useState('')
@@ -129,8 +129,8 @@ export const ReviewsClient: React.FC<{
         .slice(0, 8)
         .map((d) => ({ id: d.key, title: d.title, meta: d.type, detail: `Edited ${formatWhen(d.updatedAt)}`, href: d.href, movable: false })),
     },
-    { key: 'waiting', label: 'Waiting for review', cards: filtered.filter((r) => r.status === 'waiting').map(card), highlight: true },
-    { key: 'sentBack', label: 'Sent back', cards: filtered.filter((r) => r.status === 'sentBack' && latest.get(r.key) === r).slice(0, 20).map(card), dropTarget: approver },
+    { key: 'waiting', label: 'Waiting for approval', cards: filtered.filter((r) => r.status === 'waiting').map(card), highlight: true },
+    { key: 'sentBack', label: 'Changes requested', cards: filtered.filter((r) => r.status === 'sentBack' && latest.get(r.key) === r).slice(0, 20).map(card), dropTarget: approver },
     { key: 'scheduled', label: 'Scheduled', cards: filtered.filter((r) => r.status === 'scheduled').map(card), dropTarget: approver },
     { key: 'published', label: 'Published, 7 days', cards: filtered.filter(recentPublished).slice(0, 12).map(card) },
   ]
@@ -159,8 +159,8 @@ export const ReviewsClient: React.FC<{
             i
             <span className="cms-info__note" role="tooltip">
               {approver
-                ? 'Changes waiting for sign-off, and what has been approved (Published shows the last 7 days, All the last 90). Open one to publish it, schedule it or send it back. On the board, drag a waiting card to Sent back or Scheduled.'
-                : 'Your changes and where they are. Approvers publish them, or send them back with a note.'}
+                ? 'Changes waiting for sign-off, and what has been approved (Published shows the last 7 days, All the last 90). Open one to approve and publish it, approve it for a date, or request changes. On the board, drag a waiting card to Changes requested or Scheduled.'
+                : 'Your changes and where they are. Approvers publish them, or ask for changes with a note.'}
             </span>
           </span>
         </div>
@@ -168,7 +168,7 @@ export const ReviewsClient: React.FC<{
           <input
             className="cms-input cms-seo__search"
             type="search"
-            placeholder="Search reviews"
+            placeholder="Search approvals"
             aria-label="Search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}

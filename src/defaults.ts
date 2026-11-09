@@ -47,6 +47,37 @@ const INDEXED: Partial<Field> = {
   },
 }
 
+/**
+ * The SEO plugin's fields in SEO words, the same ones the SEO overview uses:
+ * Title tag, Meta description, and the picture social media show, which
+ * Open Graph calls og:image.
+ */
+const SEO_LABELS: Record<string, { label: string; description?: string }> = {
+  title: { label: 'Title tag' },
+  description: { label: 'Meta description' },
+  image: {
+    label: 'Social share image',
+    description: 'Shown when the page is shared on social media or in a message (the Open Graph image). 1200 × 630 works everywhere.',
+  },
+}
+const withSeoLabels = (fields: Field[]): Field[] =>
+  fields.map((f) =>
+    f.type === 'group' && 'name' in f && f.name === 'meta'
+      ? {
+          ...f,
+          fields: f.fields.map((g) => {
+            const named = 'name' in g ? SEO_LABELS[g.name] : undefined
+            if (!named) return g
+            return {
+              ...g,
+              label: named.label,
+              ...(named.description ? { admin: { ...('admin' in g ? g.admin : {}), description: named.description } } : {}),
+            } as Field
+          }),
+        }
+      : f,
+  )
+
 /** The page's `noIndex` checkbox, shown as "Indexed" (stored value unchanged). */
 const asIndexed = (field: Field): Field =>
   ({ ...field, label: INDEXED.label, admin: { ...('admin' in field ? field.admin : {}), ...INDEXED.admin } }) as Field
@@ -90,7 +121,7 @@ export function withPlainSeoTab(fields: Field[] | undefined): Field[] {
                   ...tab,
                   label: tab.label === 'SEO' || tab.label === 'Google' || !tab.label ? 'SEO' : tab.label,
                   description: tab.description ?? 'How this page appears in search results and when it is shared.',
-                  fields: moved ? [moved, ...tab.fields] : tab.fields.map((f) => (isNoIndex(f) ? asIndexed(f) : f)),
+                  fields: withSeoLabels(moved ? [moved, ...tab.fields] : tab.fields.map((f) => (isNoIndex(f) ? asIndexed(f) : f))),
                 }
               : { ...tab, fields: tab.fields.map((f) => (isNoIndex(f) ? asIndexed(f) : f)) },
           ),

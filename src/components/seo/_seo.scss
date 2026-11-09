@@ -158,6 +158,10 @@
     &.is-good {
       background: #16a34a;
     }
+    // Approvals: the same colours as the editor's status pills.
+    &.is-waiting {
+      background: #2563eb;
+    }
   }
 
 }
