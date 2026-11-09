@@ -14,6 +14,13 @@
  * NavRail menu renders that slot at the top of the menu in place of the logo.
  * TenantDefault picks the site whose domain the admin was opened on; this
  * falls back to the first site if nothing is chosen.
+ *
+ * clientProps (optional):
+ * - wordmarks: { 'example.co.uk': '/logos/example.svg' }, keyed by domain
+ *   without www. A site with a wordmark shows that image in the button and
+ *   the list instead of the small mark, name and domain (the name stays in
+ *   the tip and for screen readers). For brands whose logo is a wordmark.
+ * - mark: a square image for the collapsed rail when wordmarks are used.
  */
 import { useTenantSelection } from '@payloadcms/plugin-multi-tenant/client'
 import { useConfig } from '@payloadcms/ui'
@@ -23,9 +30,14 @@ import React, { useEffect } from 'react'
 import { Mark, useFilter, useMenu, useSites } from './menu.js'
 import { Icon } from '../nav/icons.js'
 
-type Choice = { id: string; name: string; domain?: string | null; logo?: string | null }
+type Choice = { id: string; name: string; domain?: string | null; logo?: string | null; wordmark?: string }
 
-export const SiteMenu: React.FC = () => {
+type Props = { wordmarks?: Record<string, string>; mark?: string }
+
+const bare = (domain?: string | null) =>
+  (domain ?? '').trim().toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/.*$/, '')
+
+export const SiteMenu: React.FC<Props> = ({ wordmarks, mark }) => {
   const { options, selectedTenantID, setTenant, entityType } = useTenantSelection()
   const { config } = useConfig()
   const sites = useSites()
@@ -38,6 +50,7 @@ export const SiteMenu: React.FC = () => {
       name: typeof o.label === 'string' ? o.label : String(o.value),
       domain: site?.domain,
       logo: site?.logo,
+      wordmark: wordmarks?.[bare(site?.domain)],
     }
   })
   const filter = useFilter(choices, (c) => `${c.name} ${c.domain ?? ''}`)
@@ -69,11 +82,23 @@ export const SiteMenu: React.FC = () => {
         onClick={menu.toggle}
         data-tip={current.name}
       >
-        <Mark label={current.name} src={current.logo} size={30} />
-        <span className="cms-sitemenu__text">
-          <strong>{current.name}</strong>
-          {current.domain && <small>{current.domain}</small>}
-        </span>
+        {current.wordmark ? (
+          <>
+            <span className="cms-sitemenu__mark">
+              <Mark label={current.name} src={mark ?? current.logo} size={30} />
+            </span>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img className="cms-sitemenu__wordmark" src={current.wordmark} alt={current.name} />
+          </>
+        ) : (
+          <>
+            <Mark label={current.name} src={current.logo} size={30} />
+            <span className="cms-sitemenu__text">
+              <strong>{current.name}</strong>
+              {current.domain && <small>{current.domain}</small>}
+            </span>
+          </>
+        )}
         <Icon name="chevrons" size={16} />
       </button>
 
@@ -96,11 +121,18 @@ export const SiteMenu: React.FC = () => {
                   className="cms-menu__item"
                   onClick={() => pick(c.id)}
                 >
-                  <Mark label={c.name} src={c.logo} size={26} />
-                  <span className="cms-menu__itemtext">
-                    {c.name}
-                    {c.domain && <small>{c.domain}</small>}
-                  </span>
+                  {c.wordmark ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img className="cms-sitemenu__wordmark" src={c.wordmark} alt={c.name} />
+                  ) : (
+                    <>
+                      <Mark label={c.name} src={c.logo} size={26} />
+                      <span className="cms-menu__itemtext">
+                        {c.name}
+                        {c.domain && <small>{c.domain}</small>}
+                      </span>
+                    </>
+                  )}
                   {active && <Icon name="check" size={16} />}
                 </button>
               )

@@ -30,6 +30,9 @@ change. Run `payload generate:importmap` after updating.
 - The menu marks the current screen with or without a trailing slash
   (Next's `trailingSlash`).
 - Guide: the collapse arrow is beside the logo, not at the foot of the menu.
+- Site menu: `wordmarks` (by domain) shows a brand's wordmark image in place
+  of the small mark, name and domain, and `mark` is the square image used
+  when the menu is collapsed. For brands whose logo is a wordmark.
 
 ## 0.2.0
 
