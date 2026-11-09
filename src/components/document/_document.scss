@@ -273,6 +273,10 @@ body:has(.doc-controls) .doc-header {
 .doc-controls__controls {
   gap: 8px;
   align-items: center;
+  // On a phone only the publish button may give way; icon buttons keep their size.
+  > :not(.form-submit) {
+    flex-shrink: 0;
+  }
 }
 .doc-controls__controls-wrapper {
 
