@@ -3,7 +3,7 @@
 ## What this is
 
 `@webheroco/payload-admin`: the WebHero Payload admin UI, installed by every
-client site from GitHub Packages. The rules it implements are the
+client site from the file on its GitHub release. The rules it implements are the
 `client-payload` skill's admin UI standard
 (`webheroco/agent-skills`, `skills/client-payload/references/admin-ui.md`).
 When you change how the admin behaves, update that file in the same piece of
@@ -27,6 +27,10 @@ work (a separate PR there), so the rule and the code agree.
   option on `webheroAdmin()` with a sensible default, never a hard-coded slug,
   address or brand. Options must be plain data, because they are stored on
   `admin.custom` and passed to client components as props.
+- **No client names anywhere.** This repo is public. Never name a client,
+  a client's site, a person or a client's incident in code, comments, the
+  CHANGELOG, commit messages, PR titles or PR descriptions. Say what the
+  change does for any site ("a three-site admin", "a site with a shop").
 - **Server components read options with `readOptions(payload.config)`.**
   Client components get them as props, injected by the plugin.
 - **Payload's theme variables only** (`--theme-bg`, `--theme-elevation-*`,
