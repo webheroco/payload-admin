@@ -115,6 +115,10 @@ of another site can't be framed from this domain) or a big site, pass
 | `@webheroco/payload-admin/styles.css` | all the admin styles, compiled |
 | `@webheroco/payload-admin/styles.scss` | the same in Sass |
 
+Brands whose logos are wordmarks can show them in the site menu:
+`{ path: SITE_MENU, clientProps: { wordmarks: { 'example.co.uk': '/logos/example.svg' }, mark: '/logos/group-mark.svg' } }`.
+Keys are domains without www; `mark` is the square image for the collapsed menu.
+
 ## Updating a site
 
 `npm install --save-exact @webheroco/payload-admin@latest`, regenerate the
