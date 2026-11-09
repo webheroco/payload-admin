@@ -1,9 +1,10 @@
 // @webheroco/payload-admin. The rules behind it: client-payload references/admin-ui.md.
 'use client'
 
-import Link from 'next/link'
+import { Link, useStepNav } from '@payloadcms/ui'
+import NextLink from 'next/link'
 import { usePathname } from 'next/navigation'
-import React, { useEffect, useState } from 'react'
+import React, { createContext, useContext, useEffect, useState } from 'react'
 
 import { Icon } from './icons.js'
 
@@ -31,24 +32,43 @@ const readCollapsed = () => {
   }
 }
 
-/** One menu row: icon always, label beside it or (collapsed) in a hover tip. */
+/** The menu row clicked and still loading, so it shows as chosen straight away. */
+const PendingContext = createContext<{ pending: string | null; start: (href: string, label: string) => void }>({
+  pending: null,
+  start: () => {},
+})
+
+/**
+ * One menu row: icon always, label beside it or (collapsed) in a hover tip.
+ *
+ * Payload's own Link, so its progress bar runs while the next screen loads,
+ * and the click marks the row and names the screen in the breadcrumb at once.
+ * Before, the old screen's name stayed in the breadcrumb, and the old row
+ * stayed marked, until the new screen arrived.
+ */
 const RailLink: React.FC<{ href: string; icon: string; label: string; active: boolean }> = ({
   href,
   icon,
   label,
   active,
-}) => (
-  <Link
-    href={href}
-    prefetch={false}
-    className={`cms-rail__link${active ? ' is-active' : ''}`}
-    aria-current={active ? 'page' : undefined}
-    data-tip={label}
-  >
-    <Icon name={icon} />
-    <span className="cms-rail__text">{label}</span>
-  </Link>
-)
+}) => {
+  const { pending, start } = useContext(PendingContext)
+  const shown = pending ? trim(pending) === trim(href) : active
+  return (
+    <Link
+      href={href}
+      prefetch={false}
+      className={`cms-rail__link${shown ? ' is-active' : ''}`}
+      aria-current={shown ? 'page' : undefined}
+      aria-busy={pending && trim(pending) === trim(href) ? true : undefined}
+      data-tip={label}
+      onClick={() => start(href, label)}
+    >
+      <Icon name={icon} />
+      <span className="cms-rail__text">{label}</span>
+    </Link>
+  )
+}
 
 const OutLink: React.FC<{ item: OutItem }> = ({ item }) => (
   <a href={item.href} target="_blank" rel="noopener" className="cms-rail__link is-out" data-tip={item.tip}>
@@ -97,10 +117,22 @@ export const NavRailClient: React.FC<{
     return here === base || here.startsWith(`${base}/`)
   }
   const outGroups = [...new Set(outLinks.map((l) => l.group))]
+
+  // The row just clicked, until its screen has arrived.
+  const { setStepNav } = useStepNav()
+  const [pending, setPending] = useState<string | null>(null)
+  useEffect(() => setPending(null), [pathname])
+  const start = (href: string, label: string) => {
+    if (trim(href) === trim(pathname)) return
+    setPending(href)
+    setStepNav([{ label }])
+  }
+
   return (
+    <PendingContext.Provider value={{ pending, start }}>
     <aside className={`cms-rail${collapsed ? ' is-collapsed' : ''}`} aria-label="Main menu">
       <div className="cms-rail__top">
-        <Link
+        <NextLink
           href={adminRoute}
           prefetch={false}
           className="cms-rail__logo"
@@ -120,7 +152,7 @@ export const NavRailClient: React.FC<{
             <rect width="32" height="32" rx="8" fill="currentColor" />
             <path d="M9 22V10h7a4 4 0 0 1 0 8h-7M16 18l6 4" stroke="var(--theme-bg)" strokeWidth="2.4" fill="none" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-        </Link>
+        </NextLink>
         {/* On multi-site the site menu takes the logo's place (the CSS hides the logo when it is there). */}
         {beforeLinks}
         {/* An icon at the right of the open menu. Collapsed, there is none: the logo or the edge opens it. */}
@@ -177,5 +209,6 @@ export const NavRailClient: React.FC<{
       </nav>
 
     </aside>
+    </PendingContext.Provider>
   )
 }

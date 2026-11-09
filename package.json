@@ -1,6 +1,6 @@
 {
   "name": "@webheroco/payload-admin",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "The WebHero Payload admin: icon rail menu, one-row document header, section palette, SEO overview, Performance and guide, shared by every client site.",
   "license": "UNLICENSED",
   "private": false,
