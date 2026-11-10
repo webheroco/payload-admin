@@ -87,6 +87,17 @@ export const NavRail = async (props: ServerProps & { visibleEntities?: VisibleEn
         importMap: payload.importMap,
         serverProps: { i18n, locale, params, payload, permissions, searchParams, user },
       })}
+      // The site's own icon (the one Payload shows on the login screen and in
+      // the browser tab), so the menu carries the client's mark.
+      logo={
+        payload.config.admin?.components?.graphics?.Icon
+          ? RenderServerComponent({
+              Component: payload.config.admin.components.graphics.Icon,
+              importMap: payload.importMap,
+              serverProps: { i18n, locale, params, payload, permissions, searchParams, user },
+            })
+          : undefined
+      }
       home={home}
       performanceHref={
         home === 'performance'

@@ -1,5 +1,32 @@
 # Changelog
 
+## 0.4.4
+
+No schema change. Run `payload generate:importmap` after updating if the site
+sets `admin.components.graphics.Icon` (the menu now renders it).
+
+- Resubmitting a page that already has an open approval request works. The
+  package marks the old request "replaced" as the system now; before, its own
+  check refused that change ("That change can't be made here"), so a second
+  submission failed. The system flags no longer stay on the request after
+  these changes either. A site that patched this in its own config can delete
+  that.
+- The mark at the top of the menu is the site's `admin.components.graphics.Icon`
+  when it sets one, instead of the package's generic mark.
+- The account picture no longer shows as a broken image when it failed to load
+  before the page became interactive; it falls back to initials.
+- The account menu hides Light, Dark and System when the site fixes the theme
+  (`admin.theme` other than `'all'`).
+- SEO overview has an Alt text tab: every picture in an upload collection with
+  an `alt` field that the person may edit, missing ones by default (the tab
+  shows how many), with "Show all pictures", search, and alt text edited in
+  place in the language chosen in the menu.
+- The account menu and language menu show on the package's own pages (SEO
+  overview, Sections, Approvals, Guide, Performance). Payload only passed the
+  header actions to its own views, so these showed Payload's plain avatar.
+- SEO overview on phones: the tabs scroll sideways instead of widening the
+  page.
+
 ## 0.4.3
 
 No schema change. Run `payload generate:importmap` after updating (new

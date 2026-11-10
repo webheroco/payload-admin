@@ -236,22 +236,43 @@ async function notifyAuthor(req: PayloadRequest, review: ReviewDoc, outcome: 'se
 
 /* The Reviews collection */
 
+/**
+ * A system change to a review inside someone's request. Payload merges the
+ * context into the shared request, so it is put back afterwards: otherwise
+ * the flags would stay on for everything else that request does.
+ */
+async function asSystem<T>(req: PayloadRequest, run: () => Promise<T>): Promise<T> {
+  const saved = req.context
+  try {
+    return await run()
+  } finally {
+    req.context = saved
+  }
+}
+
 async function replaceOpen(req: PayloadRequest, t: ReviewTarget, exceptId: number | string) {
   const open = await req.payload.find({ collection: REVIEWS_SLUG as CollectionSlug, where: { and: [sameTarget(t), { status: { in: OPEN } }, { id: { not_equals: exceptId } }] }, depth: 0, limit: 50, overrideAccess: true, req })
-  for (const doc of open.docs) await req.payload.update({ collection: REVIEWS_SLUG as CollectionSlug, id: doc.id, data: { status: 'replaced' } as never, overrideAccess: true, req, context: { reviewQuiet: true } })
+  // "Replaced" is a status only the system sets, so the change goes through as the system.
+  for (const doc of open.docs) {
+    await asSystem(req, () =>
+      req.payload.update({ collection: REVIEWS_SLUG as CollectionSlug, id: doc.id, data: { status: 'replaced' } as never, overrideAccess: true, req, context: { reviewSystem: true, reviewQuiet: true } }),
+    )
+  }
 }
 
 async function reopenScheduled(req: PayloadRequest, t: ReviewTarget, a: ResolvedApprovals) {
   const scheduled = await req.payload.find({ collection: REVIEWS_SLUG as CollectionSlug, where: { and: [sameTarget(t), { status: { equals: 'scheduled' } }] }, depth: 0, limit: 10, overrideAccess: true, req })
   for (const doc of scheduled.docs) {
-    const reopened = await req.payload.update({
-      collection: REVIEWS_SLUG as CollectionSlug,
-      id: doc.id,
-      data: { status: 'waiting', publishAt: null, message: 'Changed after it was approved, so it needs another look.' } as never,
-      overrideAccess: true,
-      req,
-      context: { reviewSystem: true, reviewQuiet: true },
-    })
+    const reopened = await asSystem(req, () =>
+      req.payload.update({
+        collection: REVIEWS_SLUG as CollectionSlug,
+        id: doc.id,
+        data: { status: 'waiting', publishAt: null, message: 'Changed after it was approved, so it needs another look.' } as never,
+        overrideAccess: true,
+        req,
+        context: { reviewSystem: true, reviewQuiet: true },
+      }),
+    )
     await notifySubmitted(req, reopened as unknown as ReviewDoc, a)
   }
 }
@@ -262,17 +283,22 @@ async function recordPublish(req: PayloadRequest, t: ReviewTarget) {
   const now = new Date().toISOString()
   if (open.docs.length) {
     for (const doc of open.docs)
-      await req.payload.update({ collection: REVIEWS_SLUG as CollectionSlug, id: doc.id, data: { status: 'published', reviewedBy: req.user.id, reviewedAt: now } as never, overrideAccess: true, req, context: { reviewPublished: true } })
+      await asSystem(req, () =>
+        req.payload.update({ collection: REVIEWS_SLUG as CollectionSlug, id: doc.id, data: { status: 'published', reviewedBy: req.user!.id, reviewedAt: now } as never, overrideAccess: true, req, context: { reviewPublished: true } }),
+      )
     return
   }
   const described = await describe(req, t)
-  await req.payload.create({
-    collection: REVIEWS_SLUG as CollectionSlug,
-    data: { ...t, docId: t.docId ? String(t.docId) : null, title: described?.title ?? t.entity, status: 'published', submittedBy: req.user.id, reviewedBy: req.user.id, reviewedAt: now } as never,
-    overrideAccess: true,
-    req,
-    context: { reviewSystem: true, reviewQuiet: true },
-  })
+  const user = req.user
+  await asSystem(req, () =>
+    req.payload.create({
+      collection: REVIEWS_SLUG as CollectionSlug,
+      data: { ...t, docId: t.docId ? String(t.docId) : null, title: described?.title ?? t.entity, status: 'published', submittedBy: user.id, reviewedBy: user.id, reviewedAt: now } as never,
+      overrideAccess: true,
+      req,
+      context: { reviewSystem: true, reviewQuiet: true },
+    }),
+  )
 }
 
 function reviewsCollection(a: ResolvedApprovals, usersSlug: string): CollectionConfig {

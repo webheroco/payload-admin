@@ -780,9 +780,79 @@
     font-size: 14px;
     gap: 6px;
   }
+  // Four tabs don't fit a phone: the row scrolls sideways instead of
+  // widening the page. The "?" note is fixed, so the scrolling row can't clip it.
+  .cms-seo__bar .cms-tabs {
+    overflow-x: auto;
+    scrollbar-width: none;
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+  .cms-seo__bar .cms-tabs__tab {
+    flex: none;
+  }
+  .cms-seo__bar .cms-tabs .cms-info {
+    flex: none;
+    padding-right: 4px;
+  }
+  .cms-seo__bar .cms-tabs .cms-info__note {
+    position: fixed;
+    top: auto;
+    left: 16px;
+    right: 16px;
+    width: auto;
+    max-width: none;
+    margin-top: 32px;
+  }
 }
 
 // No rows: only the sentence under it, not an empty box with headings.
 .cms-scroll:has(tbody:empty) {
   display: none;
+}
+
+// Alt text: a small picture, its file name, then the description taking the room.
+.cms-seo .cms-seo__table--alt {
+  td {
+    vertical-align: middle;
+  }
+  th:first-child,
+  .cms-seo__cell-thumb {
+    width: 1%;
+    padding-right: 0;
+    img {
+      display: block;
+      width: 56px;
+      max-width: none;
+      height: 56px;
+      object-fit: cover;
+      border-radius: 8px;
+      background: var(--theme-elevation-50);
+    }
+  }
+}
+@media (min-width: 901px) {
+  .cms-scroll > .cms-seo__table--alt {
+    min-width: 640px;
+  }
+}
+@media (max-width: 900px) {
+  .cms-seo .cms-seo__table--alt {
+    tr {
+      grid-template-columns: 56px 1fr;
+    }
+    td.cms-seo__cell-thumb {
+      grid-column: 1;
+      grid-row: 1 / span 2;
+    }
+    td.cms-seo__cell-page {
+      grid-column: 2;
+      grid-row: 1;
+    }
+    td:nth-child(3) {
+      grid-column: 2;
+      grid-row: 2;
+    }
+  }
 }

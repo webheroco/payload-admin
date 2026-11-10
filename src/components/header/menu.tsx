@@ -76,13 +76,19 @@ export const Mark: React.FC<{ label: string; src?: string | null; size?: number;
   round,
 }) => {
   const [failed, setFailed] = useState(false)
-  useEffect(() => setFailed(false), [src])
+  const img = useRef<HTMLImageElement>(null)
+  useEffect(() => {
+    // An image that failed before React attached onError (it was in the
+    // server's HTML) never calls it, so check once on mount as well.
+    const el = img.current
+    setFailed(Boolean(el && el.complete && el.naturalWidth === 0))
+  }, [src])
   const hue = [...label].reduce((h, c) => (h * 31 + c.charCodeAt(0)) % 360, 7)
   const style = { width: size, height: size, borderRadius: round ? '50%' : Math.round(size / 4) }
   if (src && !failed)
     return (
       // eslint-disable-next-line @next/next/no-img-element
-      <img className="cms-mark is-image" src={src} alt="" style={style} onError={() => setFailed(true)} />
+      <img ref={img} className="cms-mark is-image" src={src} alt="" style={style} onError={() => setFailed(true)} />
     )
   return (
     <span

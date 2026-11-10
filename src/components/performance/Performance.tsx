@@ -20,6 +20,7 @@ import React from 'react'
 
 import { readOptions } from '../../options.js'
 import { PerformanceClient, type Enquiry } from './PerformanceClient.js'
+import { headerActions } from '../headerActions.js'
 
 const PERIODS = [7, 30, 90] as const
 
@@ -82,6 +83,7 @@ const render = async ({ initPageResult, params, searchParams }: AdminViewServerP
       searchParams={searchParams}
       user={user ?? undefined}
       visibleEntities={visibleEntities}
+      viewActions={headerActions(payload.config)}
     >
       {page}
     </DefaultTemplate>
