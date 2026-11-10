@@ -1,5 +1,28 @@
 # Changelog
 
+## 0.4.3
+
+No schema change. Run `payload generate:importmap` after updating (new
+`ListHelp`).
+
+- A collection's `admin.description` shows on its list as the "?" note just
+  before Create new, set by the plugin unless the collection has its own
+  `components.Description`. Before, Payload printed it as a paragraph in the
+  top row, and a long one shrank the search box to its icon and pushed
+  Columns and Filters into Create new. A site that added its own "?" for
+  this can delete it.
+- Upload collections: fields a storage plugin adds before the plugin runs
+  (`url`, `thumbnailURL`, `sizes` and every field inside) are left out of
+  Columns and Filters too. Before, only fields the plugin added itself were,
+  so a site on cloud storage offered "URL" and "Sizes > Thumbnail > URL". A
+  site that quieted these itself can delete that.
+- Performance's card grid is `.cms-perf-grid`. It shared `.cms-grid` with the
+  List/Grid switch and turned the Pages grid into two wide tiles at desktop
+  width and an overflow on phones. A site rule that fixed `.cms-grid` for the
+  list can be deleted.
+- Columns no longer offers ID unless it is already switched on, so it can
+  still be taken off.
+
 ## 0.4.2
 
 No schema change. No config change.

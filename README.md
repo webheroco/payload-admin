@@ -110,7 +110,7 @@ of another site can't be framed from this domain) or a big site, pass
 | --- | --- |
 | `@webheroco/payload-admin` | the plugin, the option types, `publicPath`, the path constants. No React, so Payload's CLI can load it. |
 | `@webheroco/payload-admin/rsc` | server components: `NavRail`, `AccountMenu`, `SeoOverview`, `Performance`, `PerformanceHome`, `Sections`, `Reviews`, `Guide`, `LanguagesCell` |
-| `@webheroco/payload-admin/client` | client components: `LanguageMenu`, `ListPanels`, `YesNoCell`, `HelpButton` (retired: the guide is in the menu), `HeaderRow`, `SwitchField`, `SaveHelp`, `PreviewToolbar`, `DocStatus`, `SaveNote`, `VersionsButton`, `BlockPalette`, `ListGridSwitch`, and `Mark`, `Icon`, `useMenu`, `useFilter`, `useSites` for a project's own pieces |
+| `@webheroco/payload-admin/client` | client components: `LanguageMenu`, `ListPanels`, `ListHelp`, `YesNoCell`, `HelpButton` (retired: the guide is in the menu), `HeaderRow`, `SwitchField`, `SaveHelp`, `PreviewToolbar`, `DocStatus`, `SaveNote`, `VersionsButton`, `BlockPalette`, `ListGridSwitch`, and `Mark`, `Icon`, `useMenu`, `useFilter`, `useSites` for a project's own pieces |
 | `@webheroco/payload-admin/multi-site` | `SiteMenu` (needs `@payloadcms/plugin-multi-tenant`) |
 | `@webheroco/payload-admin/styles.css` | all the admin styles, compiled |
 | `@webheroco/payload-admin/styles.scss` | the same in Sass |

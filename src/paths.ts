@@ -32,6 +32,7 @@ export const LIST_GRID_SWITCH = `${CLIENT}#ListGridSwitch`
 export const SERP_PREVIEW = `${CLIENT}#SerpPreview`
 export const YES_NO_CELL = `${CLIENT}#YesNoCell`
 export const LIST_PANELS = `${CLIENT}#ListPanels`
+export const LIST_HELP = `${CLIENT}#ListHelp`
 
 /** Multi-site only: needs @payloadcms/plugin-multi-tenant. */
 export const SITE_MENU = `${MULTI_SITE}#SiteMenu`
