@@ -18,6 +18,7 @@ import { BLOCK_PALETTE } from '../../paths.js'
 import { sectionUsage, usagePlan } from '../../sections-usage.js'
 import { selectedSiteID, siteWhere } from '../selectedSite.js'
 import { SectionsClient, type SectionCard } from './SectionsClient.js'
+import { headerActions } from '../headerActions.js'
 
 type AnyField = Record<string, any>
 
@@ -177,6 +178,7 @@ export const Sections = async ({ initPageResult, params, searchParams }: AdminVi
       searchParams={searchParams}
       user={user ?? undefined}
       visibleEntities={visibleEntities}
+      viewActions={headerActions(payload.config)}
     >
       <Gutter>
         <SectionsClient sections={[...cards.values()]} />

@@ -58,6 +58,7 @@ export const AccountMenuClient: React.FC<{ settings: SettingsLink[] }> = ({ sett
   const adminRoute = config.routes.admin
   const who = user.name || user.email
   const themeChoice = autoMode ? 'auto' : theme
+  const themeLocked = Boolean(config.admin?.theme && config.admin.theme !== 'all')
   const themes = [
     { value: 'light', icon: 'sun', label: 'Light' },
     { value: 'dark', icon: 'moon', label: 'Dark' },
@@ -85,6 +86,9 @@ export const AccountMenuClient: React.FC<{ settings: SettingsLink[] }> = ({ sett
               <small>{user.email}</small>
             </span>
           </div>
+          {/* Only when the site lets people choose (admin.theme 'all', Payload's default). */}
+          {themeLocked ? null : (
+          <>
           <div className="cms-menu__label">Theme</div>
           <div className="cms-accountmenu__themes" role="radiogroup" aria-label="Theme">
             {themes.map((t) => (
@@ -102,6 +106,8 @@ export const AccountMenuClient: React.FC<{ settings: SettingsLink[] }> = ({ sett
               </button>
             ))}
           </div>
+          </>
+          )}
           {settings.length > 0 && (
             <>
               <div className="cms-menu__label cms-menu__label--rule">Settings</div>

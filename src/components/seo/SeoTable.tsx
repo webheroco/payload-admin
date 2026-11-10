@@ -39,6 +39,16 @@ export type RedirectRow = {
   type: '301' | '302'
 }
 
+export type AltRow = {
+  id: string
+  collection: string
+  filename: string
+  alt: string
+  /** A small version of the picture, or the picture itself. */
+  thumb: string
+  editHref: string
+}
+
 type Range = { min: number; max: number }
 const TITLE: Range = { min: 30, max: 60 }
 const DESCRIPTION: Range = { min: 70, max: 160 }
@@ -191,7 +201,7 @@ const EditableText: React.FC<{
   )
 }
 
-type Tab = 'listings' | 'schema' | 'redirects'
+type Tab = 'listings' | 'schema' | 'alt' | 'redirects'
 
 export const SeoWorkspace: React.FC<{
   apiRoute: string
@@ -199,12 +209,21 @@ export const SeoWorkspace: React.FC<{
   locale?: string
   localeLabel?: string
   rows: SeoRow[]
+  /** null when there is no upload collection with alt text this user can edit: no Alt text tab. */
+  altRows: AltRow[] | null
   /** null when the signed-in user can't manage redirects: no Redirects tab. */
   redirects: RedirectRow[] | null
-}> = ({ apiRoute, initialTab, locale, localeLabel, rows: initialRows, redirects: initialRedirects }) => {
+}> = ({ apiRoute, altRows: initialAlt, initialTab, locale, localeLabel, rows: initialRows, redirects: initialRedirects }) => {
   const { setStepNav } = useStepNav()
   const canRedirect = initialRedirects !== null
-  const [tab, setTab] = useState<Tab>(initialTab === 'redirects' && !canRedirect ? 'listings' : initialTab)
+  const canAlt = initialAlt !== null
+  const [tab, setTab] = useState<Tab>(
+    (initialTab === 'redirects' && !canRedirect) || (initialTab === 'alt' && !canAlt) ? 'listings' : initialTab,
+  )
+  const [altRows, setAltRows] = useState(initialAlt ?? [])
+  const [allPictures, setAllPictures] = useState(false)
+  // Pictures given alt text here stay in the "missing" list until the page reloads, so they don't jump away.
+  const [doneHere, setDoneHere] = useState<Set<string>>(() => new Set())
   const [rows, setRows] = useState(initialRows)
   const [redirects, setRedirects] = useState(initialRedirects ?? [])
   const [query, setQuery] = useState('')
@@ -219,6 +238,7 @@ export const SeoWorkspace: React.FC<{
   useEffect(() => setStepNav([{ label: 'SEO overview' }]), [setStepNav])
   useEffect(() => setRows(initialRows), [initialRows])
   useEffect(() => setRedirects(initialRedirects ?? []), [initialRedirects])
+  useEffect(() => setAltRows(initialAlt ?? []), [initialAlt])
 
   const switchTab = (next: Tab) => {
     setTab(next)
@@ -308,6 +328,22 @@ export const SeoWorkspace: React.FC<{
     if (!row.id.startsWith('new-')) toast.success('Redirect removed.')
   }
 
+  const altKey = (r: AltRow) => `${r.collection}:${r.id}`
+  const missingAlt = altRows.filter((r) => !r.alt.trim()).length
+  const shownAlt = altRows.filter(
+    (r) =>
+      (allPictures || !r.alt.trim() || doneHere.has(altKey(r))) &&
+      (!q || r.filename.toLowerCase().includes(q) || r.alt.toLowerCase().includes(q)),
+  )
+  const saveAlt = (row: AltRow) => async (value: string) => {
+    const params = new URLSearchParams({ depth: '0' })
+    if (locale) params.set('locale', locale)
+    await api(`${apiRoute}/${row.collection}/${row.id}?${params}`, 'PATCH', { alt: value })
+    setAltRows((all) => all.map((r) => (altKey(r) === altKey(row) ? { ...r, alt: value } : r)))
+    setDoneHere((s) => new Set(s).add(altKey(row)))
+    toast.success('Alt text saved.')
+  }
+
   const shownRedirects = redirects.filter(
     (r) => !q || r.from.toLowerCase().includes(q) || r.toUrl.toLowerCase().includes(q),
   )
@@ -335,6 +371,17 @@ export const SeoWorkspace: React.FC<{
           >
             Schema
           </button>
+          {canAlt && (
+            <button
+              type="button"
+              role="tab"
+              aria-selected={tab === 'alt'}
+              className={`cms-tabs__tab${tab === 'alt' ? ' is-active' : ''}`}
+              onClick={() => switchTab('alt')}
+            >
+              Alt text{missingAlt ? <span className="cms-tabs__count">{missingAlt}</span> : null}
+            </button>
+          )}
           {canRedirect && (
             <button
               type="button"
@@ -354,7 +401,9 @@ export const SeoWorkspace: React.FC<{
                 ? `What search engines show for each page and post${localeLabel ? ` in ${localeLabel}` : ''}. Click any title or description to change it. Aim for title tags of ${TITLE.min} to ${TITLE.max} characters and meta descriptions of ${DESCRIPTION.min} to ${DESCRIPTION.max}.`
                 : tab === 'schema'
                   ? 'The structured data (JSON-LD) each indexed page gives search engines, read from the live site. Site-wide types are summarised at the top. Red means errors that stop rich results, amber means recommended properties are missing. The schema is written by the site’s code, so fixes are a developer job.'
-                  : 'Send visitors from an old address to a page that exists. Permanent (301) tells search engines the page has moved for good.'}
+                  : tab === 'alt'
+                    ? `Alt text describes a picture for people using screen readers and for search engines${localeLabel ? `, in ${localeLabel}` : ''}. The number is how many pictures have none. Click a description to add or change it; decorative pictures can say what they show in a few words.`
+                    : 'Send visitors from an old address to a page that exists. Permanent (301) tells search engines the page has moved for good.'}
             </span>
           </span>
         </div>
@@ -363,12 +412,21 @@ export const SeoWorkspace: React.FC<{
           <input
             className="cms-input cms-seo__search"
             type="search"
-            placeholder={tab === 'redirects' ? 'Search redirects' : 'Search pages'}
+            placeholder={tab === 'redirects' ? 'Search redirects' : tab === 'alt' ? 'Search pictures' : 'Search pages'}
             aria-label="Search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
-          {tab !== 'redirects' ? (
+          {tab === 'alt' ? (
+            <button
+              type="button"
+              className="cms-button cms-button--outline"
+              aria-pressed={allPictures}
+              onClick={() => setAllPictures((v) => !v)}
+            >
+              {allPictures ? 'Only missing' : 'Show all pictures'}
+            </button>
+          ) : tab !== 'redirects' ? (
             <>
             <button
               type="button"
@@ -525,6 +583,40 @@ export const SeoWorkspace: React.FC<{
             />
           </FilterPanel>
         </>
+      ) : tab === 'alt' ? (
+        <div className="cms-scroll">
+          <table className="cms-table cms-seo__table cms-seo__table--alt">
+            <thead>
+              <tr>
+                <th aria-label="Picture" />
+                <th>File name</th>
+                <th>Alt text</th>
+              </tr>
+            </thead>
+            <tbody>
+              {shownAlt.map((row) => (
+                <tr key={altKey(row)}>
+                  <td className="cms-seo__cell-thumb">
+                    {row.thumb ? <img src={row.thumb} alt="" width={56} height={56} loading="lazy" /> : null}
+                  </td>
+                  <td className="cms-seo__cell-page">
+                    <Link href={row.editHref} prefetch={false} className="cms-seo__page" title={row.filename}>
+                      {row.filename}
+                    </Link>
+                  </td>
+                  <td>
+                    <EditableText
+                      value={row.alt}
+                      placeholder="Add alt text"
+                      label={`alt text for ${row.filename}`}
+                      onSave={saveAlt(row)}
+                    />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       ) : tab === 'schema' ? (
         <SchemaTab
           rows={rows}
@@ -634,6 +726,11 @@ export const SeoWorkspace: React.FC<{
           </tbody>
         </table>
         </div>
+      )}
+      {tab === 'alt' && shownAlt.length === 0 && (
+        <p className="cms-seo__empty">
+          {q ? 'No pictures match that search.' : allPictures ? 'No pictures yet.' : 'Every picture has alt text.'}
+        </p>
       )}
       {tab === 'redirects' && shownRedirects.length === 0 && (
         <p className="cms-seo__empty">No redirects yet. Add one when a page moves or is removed.</p>

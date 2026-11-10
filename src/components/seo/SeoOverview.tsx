@@ -1,8 +1,10 @@
 // @webheroco/payload-admin. The rules behind it: client-payload references/admin-ui.md.
 /**
- * SEO overview (admin.components.views.seoOverview, path /seo). Two tabs:
+ * SEO overview (admin.components.views.seoOverview, path /seo). Tabs:
  * search listings (every page and post's search title, description and
- * whether search engines may list it, edited in place) and redirects.
+ * whether search engines may list it, edited in place), schema, alt text
+ * (every picture in an upload collection with an `alt` field, missing ones
+ * first) and redirects.
  * Reads in the language chosen in the menu, without falling back to English,
  * so a missing translation shows as missing.
  */
@@ -18,7 +20,8 @@ import { readOptions } from '../../options.js'
 import { publicPath } from '../../routes.js'
 import { selectedSiteID, siteWhere } from '../selectedSite.js'
 
-import { SeoWorkspace, type RedirectRow, type SeoRow } from './SeoTable.js'
+import { SeoWorkspace, type AltRow, type RedirectRow, type SeoRow } from './SeoTable.js'
+import { headerActions } from '../headerActions.js'
 
 export const SeoOverview = async ({ initPageResult, params, searchParams }: AdminViewServerProps) => {
   const { locale, permissions, req, visibleEntities } = initPageResult
@@ -103,6 +106,46 @@ export const SeoOverview = async ({ initPageResult, params, searchParams }: Admi
       type: doc.type === '302' ? '302' : '301',
     }))
 
+  // Alt text: pictures in every upload collection with a top-level `alt` field
+  // that this person may edit. Same language as the rest of the page.
+  const altCollections = payload.config.collections.filter(
+    (c) =>
+      c.upload &&
+      permissions?.collections?.[c.slug]?.update &&
+      c.fields.some((f) => 'name' in f && f.name === 'alt' && (f.type === 'text' || f.type === 'textarea')),
+  )
+  const altRows: AltRow[] = []
+  for (const c of altCollections) {
+    const where = siteWhere(payload, c.slug, siteID)
+    const imageOnly = { mimeType: { like: 'image/' } }
+    const result = await payload
+      .find({
+        collection: c.slug as 'pages',
+        depth: 0,
+        limit: 1000,
+        ...(payload.config.localization ? { locale: code, fallbackLocale: false as any } : {}),
+        overrideAccess: false,
+        pagination: false,
+        req,
+        select: { filename: true, alt: true, mimeType: true, url: true, thumbnailURL: true, sizes: true } as any,
+        sort: '-createdAt',
+        user,
+        where: where ? { and: [where, imageOnly] } : imageOnly,
+      })
+      .catch(() => null)
+    for (const doc of (result?.docs ?? []) as any[]) {
+      const thumb = doc.thumbnailURL || doc.sizes?.thumbnail?.url || doc.url || ''
+      altRows.push({
+        id: String(doc.id),
+        collection: c.slug,
+        filename: doc.filename ?? String(doc.id),
+        alt: typeof doc.alt === 'string' ? doc.alt : '',
+        thumb,
+        editHref: formatAdminURL({ adminRoute, path: `/collections/${c.slug}/${doc.id}` }),
+      })
+    }
+  }
+
   const localeLabel =
     payload.config.localization && locale
       ? payload.config.localization.locales.find((l) => l.code === locale.code)
@@ -118,11 +161,17 @@ export const SeoOverview = async ({ initPageResult, params, searchParams }: Admi
       searchParams={searchParams}
       user={user ?? undefined}
       visibleEntities={visibleEntities}
+      viewActions={headerActions(payload.config)}
     >
       <Gutter>
         <SeoWorkspace
           apiRoute={payload.config.routes.api}
-          initialTab={searchParams?.tab === 'redirects' ? 'redirects' : searchParams?.tab === 'schema' ? 'schema' : 'listings'}
+          altRows={altCollections.length ? altRows : null}
+          initialTab={
+            searchParams?.tab === 'redirects' || searchParams?.tab === 'schema' || searchParams?.tab === 'alt'
+              ? searchParams.tab
+              : 'listings'
+          }
           locale={locale?.code}
           localeLabel={typeof localeLabel?.label === 'string' ? localeLabel.label : undefined}
           redirects={redirects}

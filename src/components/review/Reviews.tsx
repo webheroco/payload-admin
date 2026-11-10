@@ -16,6 +16,7 @@ import React from 'react'
 import { adminPath, hasDrafts, REVIEWS_SLUG, typeLabel, type ReviewStatus } from '../../approvals.js'
 import { canApprove, readOptions } from '../../options.js'
 import { ReviewsClient, type ReviewItem } from './ReviewsClient.js'
+import { headerActions } from '../headerActions.js'
 
 const DAY = 86_400_000
 
@@ -153,6 +154,7 @@ export const Reviews = async ({ initPageResult, params, searchParams }: AdminVie
       searchParams={searchParams}
       user={user ?? undefined}
       visibleEntities={visibleEntities}
+      viewActions={headerActions(payload.config)}
     >
       <Gutter>
         <ReviewsClient

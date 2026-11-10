@@ -254,3 +254,20 @@ html[data-palette] .cms-rail .cms-rail__toggle {
   margin-left: auto;
   color: var(--theme-elevation-400);
 }
+
+// The site's own mark in the logo spot, at the size of the generic one.
+.cms-rail__mark {
+  display: inline-flex;
+  width: 28px;
+  height: 28px;
+  overflow: hidden;
+  border-radius: 8px;
+
+  > *,
+  img,
+  svg {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+}

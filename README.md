@@ -18,7 +18,7 @@ Built and checked on Payload 3.93 and Next.js 16.
 
 Only what differs per client:
 
-- the logo and icon (`admin.components.graphics`);
+- the logo and icon (`admin.components.graphics`; `Icon` is also the mark at the top of the menu);
 - the brand colours (`app/(payload)/custom.css`);
 - the dashboard's "needs attention" counts and shortcuts;
 - the click-to-edit bridge for the site's preview (passed in as `previewControls`);
@@ -71,7 +71,7 @@ Only what differs per client:
 | --- | --- | --- |
 | `routes` | `{ pages: '/:slug', posts: '/blog/:slug' }` | Where each collection lives on the site, for page tiles and the SEO overview. A document with its own `path` field uses that. |
 | `homeSlug` | `home` | The page served at `/`. |
-| `seo` | Pages and Posts, where they exist | The collections in the SEO overview, and what a row is called. |
+| `seo` | Pages and Posts, where they exist | The collections in the SEO overview, and what a row is called. Its Alt text tab lists the pictures in every upload collection with an `alt` field. |
 | `enquiries` | the Form Builder if `form-submissions` exists, else `{ collection: 'submissions', formField: 'form', pageField: 'page' }` | Where Performance counts enquiries. |
 | `livePreview` | none | Collections and globals with Live Preview; they get the preview toolbar. |
 | `previewControls` | none | More components beside the preview toolbar, such as the site's click-to-edit bridge. |

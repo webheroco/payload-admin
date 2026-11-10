@@ -99,9 +99,11 @@ export const NavRailClient: React.FC<{
   home?: 'performance' | 'dashboard'
   /** Whatever the config puts in beforeNavLinks: on multi-site, SiteMenu and TenantDefault. */
   beforeLinks?: React.ReactNode
+  /** The site's own mark (`admin.components.graphics.Icon`), in place of the generic one. */
+  logo?: React.ReactNode
   /** Links out of the admin, after the groups: "View website" and the project's `links`. */
   outLinks?: OutItem[]
-}> = ({ groups, adminRoute, seoHref, performanceHref, reviewsHref, sectionsHref, guideHref, home, beforeLinks, outLinks = [] }) => {
+}> = ({ groups, adminRoute, seoHref, performanceHref, reviewsHref, sectionsHref, guideHref, home, beforeLinks, logo, outLinks = [] }) => {
   const pathname = usePathname() ?? ''
   const [collapsed, setCollapsed] = useState(false)
 
@@ -151,11 +153,14 @@ export const NavRailClient: React.FC<{
             }
           }}
         >
-          {/* Replace with the client's logo mark. */}
-          <svg viewBox="0 0 32 32" width="28" height="28" aria-hidden="true">
-            <rect width="32" height="32" rx="8" fill="currentColor" />
-            <path d="M9 22V10h7a4 4 0 0 1 0 8h-7M16 18l6 4" stroke="var(--theme-bg)" strokeWidth="2.4" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
+          {logo ? (
+            <span className="cms-rail__mark">{logo}</span>
+          ) : (
+            <svg viewBox="0 0 32 32" width="28" height="28" aria-hidden="true">
+              <rect width="32" height="32" rx="8" fill="currentColor" />
+              <path d="M9 22V10h7a4 4 0 0 1 0 8h-7M16 18l6 4" stroke="var(--theme-bg)" strokeWidth="2.4" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          )}
         </NextLink>
         {/* On multi-site the site menu takes the logo's place (the CSS hides the logo when it is there). */}
         {beforeLinks}

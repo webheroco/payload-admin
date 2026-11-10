@@ -16,6 +16,7 @@ import React from 'react'
 import { readOptions } from '../../options.js'
 
 import { GuideClient, type GuideSection } from './GuideClient.js'
+import { headerActions } from '../headerActions.js'
 
 export const Guide = async ({ initPageResult, params, searchParams }: AdminViewServerProps) => {
   const { locale, permissions, req, visibleEntities } = initPageResult
@@ -183,6 +184,7 @@ export const Guide = async ({ initPageResult, params, searchParams }: AdminViewS
       searchParams={searchParams}
       user={user ?? undefined}
       visibleEntities={visibleEntities}
+      viewActions={headerActions(payload.config)}
     >
       <Gutter>
         <GuideClient name={(user as { name?: string } | null)?.name?.split(' ')[0]} sections={sections} />
