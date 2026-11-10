@@ -252,3 +252,40 @@ html.cms-list-panel-open .collection-list__wrap > .list-controls {
     width: 100%;
   }
 }
+
+// The list's description: the "?" note just before Create new (components/ListHelp),
+// never a paragraph that squeezes the search box.
+.collection-list__wrap > .list-header:has(.cms-list-help) {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: nowrap;
+
+  .list-header__content {
+    width: auto;
+  }
+  .list-header__after-header-content {
+    width: auto;
+    flex: none;
+  }
+
+  .list-header__after-header-content {
+    order: -1;
+    margin: 0;
+    padding: 0;
+  }
+  .collection-list__sub-header {
+    margin: 0;
+  }
+}
+.cms-list-help .cms-info__note {
+  left: auto;
+  right: -4px;
+  transform: none;
+}
+
+// Payload always offers ID in Columns; an editor never needs it. It stays
+// while it is switched on, so it can still be taken off.
+.list-controls__columns .pill-selector__pill[id='id']:not(.pill-selector__pill--selected) {
+  display: none !important;
+}

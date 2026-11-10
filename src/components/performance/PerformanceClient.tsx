@@ -186,7 +186,7 @@ export const PerformanceClient: React.FC<{
         <StackedBars dates={buckets} series={enquirySeries} unit={unit} />
       </section>
 
-      <div className="cms-grid">
+      <div className="cms-perf-grid">
         <Panel title="By form">
           <BarList
             rows={forms.map((f) => ({ ...f, color: colorOf(f.label) }))}

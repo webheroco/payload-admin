@@ -32,6 +32,7 @@ import {
   SWITCH_FIELD,
   VERSIONS_BUTTON,
   YES_NO_CELL,
+  LIST_HELP,
 } from './paths.js'
 
 /**
@@ -245,16 +246,12 @@ export function withQuietFileFields(collection: CollectionConfig): Field[] {
   const fields = collection.fields ?? []
   if (!collection.upload) return fields
   const upload = typeof collection.upload === 'object' ? collection.upload : {}
-  const own = new Set(fields.map((f) => ('name' in f ? f.name : '')))
-  const quiet = (f: Field): Field => ({ ...f, admin: { ...('admin' in f ? f.admin : {}), ...QUIET } }) as Field
-  // A storage plugin's prefix and any field named with a leading underscore are plumbing.
-  const mine = fields.map((f) => ('name' in f && (f.name === 'prefix' || f.name.startsWith('_')) ? quiet(f) : f))
-  const added: Field[] = FILE_FIELDS.filter(([name]) => !own.has(name)).map(([name, type]) => ({ name, type, admin: QUIET }) as Field)
+  const wanted: Field[] = FILE_FIELDS.map(([name, type]) => ({ name, type, admin: QUIET }) as Field)
   if (upload.focalPoint !== false || upload.imageSizes?.length || upload.resizeOptions) {
-    for (const name of ['focalX', 'focalY']) if (!own.has(name)) added.push({ name, type: 'number', admin: QUIET } as Field)
+    for (const name of ['focalX', 'focalY']) wanted.push({ name, type: 'number', admin: QUIET } as Field)
   }
-  if (upload.imageSizes?.length && !own.has('sizes')) {
-    added.push({
+  if (upload.imageSizes?.length) {
+    wanted.push({
       name: 'sizes',
       type: 'group',
       admin: QUIET,
@@ -271,7 +268,41 @@ export function withQuietFileFields(collection: CollectionConfig): Field[] {
       ),
     } as Field)
   }
-  return [...mine, ...added]
+  // A storage plugin's prefix and any field named with a leading underscore are plumbing.
+  const mine = fields.map((f) => ('name' in f && (f.name === 'prefix' || f.name.startsWith('_')) ? quietAll(f) : f))
+  return mergeQuiet(mine, wanted)
+}
+
+/** A field and everything inside it, out of Columns and Filters. */
+function quietAll(field: Field): Field {
+  const quieted = { ...field, admin: { ...('admin' in field ? field.admin : {}), ...QUIET } } as Field
+  if ('fields' in quieted && Array.isArray(quieted.fields)) {
+    return { ...quieted, fields: quieted.fields.map(quietAll) } as Field
+  }
+  return quieted
+}
+
+/**
+ * Quiet each wanted field: one the collection already has (a storage plugin
+ * adds `url` and `sizes` before this runs) keeps its definition and gains the
+ * flags, inside groups too; a missing one is added with only the flags, which
+ * Payload merges into its own upload field of that name.
+ */
+function mergeQuiet(fields: Field[], wanted: Field[]): Field[] {
+  const byName = new Map(wanted.map((w) => ['name' in w ? w.name : '', w]))
+  const seen = new Set<string>()
+  const merged = fields.map((f) => {
+    const name = 'name' in f ? f.name : ''
+    const want = byName.get(name)
+    if (!want) return f
+    seen.add(name)
+    const quieted = quietAll(f)
+    if ('fields' in quieted && Array.isArray(quieted.fields) && 'fields' in want && Array.isArray(want.fields)) {
+      return { ...quieted, fields: mergeQuiet(quieted.fields, want.fields) } as Field
+    }
+    return quieted
+  })
+  return [...merged, ...wanted.filter((w) => !seen.has('name' in w ? w.name : ''))]
 }
 
 /** A list column of EN / FR / ES chips. `ui` fields store nothing, so no migration. */
@@ -349,6 +380,8 @@ export function collectionDefaults(
       components: {
         ...components,
         ...(beforeListTable ? { beforeListTable } : {}),
+        // The list's description as the "?" note beside Create new, not a paragraph in the top row.
+        ...(collection.admin?.description && !components?.Description ? { Description: LIST_HELP } : {}),
         edit: {
           ...components?.edit,
           // The editor's-words status pills, "Undo changes" and the dates note.

@@ -170,6 +170,41 @@ test('upload lists offer what an editor recognises, not the file plumbing', () =
   assert.equal(webheroAdmin()(base()).collections[0].fields.some((f) => f.name === 'url'), false)
 })
 
+test('a storage plugin\'s own url and sizes fields are quieted too, inside the groups', () => {
+  const input = base()
+  input.collections.push({
+    slug: 'media',
+    upload: { imageSizes: [{ name: 'thumbnail', width: 300 }] },
+    fields: [
+      { name: 'alt', type: 'text' },
+      // What a cloud storage plugin adds before webheroAdmin() runs.
+      { name: 'url', type: 'text', admin: { hidden: true } },
+      { name: 'sizes', type: 'group', fields: [{ name: 'thumbnail', type: 'group', fields: [{ name: 'url', type: 'text' }] }] },
+    ],
+  })
+  const media = webheroAdmin()(input).collections.find((c) => c.slug === 'media')
+  const by = (name) => media.fields.filter((f) => f.name === name)
+  assert.equal(by('url').length, 1)
+  assert.equal(by('sizes').length, 1)
+  assert.equal(by('url')[0].admin.hidden, true)
+  assert.equal(by('url')[0].admin.disableListColumn, true)
+  const thumb = by('sizes')[0].fields.find((f) => f.name === 'thumbnail')
+  assert.equal(by('sizes')[0].admin.disableListFilter, true)
+  assert.equal(thumb.admin.disableListColumn, true)
+  assert.deepEqual(thumb.fields.map((f) => f.name).sort(), ['filename', 'filesize', 'height', 'mimeType', 'url', 'width'])
+  for (const f of thumb.fields) assert.equal(f.admin.disableListColumn, true, f.name)
+})
+
+test('a list description becomes the "?" note beside Create new, unless the collection has its own', () => {
+  const input = base()
+  input.collections[0].admin.description = 'Every page on the site.'
+  input.collections[1].admin = { description: 'Forms people sent.', components: { Description: '/own#Own' } }
+  const [pages, submissions] = webheroAdmin()(input).collections
+  assert.ok(pages.admin.components.Description.endsWith('#ListHelp'))
+  assert.equal(submissions.admin.components.Description, '/own#Own')
+  assert.equal(webheroAdmin()(base()).collections[0].admin.components.Description, undefined)
+})
+
 test('a site that still lists the old "?" top right gets it taken out', () => {
   const input = base()
   input.admin.components.actions.push('@webheroco/payload-admin/client#HelpButton')
