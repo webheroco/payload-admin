@@ -1,37 +1,68 @@
 // @webheroco/payload-admin. The rules behind it: client-payload references/admin-ui.md.
 // Payload's own lists (Media, enquiries, Team...): the same shape as our pages.
 // - No big heading: the breadcrumb already names the list.
-// - One top row: search, Columns, Filters, then Create new, kept in view.
-// - The table scrolls inside its box, sideways too, with its heading row fixed.
+// - One top row: search (with Columns and Filters) taking the free width,
+//   then List/Grid, Create new and Bulk upload, then All / Trash. Nothing
+//   overlaps; under 900px the buttons go first and search gets its own line.
+// - The description on its own line under that row; the selection bar under it.
+// - The page scrolls as a page: no box round the table, no sticky rows, no
+//   scrolling inside the table except sideways when it is wider than the page.
 // - Columns and Filters open in the right-hand panel (components/ListPanels).
 
 $panel-width: 400px;
+$control: 40px;
 
 .collection-list__wrap {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto auto auto;
   column-gap: 8px;
+  align-items: center;
 
-  > * {
+  // Everything after the top row: full width, in this order.
+  > *,
+  .list-header__after-header-content,
+  .list-selection,
+  .cms-grid {
     grid-column: 1 / -1;
     min-width: 0;
+    order: 4;
   }
-  > .list-controls,
-  > .list-header {
+  // The header, its parts and the List/Grid wrapper give their pieces to this grid.
+  > .list-header,
+  > .list-header > .list-header__content,
+  .list-header__title-and-actions,
+  .list-header__actions,
+  > .cms-view-switch {
+    display: contents;
+  }
+  > .list-controls {
     grid-row: 1;
-    position: sticky;
-    top: var(--app-header-height);
-    z-index: 20;
-    align-self: start;
-    background: var(--theme-bg);
+    grid-column: 1;
     margin: 0;
     padding: 12px 0;
   }
-  > .list-controls {
-    grid-column: 1;
-  }
-  > .list-header {
+  > .cms-view-switch > .cms-view-switch__buttons {
+    grid-row: 1;
     grid-column: 2;
+  }
+  .list-header__title-actions {
+    grid-row: 1;
+    grid-column: 3;
+  }
+  .default-list-view-tabs {
+    grid-row: 1;
+    grid-column: 4;
+  }
+  .list-header__after-header-content {
+    order: 1;
+    margin: 0 0 16px;
+    padding: 0;
+    &:empty {
+      display: none;
+    }
+  }
+  .list-selection {
+    order: 2;
   }
 }
 
@@ -40,17 +71,12 @@ $panel-width: 400px;
   display: none !important;
 }
 .list-header {
-  .list-header__content,
-  .list-header__title-and-actions,
   .list-header__title-actions {
     display: flex;
     align-items: center;
     gap: 8px;
     margin: 0;
     padding: 0;
-  }
-  .list-header__actions:empty {
-    display: none;
   }
   .list-header__title-actions .btn {
     margin: 0;
@@ -59,14 +85,17 @@ $panel-width: 400px;
     background: none;
   }
   .list-header__title-actions .btn .btn__content {
-    height: 34px;
-    padding: 0 14px;
+    display: inline-flex;
+    align-items: center;
+    height: $control;
+    padding: 0 16px;
     border-radius: var(--cms-radius);
     border: 1px solid var(--theme-elevation-150);
     background: var(--theme-bg);
     color: var(--theme-text);
     font-size: 14px;
     font-weight: 500;
+    white-space: nowrap;
   }
   // Create new: the one dark button.
   .list-create-new-doc__create-new-button .btn__content {
@@ -74,51 +103,186 @@ $panel-width: 400px;
     border-color: var(--theme-text) !important;
     color: var(--theme-bg) !important;
   }
+  .collection-list__sub-header,
+  .view-description,
+  .custom-view-description {
+    margin: 0;
+    color: var(--theme-elevation-600);
+    font-size: 14px;
+    line-height: 1.5;
+  }
 }
 
-// Search row: same height as the buttons beside it.
-.collection-list .list-controls .search-bar {
-  min-height: 40px;
+// All / Trash: a segmented switch the same height as everything else on the row.
+.default-list-view-tabs {
+  display: inline-flex;
+  gap: 4px;
+  margin: 0;
+  padding: 3px;
   border-radius: var(--cms-radius);
+  background: var(--theme-elevation-100);
+
+  .btn {
+    margin: 0;
+    border: 0;
+  }
+  .btn .btn__content,
+  .btn {
+    height: $control - 6px;
+  }
+  .default-list-view-tabs__button {
+    display: inline-flex;
+    align-items: center;
+    padding: 0 14px;
+    border-radius: var(--cms-radius);
+    background: transparent;
+    color: var(--theme-elevation-800);
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+    opacity: 1;
+  }
+  .default-list-view-tabs__button--active {
+    background: var(--theme-elevation-0);
+    color: var(--theme-elevation-1000);
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.12);
+  }
 }
 
-// The table scrolls inside its box, so the heading row and the page top stay in view.
-@media (min-width: 769px) {
-  .collection-list .table {
-    max-height: calc(100dvh - var(--app-header-height) - 150px);
-    overflow: auto;
-    border: 1px solid var(--theme-elevation-100);
-    border-radius: 12px;
+// Rows ticked: one bar of the package's buttons; Delete in red.
+.collection-list__wrap .list-selection {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 12px;
+  padding: 8px 8px 8px 14px;
+  border-radius: var(--cms-radius);
+  background: var(--theme-elevation-50);
+  font-size: 14px;
 
-    table {
-      border-collapse: separate;
-      border-spacing: 0;
-    }
-    thead th {
-      position: sticky;
-      top: 0;
-      z-index: 2;
+  > span:first-child {
+    font-weight: 600;
+    margin-right: 4px;
+  }
+  > span:not(:first-child) {
+    display: none;
+  }
+  .list-selection__actions,
+  .edit-many {
+    display: contents;
+  }
+  .list-selection__button,
+  .list-selection__button.btn {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: none;
+
+    .btn__content {
+      display: inline-flex;
+      align-items: center;
+      height: 34px;
+      padding: 0 14px;
+      border-radius: var(--cms-radius);
+      border: 1px solid var(--theme-elevation-150);
       background: var(--theme-bg);
-      box-shadow: inset 0 -1px 0 var(--theme-elevation-100);
+      color: var(--theme-text);
+      font-size: 14px;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+    &:hover .btn__content {
+      border-color: var(--theme-elevation-300);
     }
   }
+  #select-all-across-pages .btn__content {
+    border-color: transparent;
+    background: none;
+    text-decoration: underline;
+  }
+  .list-selection__button.delete-documents__toggle .btn__content {
+    border-color: var(--theme-error-500, #d4351c);
+    color: var(--theme-error-500, #d4351c);
+  }
 }
-@media (max-width: 768px) {
-  .collection-list .table {
-    overflow-x: auto;
+
+// Search: takes the free width, Columns and Filters inside it, same height as the buttons.
+.collection-list__wrap > .list-controls {
+  min-width: 0;
+  .search-bar {
+    min-height: $control;
+    padding-block: 0;
+    width: 100%;
+    min-width: 0;
+    border-radius: var(--cms-radius);
   }
-  // Phones: the buttons on their own row, then search, Columns and Filters full width.
-  .collection-list__wrap > .list-controls,
-  .collection-list__wrap > .list-header {
-    position: static;
-    grid-column: 1 / -1;
+  @media (min-width: 901px) {
+    .search-bar {
+      height: $control;
+    }
   }
-  .collection-list__wrap > .list-header {
-    grid-row: 1;
-    padding-bottom: 0;
+  .search-filter {
+    flex: 1 1 auto;
+    min-width: 120px;
   }
-  .collection-list__wrap > .list-controls {
-    grid-row: 2;
+  .search-bar__actions {
+    flex: none;
+    flex-wrap: nowrap;
+  }
+}
+.collection-list__wrap > .cms-view-switch > .cms-view-switch__buttons {
+  margin: 0;
+}
+
+// The page scrolls, not the table. A table wider than the page scrolls
+// sideways; it lines up with the row above at every width (Payload shifts it
+// out to the page edges under 1025px).
+.collection-list .table {
+  position: static !important;
+  left: auto !important;
+  width: auto !important;
+  max-height: none;
+  margin-inline: 0 !important;
+  padding-inline: 0 !important;
+  overflow-x: auto;
+  overflow-y: visible;
+  border: 0;
+  border-radius: 0;
+}
+.collection-list .table thead th {
+  position: static;
+}
+
+// Tablets and phones: the buttons first, then All / Trash, then search with
+// Columns and Filters, then the description, each on its own line.
+@media (max-width: 900px) {
+  .collection-list__wrap {
+    grid-template-columns: minmax(0, 1fr) auto;
+    > .list-controls {
+      grid-row: auto;
+      grid-column: 1 / -1;
+      order: 0;
+      padding: 8px 0 12px;
+    }
+    .list-header__title-actions {
+      grid-row: 1;
+      grid-column: 1;
+      flex-wrap: wrap;
+      padding-top: 12px;
+    }
+    > .cms-view-switch > .cms-view-switch__buttons {
+      grid-row: 1;
+      grid-column: 2;
+      margin-top: 12px;
+    }
+    .default-list-view-tabs {
+      grid-row: auto;
+      grid-column: 1 / -1;
+      order: -1;
+      justify-self: start;
+      margin-top: 8px;
+    }
   }
 }
 
@@ -152,9 +316,10 @@ $panel-width: 400px;
     padding: 16px 20px 24px;
   }
 }
-// The sticky top row holds the panel, so it goes above the page while one is open,
+// The top row holds the panel, so it goes above the page while one is open,
 // with the dimmed backdrop inside it.
 html.cms-list-panel-open .collection-list__wrap > .list-controls {
+  position: relative;
   z-index: 2000;
   &::before {
     content: '';
@@ -253,31 +418,6 @@ html.cms-list-panel-open .collection-list__wrap > .list-controls {
   }
 }
 
-// The list's description: the "?" note just before Create new (components/ListHelp),
-// never a paragraph that squeezes the search box.
-.collection-list__wrap > .list-header:has(.cms-list-help) {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: nowrap;
-
-  .list-header__content {
-    width: auto;
-  }
-  .list-header__after-header-content {
-    width: auto;
-    flex: none;
-  }
-
-  .list-header__after-header-content {
-    order: -1;
-    margin: 0;
-    padding: 0;
-  }
-  .collection-list__sub-header {
-    margin: 0;
-  }
-}
 .cms-list-help .cms-info__note {
   left: auto;
   right: -4px;

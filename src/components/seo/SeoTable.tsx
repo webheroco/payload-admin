@@ -213,7 +213,9 @@ export const SeoWorkspace: React.FC<{
   altRows: AltRow[] | null
   /** null when the signed-in user can't manage redirects: no Redirects tab. */
   redirects: RedirectRow[] | null
-}> = ({ apiRoute, altRows: initialAlt, initialTab, locale, localeLabel, rows: initialRows, redirects: initialRedirects }) => {
+  /** The domain old addresses come from (the site this one replaced), shown in front of each path. */
+  redirectsFrom?: string
+}> = ({ apiRoute, redirectsFrom, altRows: initialAlt, initialTab, locale, localeLabel, rows: initialRows, redirects: initialRedirects }) => {
   const { setStepNav } = useStepNav()
   const canRedirect = initialRedirects !== null
   const canAlt = initialAlt !== null
@@ -226,6 +228,13 @@ export const SeoWorkspace: React.FC<{
   const [doneHere, setDoneHere] = useState<Set<string>>(() => new Set())
   const [rows, setRows] = useState(initialRows)
   const [redirects, setRedirects] = useState(initialRedirects ?? [])
+  const [editing, setEditing] = useState<string | null>(null)
+  /** The old address in full: a path gets the old domain in front, when the site names one. */
+  const fullFrom = (from: string) => {
+    if (!from || /^https?:\/\//.test(from)) return from
+    const host = (redirectsFrom ?? '').replace(/^https?:\/\//, '').replace(/\/$/, '')
+    return host ? `${host}${from.startsWith('/') ? '' : '/'}${from}` : from
+  }
   const [query, setQuery] = useState('')
   const [filters, setFilters] = useState(DEFAULTS)
   const set = (key: keyof typeof DEFAULTS) => (value: string) => setFilters((f) => ({ ...f, [key]: value }))
@@ -634,95 +643,132 @@ export const SeoWorkspace: React.FC<{
               <th>Old address</th>
               <th>Goes to</th>
               <th>Kind</th>
-              <th aria-label="Remove" />
+              <th aria-label="Edit or remove" />
             </tr>
           </thead>
           <tbody>
-            {shownRedirects.map((row) => (
-              <tr key={row.id}>
-                <td>
-                  <EditableText
-                    value={row.from}
-                    placeholder="/old-address"
-                    label="old address"
-                    onSave={(from) =>
-                      saveRedirect(row, { from: from.startsWith('/') || /^https?:/.test(from) ? from : `/${from}` })
-                    }
-                  />
-                </td>
-                <td>
-                  <div className="cms-seo__to">
-                    <select
-                      className="cms-select"
-                      aria-label="Goes to"
-                      value={row.toType === 'custom' ? 'custom' : row.toRef}
-                      onChange={(e) =>
-                        e.target.value === 'custom'
-                          ? setRedirects((all) => all.map((r) => (r.id === row.id ? { ...r, toType: 'custom' } : r)))
-                          : saveRedirect(row, { toType: 'reference', toRef: e.target.value }).catch((err) =>
-                              toast.error(err.message),
-                            )
-                      }
-                    >
-                      <option value="" disabled>
-                        Choose a page
-                      </option>
-                      {targets.map((t) => (
-                        <option key={t.value} value={t.value}>
-                          {t.label}
-                        </option>
-                      ))}
-                      <option value="custom">Another address…</option>
-                    </select>
-                    {row.toType === 'custom' && (
+            {shownRedirects.map((row) => {
+              const open = editing === row.id || row.id.startsWith('new-')
+              const target = targets.find((t) => t.value === row.toRef)
+              const goesTo = row.toType === 'custom' ? row.toUrl : target?.label ?? ''
+              return (
+                <tr key={row.id} className={open ? 'is-editing' : undefined}>
+                  <td className="cms-seo__cell-from">
+                    {open ? (
                       <EditableText
-                        value={row.toUrl}
-                        placeholder="Type the address"
-                        label="address to send visitors to"
-                        onSave={(toUrl) => saveRedirect(row, { toType: 'custom', toUrl })}
+                        value={row.from}
+                        placeholder="/old-address"
+                        label="old address"
+                        onSave={(from) =>
+                          saveRedirect(row, { from: from.startsWith('/') || /^https?:/.test(from) ? from : `/${from}` })
+                        }
                       />
+                    ) : (
+                      <span className="cms-seo__address" title={fullFrom(row.from)}>
+                        {fullFrom(row.from)}
+                      </span>
                     )}
-                  </div>
-                </td>
-                <td>
-                  <select
-                    className="cms-select"
-                    aria-label="Kind of redirect"
-                    value={row.type}
-                    onChange={(e) =>
-                      saveRedirect(row, { type: e.target.value as '301' | '302' }).catch((err) =>
-                        toast.error(err.message),
+                  </td>
+                  <td>
+                    {open ? (
+                      <div className="cms-seo__to">
+                        <select
+                          className="cms-select"
+                          aria-label="Goes to"
+                          value={row.toType === 'custom' ? 'custom' : row.toRef}
+                          onChange={(e) =>
+                            e.target.value === 'custom'
+                              ? setRedirects((all) => all.map((r) => (r.id === row.id ? { ...r, toType: 'custom' } : r)))
+                              : saveRedirect(row, { toType: 'reference', toRef: e.target.value }).catch((err) =>
+                                  toast.error(err.message),
+                                )
+                          }
+                        >
+                          <option value="" disabled>
+                            Choose a page
+                          </option>
+                          {targets.map((t) => (
+                            <option key={t.value} value={t.value}>
+                              {t.label}
+                            </option>
+                          ))}
+                          <option value="custom">Another address…</option>
+                        </select>
+                        {row.toType === 'custom' && (
+                          <EditableText
+                            value={row.toUrl}
+                            placeholder="Type the address"
+                            label="address to send visitors to"
+                            onSave={(toUrl) => saveRedirect(row, { toType: 'custom', toUrl })}
+                          />
+                        )}
+                      </div>
+                    ) : (
+                      <span className={`cms-seo__address${goesTo ? '' : ' is-empty'}`} title={goesTo}>
+                        {goesTo || 'Not set'}
+                      </span>
+                    )}
+                  </td>
+                  <td>
+                    {open ? (
+                      <select
+                        className="cms-select"
+                        aria-label="Kind of redirect"
+                        value={row.type}
+                        onChange={(e) =>
+                          saveRedirect(row, { type: e.target.value as '301' | '302' }).catch((err) =>
+                            toast.error(err.message),
+                          )
+                        }
+                      >
+                        <option value="301">Permanent</option>
+                        <option value="302">Temporary</option>
+                      </select>
+                    ) : (
+                      <span>{row.type === '302' ? 'Temporary' : 'Permanent'}</span>
+                    )}
+                  </td>
+                  <td className="cms-seo__cell-actions">
+                    {open ? (
+                      row.id.startsWith('new-') ? null : (
+                        <button type="button" className="cms-button cms-button--outline cms-button--small" onClick={() => setEditing(null)}>
+                          Done
+                        </button>
                       )
-                    }
-                  >
-                    <option value="301">Permanent</option>
-                    <option value="302">Temporary</option>
-                  </select>
-                </td>
-                <td>
-                  <button
-                    type="button"
-                    className="cms-icon-button"
-                    data-tip="Remove"
-                    aria-label={`Remove redirect from ${row.from || 'new row'}`}
-                    onClick={() => removeRedirect(row).catch((err) => toast.error(err.message))}
-                  >
-                    <svg
-                      viewBox="0 0 24 24"
-                      width="16"
-                      height="16"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.8"
-                      strokeLinecap="round"
-                      aria-hidden="true"
+                    ) : (
+                      <button
+                        type="button"
+                        className="cms-button cms-button--outline cms-button--small"
+                        aria-label={`Edit redirect from ${row.from}`}
+                        onClick={() => setEditing(row.id)}
+                      >
+                        Edit
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      className="cms-icon-button"
+                      data-tip="Remove"
+                      aria-label={`Remove redirect from ${row.from || 'new row'}`}
+                      onClick={() => removeRedirect(row).catch((err) => toast.error(err.message))}
                     >
-                      <path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13" />
-                    </svg>
-                  </button>
-                </td>
-              </tr>
-            ))}
+                      <svg
+                        viewBox="0 0 24 24"
+                        width="16"
+                        height="16"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.8"
+                        strokeLinecap="round"
+                        aria-hidden="true"
+                      >
+                        <path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13" />
+                      </svg>
+                    </button>
+                  </td>
+                </tr>
+              )
+            })}
           </tbody>
         </table>
         </div>

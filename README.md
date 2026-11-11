@@ -24,6 +24,13 @@ Only what differs per client:
 - the click-to-edit bridge for the site's preview (passed in as `previewControls`);
 - on multi-site, `TenantDefault` (it knows the site's domains).
 
+## What every collection gets
+
+- Lists read only the columns on show (Payload's `enableListViewSelectAPI`), plus the few fields the package's tiles and status pills need (`forceSelect`). A collection whose own cells read other fields sets `admin.enableListViewSelectAPI: false`.
+- Columns offers top-level fields only: nothing inside a group, array or named tab, and no array or section fields. A field named in `admin.defaultColumns` stays.
+- Any collection with pictures (an upload collection, or a top-level upload field) gets List/Grid.
+- The list's `admin.description` shows on its own line under the top row.
+
 ## Install
 
 1. Install a release. Each version is a file attached to its GitHub
@@ -82,7 +89,9 @@ Only what differs per client:
 | `websiteLink` | `false` | "View website" in the menu: the chosen site's `origin` on multi-site, else `serverURL`. |
 | `guideCards` | none | More guide cards: `{ id, title, steps, icon?, action?: { label, href }, collection?, after?, group? }`. `group` is the heading it sits under ("Shop"); without one it joins the card it follows. |
 | `maxVersions` | 50 | Versions kept per document. |
-| `views` | all on | `{ seo, performance, guide, sections }`: `false` turns a page off. |
+| `redirectsFrom` | none | The domain the site replaced (`'old-site.com'`, or `{ [tenantId]: domain }` on multi-site): Redirects show each old address in full. |
+| `slowLog` | 1000 | Any read or save slower than this (ms) is logged as `cms-timing <collection> <operation> <ms>ms`. `false` turns it off. |
+| `views` | all on | `{ seo, performance, guide, sections }`: `false` turns a page off. Sections is off by default on a site with more than 100 kinds of section; `sections: true` keeps it. |
 | `approvals` | off | `true`, or `{ approverRoles, roleField, only }`: sign-off before anything goes live (see below). |
 | `home` | `'performance'` | What `/admin` opens on. Performance replaces the dashboard; `'dashboard'` keeps Payload's dashboard and puts Performance at `/performance`. |
 

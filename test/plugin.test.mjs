@@ -74,6 +74,8 @@ test('the plugin sets the admin and keeps what the project set', () => {
   assert.deepEqual(pages.admin.components.beforeListTable[0].clientProps, {
     routes: { pages: '/:slug', posts: '/blog/:slug' },
     homeSlug: 'home',
+    media: false,
+    drafts: true,
     collectionSlug: 'pages',
   })
   assert.equal(config.globals[0].versions.max, 50)
@@ -195,14 +197,54 @@ test('a storage plugin\'s own url and sizes fields are quieted too, inside the g
   for (const f of thumb.fields) assert.equal(f.admin.disableListColumn, true, f.name)
 })
 
-test('a list description becomes the "?" note beside Create new, unless the collection has its own', () => {
+test('a list description is left to Payload, shown under the top row', () => {
   const input = base()
   input.collections[0].admin.description = 'Every page on the site.'
-  input.collections[1].admin = { description: 'Forms people sent.', components: { Description: '/own#Own' } }
-  const [pages, submissions] = webheroAdmin()(input).collections
-  assert.ok(pages.admin.components.Description.endsWith('#ListHelp'))
-  assert.equal(submissions.admin.components.Description, '/own#Own')
-  assert.equal(webheroAdmin()(base()).collections[0].admin.components.Description, undefined)
+  const [pages] = webheroAdmin()(input).collections
+  assert.equal(pages.admin.components.Description, undefined)
+})
+
+test('lists read only their columns, plus what the tiles and pills need', () => {
+  const [pages, submissions] = webheroAdmin()(base()).collections
+  assert.equal(pages.admin.enableListViewSelectAPI, true)
+  assert.deepEqual(pages.forceSelect, { title: true, _status: true })
+  assert.deepEqual(submissions.forceSelect, {})
+  const input = base()
+  input.collections[1].admin = { enableListViewSelectAPI: false }
+  const off = webheroAdmin()(input).collections[1]
+  assert.equal(off.admin.enableListViewSelectAPI, false)
+  assert.equal(off.forceSelect, undefined)
+})
+
+test('Columns offers top-level fields only', () => {
+  const input = base()
+  input.collections[1].fields.push(
+    { name: 'hero', type: 'group', fields: [{ name: 'sticky', type: 'checkbox' }] },
+    { type: 'row', fields: [{ name: 'phone', type: 'text' }] },
+    { name: 'layout', type: 'blocks', blocks: [] },
+    { name: 'kept', type: 'array', fields: [{ name: 'x', type: 'text' }] },
+  )
+  input.collections[1].admin = { defaultColumns: ['form', 'kept'] }
+  const sub = webheroAdmin()(input).collections[1]
+  const by = (name) => sub.fields.find((f) => f.name === name)
+  assert.equal(by('hero').fields[0].admin.disableListColumn, true)
+  assert.equal(sub.fields.find((f) => f.type === 'row').fields[0].admin?.disableListColumn, undefined)
+  assert.equal(by('layout').admin.disableListColumn, true)
+  assert.equal(by('kept').admin?.disableListColumn, undefined)
+  assert.equal(by('form').admin?.disableListColumn, undefined)
+})
+
+test('collections with pictures get List/Grid', () => {
+  const input = base()
+  input.collections.push({ slug: 'team', fields: [{ name: 'name', type: 'text' }, { name: 'photo', type: 'upload', relationTo: 'media' }] })
+  input.collections.push({ slug: 'files', upload: true, fields: [] })
+  const out = webheroAdmin()(input).collections
+  const team = out.find((c) => c.slug === 'team').admin.components.beforeListTable
+  assert.equal(team.length, 1)
+  assert.deepEqual(team[0].clientProps.picture, ['photo'])
+  assert.equal(out.find((c) => c.slug === 'files').admin.components.beforeListTable[0].clientProps.media, true)
+  assert.equal(out.find((c) => c.slug === 'submissions').admin.components?.beforeListTable, undefined)
+  assert.equal(out.find((c) => c.slug === 'pages').admin.components.beforeListTable.length, 1)
 })
 
 test('a site that still lists the old "?" top right gets it taken out', () => {

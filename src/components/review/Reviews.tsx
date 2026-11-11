@@ -10,7 +10,6 @@ import type { AdminViewServerProps, CollectionSlug, Where } from 'payload'
 import { DefaultTemplate } from '@payloadcms/next/templates'
 import { Gutter } from '@payloadcms/ui'
 import { redirect } from 'next/navigation'
-import { formatAdminURL } from 'payload/shared'
 import React from 'react'
 
 import { adminPath, hasDrafts, REVIEWS_SLUG, typeLabel, type ReviewStatus } from '../../approvals.js'
@@ -41,7 +40,10 @@ export const Reviews = async ({ initPageResult, params, searchParams }: AdminVie
   const { locale, permissions, req, visibleEntities } = initPageResult
   const { payload, user } = req
   const adminRoute = payload.config.routes.admin
-  if (!user) redirect(formatAdminURL({ adminRoute, path: '/login' }))
+  // Payload signs people out before a view runs, so no user here means the
+  // account couldn't be read (the database is busy or restarting). Show
+  // Payload's error rather than bouncing through the login page to home.
+  if (!user) throw new Error('Your account could not be read just now. Reload the page in a moment.')
   const { approvals } = readOptions(payload.config)
   if (!approvals) redirect(adminRoute)
   const approver = canApprove(user, approvals)

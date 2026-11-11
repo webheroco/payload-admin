@@ -36,11 +36,38 @@ const ACTIONS = [ACCOUNT_MENU, LANGUAGE_MENU, HEADER_ROW]
 /** Older versions put the guide's "?" here: sites that copied it get it taken out. */
 const RETIRED = [HELP_BUTTON]
 
+const SECTIONS_LIMIT = 100
+
+/** How many kinds of section (blocks) the config defines, shared or inline. */
+export function blockTypeCount(config: Config): number {
+  const slugs = new Set<string>((config.blocks ?? []).map((b) => b.slug))
+  const walk = (fields: unknown[] | undefined) => {
+    for (const f of (fields ?? []) as any[]) {
+      if (f?.type === 'blocks') {
+        for (const b of f.blocks ?? []) {
+          slugs.add(b.slug)
+          walk(b.fields)
+        }
+        for (const ref of f.blockReferences ?? []) slugs.add(typeof ref === 'string' ? ref : ref.slug)
+      }
+      if (f?.type === 'tabs') for (const t of f.tabs ?? []) walk(t.fields)
+      if (Array.isArray(f?.fields)) walk(f.fields)
+    }
+  }
+  for (const c of config.collections ?? []) walk(c.fields)
+  for (const g of config.globals ?? []) walk(g.fields)
+  return slugs.size
+}
+
 export const webheroAdmin =
   (options: WebheroAdminOptions = {}): Plugin =>
   (input: Config): Config => {
     const slugs = new Set((input.collections ?? []).map((c) => c.slug))
     const resolved = resolveOptions(options, slugs)
+    // Sections reads every kind of section a page can hold. With a few hundred
+    // kinds that is one of the heaviest reads in the admin, so on a big site
+    // the page is off unless the site asks for it.
+    if (options.views?.sections === undefined && blockTypeCount(input) > SECTIONS_LIMIT) resolved.views.sections = false
     // Approvals (optional) wrap the collections and globals with drafts and add Reviews.
     const config = resolved.approvals ? withApprovals(input, resolved.approvals) : input
     const previewControls = options.previewControls ?? []
