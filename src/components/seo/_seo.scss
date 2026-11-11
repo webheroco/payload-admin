@@ -97,7 +97,28 @@
   }
   &__table--redirects {
     td {
+      vertical-align: middle;
+    }
+    tr.is-editing td {
       vertical-align: top;
+    }
+    .cms-seo__address {
+      display: block;
+      max-width: 520px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      &.is-empty {
+        color: var(--theme-elevation-500);
+      }
+    }
+    .cms-seo__cell-actions {
+      width: 1%;
+      white-space: nowrap;
+      text-align: right;
+      > * + * {
+        margin-left: 8px;
+      }
     }
     th:nth-child(1),
     td:nth-child(1) {
@@ -314,6 +335,11 @@
       background: var(--theme-elevation-50);
       border-color: var(--theme-elevation-400);
     }
+  }
+  &--small {
+    height: 32px;
+    padding: 0 12px;
+    font-size: 13px;
   }
   &--quiet {
     background: none;
@@ -737,34 +763,15 @@
 .cms-scroll {
   overflow-x: auto;
 }
+// The page scrolls as a page: no box, no sticky bar or heading row. A table
+// wider than the page scrolls sideways on its own.
+.cms-scroll {
+  margin-top: 12px;
+  overflow-x: auto;
+}
 @media (min-width: 901px) {
-  .cms-seo__bar {
-    position: sticky;
-    top: var(--app-header-height);
-    z-index: 20;
-    background: var(--theme-bg);
-  }
-  .cms-scroll {
-    max-height: calc(100dvh - var(--app-header-height) - 140px);
-    overflow: auto;
-    margin-top: 12px;
-    border: 1px solid var(--theme-elevation-100);
-    border-radius: 12px;
-
-    > .cms-seo__table {
-      min-width: 900px;
-      border-collapse: separate;
-      border-spacing: 0;
-    }
-    thead th {
-      position: sticky;
-      top: 0;
-      z-index: 2;
-      background: var(--theme-bg);
-    }
-    tbody tr:last-child td {
-      border-bottom: 0;
-    }
+  .cms-scroll > .cms-seo__table {
+    min-width: 900px;
   }
 }
 

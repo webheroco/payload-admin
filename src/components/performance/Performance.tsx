@@ -14,7 +14,6 @@ import type { AdminViewServerProps, PayloadRequest, TypedUser } from 'payload'
 import { DefaultTemplate } from '@payloadcms/next/templates'
 import { Gutter } from '@payloadcms/ui'
 import { cookies } from 'next/headers'
-import { redirect } from 'next/navigation'
 import { formatAdminURL } from 'payload/shared'
 import React from 'react'
 
@@ -37,7 +36,10 @@ const render = async ({ initPageResult, params, searchParams }: AdminViewServerP
   const { locale, permissions, req, visibleEntities } = initPageResult
   const { payload, user } = req
   const adminRoute = payload.config.routes.admin
-  if (!user) redirect(formatAdminURL({ adminRoute, path: '/login' }))
+  // Payload signs people out before a view runs, so no user here means the
+  // account couldn't be read (the database is busy or restarting). Show
+  // Payload's error rather than bouncing through the login page to home.
+  if (!user) throw new Error('Your account could not be read just now. Reload the page in a moment.')
 
   const days = PERIODS.find((p) => String(p) === searchParams?.period) ?? 30
   const end = new Date()

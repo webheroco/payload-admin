@@ -93,6 +93,14 @@ export type WebheroAdminOptions = {
   guideCards?: GuideCard[]
   /** Versions kept per document. Default 50. */
   maxVersions?: number
+  /**
+   * When the site replaced another domain, that domain (e.g. 'old-site.com'):
+   * the SEO overview's Redirects show each old address in full. On multi-site,
+   * one per site, keyed by the tenant id: { '1': 'old-site.com' }.
+   */
+  redirectsFrom?: string | Record<string, string>
+  /** Log any read or save slower than this many milliseconds ("cms-timing ..."). Default 1000; false turns it off. */
+  slowLog?: number | false
   /** Turn a page off with `false`. All on by default. */
   views?: { seo?: boolean; performance?: boolean; guide?: boolean; sections?: boolean }
   /**
@@ -141,6 +149,8 @@ export type ResolvedOptions = {
   websiteLink: boolean
   guideCards: GuideCard[]
   maxVersions: number
+  redirectsFrom: string | Record<string, string> | null
+  slowLog: number | false
   views: { seo: boolean; performance: boolean; guide: boolean; sections: boolean }
   home: 'performance' | 'dashboard'
   approvals: ResolvedApprovals | null
@@ -172,6 +182,8 @@ export function resolveOptions(options: WebheroAdminOptions, collectionSlugs: Se
     websiteLink: options.websiteLink ?? false,
     guideCards: options.guideCards ?? [],
     maxVersions: options.maxVersions ?? 50,
+    redirectsFrom: options.redirectsFrom ?? null,
+    slowLog: options.slowLog ?? 1000,
     views: {
       seo: options.views?.seo ?? true,
       performance: options.views?.performance ?? true,

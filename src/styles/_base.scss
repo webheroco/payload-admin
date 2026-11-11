@@ -122,10 +122,10 @@ html:root {
   display: none;
 }
 
-/* As many tiles as fit, at least four across on a laptop and two on a phone. */
+/* Four across on a laptop, three on a tablet, two on a phone; tiles never overlap. */
 .cms-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(200px, calc(50% - var(--base) / 2)), 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: var(--base);
   margin: var(--base) 0 0;
   padding: 0;
@@ -186,9 +186,28 @@ html:root {
   color: var(--theme-elevation-400);
 }
 
+.cms-grid__item {
+  min-width: 0;
+}
+@media (max-width: 1099px) {
+  .cms-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (max-width: 768px) {
+  .cms-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.cms-grid__label,
+.cms-grid__meta {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .cms-grid__label {
   font-weight: 600;
-  overflow-wrap: anywhere;
 }
 
 .cms-grid__meta {

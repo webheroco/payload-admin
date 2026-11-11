@@ -30,7 +30,7 @@ import React, { useEffect } from 'react'
 import { Mark, useFilter, useMenu, useSites } from './menu.js'
 import { Icon } from '../nav/icons.js'
 
-type Choice = { id: string; name: string; domain?: string | null; logo?: string | null; wordmark?: string }
+type Choice = { id: string; value: number | string; name: string; domain?: string | null; logo?: string | null; wordmark?: string }
 
 type Props = { wordmarks?: Record<string, string>; mark?: string }
 
@@ -47,6 +47,8 @@ export const SiteMenu: React.FC<Props> = ({ wordmarks, mark }) => {
     const site = sites.find((s) => String(s.id) === String(o.value))
     return {
       id: String(o.value),
+      // The plugin matches the site by its own id, number or string, with ===.
+      value: o.value as number | string,
       name: typeof o.label === 'string' ? o.label : String(o.value),
       domain: site?.domain,
       logo: site?.logo,
@@ -57,19 +59,19 @@ export const SiteMenu: React.FC<Props> = ({ wordmarks, mark }) => {
   const current = choices.find((c) => c.id === String(selectedTenantID))
 
   // Always one site: with nothing chosen yet, start on the first.
-  const first = choices[0]?.id
+  const first = choices[0]?.value
   useEffect(() => {
-    if (choices.length > 1 && !current && first && entityType !== 'document') setTenant({ id: first, refresh: true })
+    if (choices.length > 1 && !current && first !== undefined && entityType !== 'document') setTenant({ id: first, refresh: true })
   }, [choices.length, current, first, entityType, setTenant])
 
   if (choices.length < 2 || !current) return null
 
   // Inside a document the site is the document's own; switching happens from lists.
   const locked = entityType === 'document'
-  const pick = (id: string) => {
+  const pick = (choice: Choice) => {
     menu.setOpen(false)
     filter.reset()
-    if (id !== current.id) setTenant({ id, refresh: true })
+    if (choice.id !== current.id) setTenant({ id: choice.value, refresh: true })
   }
 
   return (
@@ -119,7 +121,7 @@ export const SiteMenu: React.FC<Props> = ({ wordmarks, mark }) => {
                   data-menu-item
                   disabled={locked && !active}
                   className="cms-menu__item"
-                  onClick={() => pick(c.id)}
+                  onClick={() => pick(c)}
                 >
                   {c.wordmark ? (
                     // eslint-disable-next-line @next/next/no-img-element

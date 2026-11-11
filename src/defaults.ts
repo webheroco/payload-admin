@@ -16,11 +16,18 @@
  *   shown as "Indexed" (on = search engines may list it), the word the SEO
  *   overview uses;
  * - translated collections get a "Languages" column;
- * - the List/Grid switch gets the site's addresses for its page tiles.
+ * - the List/Grid switch gets the site's addresses for its page tiles, and
+ *   every collection with pictures gets the switch;
+ * - lists read only the columns on show (Payload's select API), plus the
+ *   fields the package's tiles and links need;
+ * - Columns offers top-level fields only: nothing inside a group, array,
+ *   named tab or section shows as "Hero > Keep in view".
  */
 import type { CollectionConfig, CustomComponent, Field, GlobalConfig, PayloadComponent } from 'payload'
 
 import type { ResolvedOptions } from './options.js'
+
+import { timingHooks } from './timing.js'
 
 import {
   DOC_STATUS,
@@ -32,7 +39,6 @@ import {
   SWITCH_FIELD,
   VERSIONS_BUTTON,
   YES_NO_CELL,
-  LIST_HELP,
 } from './paths.js'
 
 /**
@@ -305,6 +311,73 @@ function mergeQuiet(fields: Field[], wanted: Field[]): Field[] {
   return [...merged, ...wanted.filter((w) => !seen.has('name' in w ? w.name : ''))]
 }
 
+/** Containers whose fields sit at the top level of the document (no "Group >" prefix). */
+const isLayout = (field: Field) => field.type === 'row' || field.type === 'collapsible' || (field.type as string) === 'tabs'
+
+/**
+ * Columns: only what an editor can read in a cell. Fields inside a group,
+ * an array, a named tab or a section, and array and section fields
+ * themselves ("2 Layouts - Hero, FAQ"), are left out of Columns. Filters
+ * keep them. A field the collection names in `admin.defaultColumns` stays.
+ */
+export function withFlatColumns(fields: Field[] | undefined, keep: Set<string> = new Set(), nested = false): Field[] {
+  const off = (field: Field): Field =>
+    'name' in field && keep.has(field.name) && !nested
+      ? field
+      : ({ ...field, admin: { ...('admin' in field ? field.admin : {}), disableListColumn: true } } as Field)
+  return (fields ?? []).map((field) => {
+    if (field.type === 'tabs') {
+      return {
+        ...field,
+        tabs: field.tabs.map((tab) => ({ ...tab, fields: withFlatColumns(tab.fields, keep, nested || 'name' in tab) })),
+      } as Field
+    }
+    if (isLayout(field) && 'fields' in field) return { ...field, fields: withFlatColumns(field.fields as Field[], keep, nested) } as Field
+    if (field.type === 'group') {
+      // An unnamed group is only a box on the form; its fields are top level.
+      const named = 'name' in field && Boolean(field.name)
+      return { ...field, fields: withFlatColumns(field.fields, keep, nested || named) } as Field
+    }
+    if (field.type === 'array' || field.type === 'blocks') return off(field)
+    if (nested && field.type !== 'ui') return off(field)
+    return field
+  })
+}
+
+/** The top-level upload fields (outside groups and arrays), by name. */
+function topLevelPictures(fields: Field[] | undefined): string[] {
+  const out: string[] = []
+  for (const field of fields ?? []) {
+    if (field.type === 'upload' && 'name' in field && !field.hasMany) out.push(field.name)
+    else if (field.type === 'tabs') {
+      for (const tab of field.tabs) if (!('name' in tab && tab.name)) out.push(...topLevelPictures(tab.fields))
+    } else if (isLayout(field) && 'fields' in field) out.push(...topLevelPictures(field.fields as Field[]))
+  }
+  return out
+}
+
+/** Fields the package's tiles, status pills and links read from a list row. */
+function listSelect(collection: CollectionConfig): Record<string, true> {
+  const names = new Set<string>()
+  const top = (fields: Field[] | undefined) => {
+    for (const field of fields ?? []) {
+      if ('name' in field && field.name) names.add(field.name)
+      else if (field.type === 'tabs') {
+        for (const tab of field.tabs) if (!('name' in tab && tab.name)) top(tab.fields)
+      } else if (isLayout(field) && 'fields' in field) top(field.fields as Field[])
+    }
+  }
+  top(collection.fields)
+  const wanted = ['title', 'name', 'slug', 'path', 'alt', 'decorative', collection.admin?.useAsTitle ?? '']
+  const select: Record<string, true> = {}
+  for (const name of wanted) if (name && names.has(name)) select[name] = true
+  if (collection.upload) {
+    for (const name of ['filename', 'mimeType', 'url', 'thumbnailURL', 'filesize', 'sizes']) select[name] = true
+  }
+  if (collection.versions && typeof collection.versions === 'object' && collection.versions.drafts) select._status = true
+  return select
+}
+
 /** A list column of EN / FR / ES chips. `ui` fields store nothing, so no migration. */
 function withLanguagesColumn(fields: Field[], slug: string, options: ResolvedOptions): Field[] {
   if (!options.translated.includes(slug)) return fields
@@ -324,14 +397,34 @@ function pathOf(component: PayloadComponent): string | undefined {
   return undefined
 }
 
-/** The List/Grid switch needs the site's addresses to load each page tile. */
-function withGridRoutes(components: CustomComponent[] | undefined, options: ResolvedOptions): CustomComponent[] | undefined {
+/**
+ * The List/Grid switch needs the site's addresses to load each page tile.
+ * A collection with pictures (an upload collection, or a top-level upload
+ * field) gets the switch if it hasn't one.
+ */
+function withGridRoutes(collection: CollectionConfig, options: ResolvedOptions): CustomComponent[] | undefined {
+  let components = collection.admin?.components?.beforeListTable
+  const has = components?.some((c) => pathOf(c) === LIST_GRID_SWITCH)
+  const pictures = collection.upload ? [] : topLevelPictures(collection.fields)
+  if (!has && (collection.upload || pictures.length)) {
+    components = [
+      ...(components ?? []),
+      { path: LIST_GRID_SWITCH, clientProps: { collectionSlug: collection.slug, ...(pictures.length ? { picture: pictures } : {}) } },
+    ]
+  }
   return components?.map((component): CustomComponent => {
     if (pathOf(component) !== LIST_GRID_SWITCH) return component
     const base = typeof component === 'string' ? { path: component } : (component as Exclude<CustomComponent, string | false>)
     return {
       ...base,
-      clientProps: { routes: options.routes, homeSlug: options.homeSlug, ...base.clientProps },
+      clientProps: {
+        routes: options.routes,
+        homeSlug: options.homeSlug,
+        media: Boolean(collection.upload),
+        ...(collection.admin?.useAsTitle ? { titleField: collection.admin.useAsTitle } : {}),
+        drafts: Boolean(collection.versions && typeof collection.versions === 'object' && collection.versions.drafts),
+        ...base.clientProps,
+      },
     }
   })
 }
@@ -358,7 +451,8 @@ export function collectionDefaults(
   if (!hasDrafts && options.saveHelp[collection.slug]) {
     beforeControls.unshift({ path: SAVE_NOTE, clientProps: { help: options.saveHelp[collection.slug] } })
   }
-  const beforeListTable = withGridRoutes(components?.beforeListTable, options)
+  const beforeListTable = withGridRoutes(collection, options)
+  const keepColumns = new Set((collection.admin?.defaultColumns ?? []).map(String))
   return {
     ...collection,
     ...(collection.versions
@@ -369,8 +463,25 @@ export function collectionDefaults(
           },
         }
       : {}),
+    ...(options.slowLog === false
+      ? {}
+      : (() => {
+          const t = timingHooks(collection.slug, options.slowLog)
+          return {
+            hooks: {
+              ...collection.hooks,
+              beforeOperation: [t.beforeOperation, ...(collection.hooks?.beforeOperation ?? [])],
+              afterOperation: [...(collection.hooks?.afterOperation ?? []), t.afterOperation],
+            },
+          }
+        })()),
+    // The list reads only the columns on show, plus what the tiles and pills need.
+    ...(collection.admin?.enableListViewSelectAPI === false
+      ? {}
+      : { forceSelect: { ...listSelect(collection), ...(collection.forceSelect as object) } as never }),
     admin: {
       hideAPIURL: true,
+      enableListViewSelectAPI: true,
       ...collection.admin,
       pagination: {
         defaultLimit: options.listPageSize,
@@ -380,8 +491,6 @@ export function collectionDefaults(
       components: {
         ...components,
         ...(beforeListTable ? { beforeListTable } : {}),
-        // The list's description as the "?" note beside Create new, not a paragraph in the top row.
-        ...(collection.admin?.description && !components?.Description ? { Description: LIST_HELP } : {}),
         edit: {
           ...components?.edit,
           // The editor's-words status pills, "Undo changes" and the dates note.
@@ -393,7 +502,10 @@ export function collectionDefaults(
       },
     },
     fields: withLanguagesColumn(
-      withoutUiColumns(withShallowRelations(withSwitches(withPlainSeoTab(withQuietFileFields(collection), { routes: options.routes, homeSlug: options.homeSlug })))),
+      withFlatColumns(
+        withoutUiColumns(withShallowRelations(withSwitches(withPlainSeoTab(withQuietFileFields(collection), { routes: options.routes, homeSlug: options.homeSlug })))),
+        keepColumns,
+      ),
       collection.slug,
       options,
     ),

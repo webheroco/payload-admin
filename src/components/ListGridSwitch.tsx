@@ -85,8 +85,9 @@ function tileUrl(routes: SiteRoutes, homeSlug: string, collectionSlug: string, d
   return publicPath(routes, homeSlug, collectionSlug, doc);
 }
 
-function labelOf(doc: GridDoc): string {
-  return doc.title || doc.filename || String(doc.id);
+function labelOf(doc: GridDoc, titleField?: string): string {
+  const own = titleField ? (doc as Record<string, unknown>)[titleField] : null;
+  return (typeof own === "string" && own) || doc.title || doc.filename || String(doc.id);
 }
 
 export function ListGridSwitch({
@@ -95,6 +96,9 @@ export function ListGridSwitch({
   routes = DEFAULT_ROUTES,
   homeSlug = DEFAULT_HOME_SLUG,
   picture,
+  media,
+  titleField,
+  drafts = true,
   remember = true,
 }: {
   collectionSlug: string;
@@ -106,6 +110,12 @@ export function ListGridSwitch({
    * framed from this domain. One request per page of results.
    */
   picture?: string[];
+  /** The field that names a document (`admin.useAsTitle`). Set by the plugin. */
+  titleField?: string;
+  /** The collection has drafts, so tiles say "Not published". Set by the plugin. */
+  drafts?: boolean;
+  /** An upload collection: tiles show the file. Set by the plugin. */
+  media?: boolean;
   /** False: every visit opens on `defaultView`; a switch lasts until the editor leaves the list. */
   remember?: boolean;
   /** Passed in by the webheroAdmin plugin. */
@@ -127,7 +137,7 @@ export function ListGridSwitch({
   // and a trashed document has no page to show: both keep the table.
   const available = !isInDrawer && !(pathname?.endsWith("/trash") ?? false);
   const grid = available && view === "grid";
-  const isMedia = collectionSlug === "media";
+  const isMedia = media ?? collectionSlug === "media";
   const usePictures = !isMedia && Boolean(picture?.length);
   // Each tile's picture, by document id.
   const [pictures, setPictures] = useState<Record<string, GridDoc>>({});
@@ -206,17 +216,17 @@ export function ListGridSwitch({
         <img src={src} alt="" loading="lazy" decoding="async" />
       ) : (
         <span className="cms-grid__placeholder" aria-hidden="true">
-          {labelOf(doc).slice(0, 1).toUpperCase()}
+          {labelOf(doc, titleField).slice(0, 1).toUpperCase()}
         </span>
       );
     }
-    const url = isLive(doc) ? tileUrl(routes, homeSlug, collectionSlug, doc) : null;
+    const url = isLive(doc) || !drafts ? tileUrl(routes, homeSlug, collectionSlug, doc) : null;
     if (url) {
       return (
         <iframe
           className="cms-grid__page"
           src={url}
-          title={`Preview of ${labelOf(doc)}`}
+          title={`Preview of ${labelOf(doc, titleField)}`}
           width={PAGE_WIDTH}
           height={PAGE_HEIGHT}
           // No scripts in a tile: no analytics events, forms or preview listener.
@@ -230,7 +240,7 @@ export function ListGridSwitch({
     }
     return (
       <span className="cms-grid__placeholder" aria-hidden="true">
-        {labelOf(doc).slice(0, 1).toUpperCase()}
+        {labelOf(doc, titleField).slice(0, 1).toUpperCase()}
       </span>
     );
   };
@@ -259,9 +269,9 @@ export function ListGridSwitch({
               <li key={doc.id} className="cms-grid__item">
                 <Link href={`${adminRoute}/collections/${collectionSlug}/${doc.id}`} prefetch={false}>
                   <span className="cms-grid__thumb">{tile(doc)}</span>
-                  <span className="cms-grid__label">{labelOf(doc)}</span>
+                  <span className="cms-grid__label">{labelOf(doc, titleField)}</span>
                   {path ? <span className="cms-grid__meta">{path}</span> : null}
-                  {!isMedia && !isLive(doc) ? (
+                  {!isMedia && drafts && !isLive(doc) ? (
                     <span className="cms-grid__meta cms-grid__meta--warn">Not published</span>
                   ) : null}
                   {!isMedia && doc._displayStatus === "changed" ? (

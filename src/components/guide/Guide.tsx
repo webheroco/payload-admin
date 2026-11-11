@@ -9,7 +9,6 @@ import type { AdminViewServerProps } from 'payload'
 
 import { DefaultTemplate } from '@payloadcms/next/templates'
 import { Gutter } from '@payloadcms/ui'
-import { redirect } from 'next/navigation'
 import { formatAdminURL } from 'payload/shared'
 import React from 'react'
 
@@ -22,7 +21,10 @@ export const Guide = async ({ initPageResult, params, searchParams }: AdminViewS
   const { locale, permissions, req, visibleEntities } = initPageResult
   const { payload, user } = req
   const adminRoute = payload.config.routes.admin
-  if (!user) redirect(formatAdminURL({ adminRoute, path: '/login' }))
+  // Payload signs people out before a view runs, so no user here means the
+  // account couldn't be read (the database is busy or restarting). Show
+  // Payload's error rather than bouncing through the login page to home.
+  if (!user) throw new Error('Your account could not be read just now. Reload the page in a moment.')
 
   const url = (path: `/${string}`) => formatAdminURL({ adminRoute, path })
   const { home, guideCards } = readOptions(payload.config)

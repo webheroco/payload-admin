@@ -12,7 +12,6 @@ import type { AdminViewServerProps } from 'payload'
 
 import { DefaultTemplate } from '@payloadcms/next/templates'
 import { Gutter } from '@payloadcms/ui'
-import { redirect } from 'next/navigation'
 import { formatAdminURL } from 'payload/shared'
 import React from 'react'
 
@@ -27,9 +26,12 @@ export const SeoOverview = async ({ initPageResult, params, searchParams }: Admi
   const { locale, permissions, req, visibleEntities } = initPageResult
   const { payload, user } = req
   const adminRoute = payload.config.routes.admin
-  if (!user) redirect(formatAdminURL({ adminRoute, path: '/login' }))
+  // Payload signs people out before a view runs, so no user here means the
+  // account couldn't be read (the database is busy or restarting). Show
+  // Payload's error rather than bouncing through the login page to home.
+  if (!user) throw new Error('Your account could not be read just now. Reload the page in a moment.')
   // The collections listed, and where each lives: webheroAdmin({ seo, routes, homeSlug }).
-  const { seo, routes, homeSlug } = readOptions(payload.config)
+  const { seo, routes, homeSlug, redirectsFrom } = readOptions(payload.config)
   const KINDS = seo.filter((k) => payload.collections[k.slug as 'pages'])
 
   const defaultCode = payload.config.localization ? payload.config.localization.defaultLocale : 'en'
@@ -175,6 +177,9 @@ export const SeoOverview = async ({ initPageResult, params, searchParams }: Admi
           locale={locale?.code}
           localeLabel={typeof localeLabel?.label === 'string' ? localeLabel.label : undefined}
           redirects={redirects}
+          redirectsFrom={
+            typeof redirectsFrom === 'string' ? redirectsFrom : siteID && redirectsFrom ? redirectsFrom[siteID] : undefined
+          }
           rows={rows}
         />
       </Gutter>

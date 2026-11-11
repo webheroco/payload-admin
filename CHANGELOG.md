@@ -1,5 +1,47 @@
 # Changelog
 
+## 0.5.0
+
+No schema change. Run `payload generate:importmap` after updating. Delete any
+site CSS that patched the lists, the SEO overview tables or the selection bar
+for 0.4.x: this release does the same at source.
+
+- Lists: one top row in this order: search (with Columns and Filters) taking
+  the free width, List/Grid, Create new and Bulk upload, then All / Trash.
+  Nothing overlaps at any width; under 900px the buttons come first and search
+  gets its own line. Every control on the row is 40px. The list's description
+  is a line of text under the row again (it was a "?" note in 0.4.3).
+- The page scrolls as a page: no box round the table, no table scrolling inside
+  itself, no sticky rows. A table wider than the page scrolls sideways and
+  lines up with the row above at every width (Payload pushed it to the page
+  edges between 901 and 1024px). The same for the SEO overview and Approvals
+  tables.
+- Rows ticked: the selection bar uses the package's buttons, Delete in red.
+- All / Trash is a switch styled like List/Grid.
+- Columns offers top-level fields only (no "Hero > Keep in view", no
+  "2 Layouts" section columns). Fields named in `admin.defaultColumns` stay.
+- Lists read only the columns on show (`enableListViewSelectAPI`, with
+  `forceSelect` for what tiles and pills need). On a page-built site this took
+  a Pages list from about a minute to under a second. Opt out per collection
+  with `admin.enableListViewSelectAPI: false`.
+- List/Grid on every collection with pictures. Tiles use the collection's
+  title field, say "Not published" only where there are drafts, and sit in a
+  fixed grid (4, 3 or 2 across) with long names cut short.
+- Site menu: switching site works when site ids are numbers. The plugin matches
+  ids with `===`, and the menu passed them as text, so it fell back to the
+  first site.
+- The package's pages (SEO overview, Sections, Approvals, Guide, Performance)
+  no longer redirect to the login when the account can't be read, which sent
+  editors to the home page when the database was busy. They show Payload's
+  error instead.
+- Sections is off by default on a site with more than 100 kinds of section,
+  where reading every section table is one of the heaviest reads the admin
+  makes. `views: { sections: true }` keeps it.
+- Redirects: each redirect is plain text with Edit, not a dropdown in the
+  table. `redirectsFrom` shows the old domain in front of each path.
+- `slowLog` (default 1000ms): slow reads and saves are logged as
+  `cms-timing <collection> <operation> <ms>ms`.
+
 ## 0.4.4
 
 No schema change. Run `payload generate:importmap` after updating if the site
