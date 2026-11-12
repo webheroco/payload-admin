@@ -11,9 +11,10 @@
 import type { Config, Plugin } from 'payload'
 
 import { withApprovals } from './approvals.js'
+import { withDuplicateCheck } from './duplicates.js'
 import { collectionDefaults, globalDefaults } from './defaults.js'
 import { resolveOptions, type WebheroAdminOptions } from './options.js'
-import { ACCOUNT_MENU, GUIDE, HEADER_ROW, HELP_BUTTON, LANGUAGE_MENU, LIST_PANELS, NAV_RAIL, PERFORMANCE, PERFORMANCE_HOME, REVIEWS, SECTIONS, SEO_OVERVIEW } from './paths.js'
+import { ACCOUNT_MENU, CLAUDE_SETUP, GUIDE, HEADER_ROW, HELP_BUTTON, LANGUAGE_MENU, LIST_PANELS, NAV_RAIL, PERFORMANCE, PERFORMANCE_HOME, REVIEWS, SECTIONS, SEO_OVERVIEW } from './paths.js'
 
 /**
  * Payload's list wording in plain words. An empty list reads the same whether
@@ -110,13 +111,17 @@ export const webheroAdmin =
                 ? { performance: { Component: PERFORMANCE, path: '/performance' as const } }
                 : {}),
             ...(resolved.views.guide ? { guide: { Component: GUIDE, path: '/guide' as const } } : {}),
+            // Registered always; it opens (and is linked) only while the site's MCP is on.
+            ...(resolved.views.claude ? { claudeSetup: { Component: CLAUDE_SETUP, path: '/claude' as const } } : {}),
             ...(resolved.views.sections ? { sections: { Component: SECTIONS, path: '/sections' as const } } : {}),
             ...(resolved.approvals ? { reviews: { Component: REVIEWS, path: '/reviews' as const } } : {}),
             ...components.views,
           },
         },
       },
-      collections: config.collections?.map((c) => collectionDefaults(c, resolved, previewControls)),
+      collections: config.collections?.map((c) =>
+        collectionDefaults(resolved.duplicateCheck.includes(c.slug) ? withDuplicateCheck(c) : c, resolved, previewControls),
+      ),
       globals: config.globals?.map((g) => globalDefaults(g, resolved, previewControls)),
     }
   }

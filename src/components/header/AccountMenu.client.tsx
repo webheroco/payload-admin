@@ -47,7 +47,7 @@ const useAvatar = (user: any) => {
 
 export type SettingsLink = { slug: string; label: string; href: string; icon: string }
 
-export const AccountMenuClient: React.FC<{ settings: SettingsLink[] }> = ({ settings }) => {
+export const AccountMenuClient: React.FC<{ settings: SettingsLink[]; claude?: string }> = ({ settings, claude }) => {
   const { user } = useAuth<any>()
   const { config } = useConfig()
   const { autoMode, setTheme, theme } = useTheme()
@@ -127,6 +127,12 @@ export const AccountMenuClient: React.FC<{ settings: SettingsLink[] }> = ({ sett
             </>
           )}
           <div className="cms-menu__foot">
+            {claude && (
+              <Link href={claude} prefetch={false} className="cms-menu__item" data-menu-item onClick={() => menu.setOpen(false)}>
+                <Icon name="chat" size={16} />
+                <span className="cms-menu__itemtext">Use with Claude</span>
+              </Link>
+            )}
             <Link
               href={`${adminRoute}/account`}
               prefetch={false}

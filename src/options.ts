@@ -102,7 +102,18 @@ export type WebheroAdminOptions = {
   /** Log any read or save slower than this many milliseconds ("cms-timing ..."). Default 1000; false turns it off. */
   slowLog?: number | false
   /** Turn a page off with `false`. All on by default. */
-  views?: { seo?: boolean; performance?: boolean; guide?: boolean; sections?: boolean }
+  views?: { seo?: boolean; performance?: boolean; guide?: boolean; sections?: boolean; claude?: boolean }
+  /**
+   * "Use Claude with your website" (/claude), shown while the site's MCP and
+   * connector sign-in are on. `termsUrl`: the published AI editing terms.
+   */
+  claude?: { termsUrl?: string }
+  /**
+   * Upload collections that check for the same picture already in the library
+   * when a file is picked (duplicates.ts). Adds a `contentHash` column, so the
+   * site needs a migration. Default none.
+   */
+  duplicateCheck?: string[]
   /**
    * What opens when someone signs in. Default 'performance': the admin's home
    * is the Performance page and there is no separate dashboard of links that
@@ -151,7 +162,9 @@ export type ResolvedOptions = {
   maxVersions: number
   redirectsFrom: string | Record<string, string> | null
   slowLog: number | false
-  views: { seo: boolean; performance: boolean; guide: boolean; sections: boolean }
+  views: { seo: boolean; performance: boolean; guide: boolean; sections: boolean; claude: boolean }
+  claude: { termsUrl: string | null }
+  duplicateCheck: string[]
   home: 'performance' | 'dashboard'
   approvals: ResolvedApprovals | null
 }
@@ -189,7 +202,10 @@ export function resolveOptions(options: WebheroAdminOptions, collectionSlugs: Se
       performance: options.views?.performance ?? true,
       guide: options.views?.guide ?? true,
       sections: options.views?.sections ?? true,
+      claude: options.views?.claude ?? true,
     },
+    claude: { termsUrl: options.claude?.termsUrl ?? null },
+    duplicateCheck: options.duplicateCheck ?? [],
     // Performance can only be home when it is switched on.
     home: (options.views?.performance ?? true) ? (options.home ?? 'performance') : 'dashboard',
     approvals: options.approvals

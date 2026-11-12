@@ -85,3 +85,45 @@
     }
   }
 }
+
+// Use Claude with your website (/claude): the address to copy.
+.cms-claude__address {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 720px;
+  padding: 6px 6px 6px 16px;
+  border-radius: var(--cms-radius-lg);
+  border: 1px solid var(--theme-elevation-150);
+  background: var(--theme-bg);
+
+  code {
+    flex: 1;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    font-size: 15px;
+    background: none;
+    padding: 0;
+    user-select: all;
+  }
+}
+.cms-claude__copy {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: var(--cms-radius);
+  background: var(--theme-elevation-100);
+  color: var(--theme-text);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--theme-elevation-150);
+  }
+}

@@ -349,7 +349,8 @@ html.cms-headrow {
     background: var(--theme-bg);
     border-bottom: 1px solid var(--theme-elevation-100);
   }
-  .doc-controls {
+  // Not in a pop-up (drawer): it has its own title row, and the controls stay in it.
+  .doc-controls:not(.drawer *) {
     height: var(--app-header-height);
     margin-top: calc(-1 * var(--app-header-height));
     // Above the top bar (z-index 30), but clicks pass through the empty parts.
@@ -364,16 +365,16 @@ html.cms-headrow {
       display: none;
     }
   }
-  .doc-controls__wrapper {
+  .doc-controls__wrapper:not(.drawer *) {
     height: 100%;
     padding: 0;
     gap: 12px;
   }
-  .doc-controls__content,
-  .doc-controls__controls-wrapper {
+  .doc-controls__content:not(.drawer *),
+  .doc-controls__controls-wrapper:not(.drawer *) {
     pointer-events: auto;
   }
-  .doc-controls__divider {
+  .doc-controls__divider:not(.drawer *) {
     display: none;
   }
   // A hairline between the document's buttons and the menus.
@@ -422,4 +423,57 @@ html.cms-headrow {
   max-width: 320px;
   white-space: normal;
   line-height: 1.45;
+}
+
+// The duplicate-photo check under the upload area (DuplicateCheck).
+.cms-duplicate {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  margin: 0 0 20px;
+  padding: 14px 16px;
+  border-radius: var(--cms-radius-lg);
+  border: 1px solid var(--theme-elevation-150);
+  background: var(--theme-elevation-50);
+  font-size: 14px;
+  line-height: 1.5;
+
+  img {
+    flex: none;
+    width: 64px;
+    height: 64px;
+    object-fit: cover;
+    border-radius: var(--cms-radius);
+    background: var(--theme-elevation-100);
+  }
+  strong {
+    display: block;
+    margin-bottom: 2px;
+  }
+  span {
+    color: var(--theme-elevation-700);
+  }
+  &__actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  &__use {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 18px;
+    border: 0;
+    border-radius: var(--cms-radius);
+    background: var(--theme-text);
+    color: var(--theme-bg);
+    font: inherit;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+
+    &[disabled] {
+      opacity: 0.6;
+    }
+  }
 }

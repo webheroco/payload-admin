@@ -12,6 +12,8 @@ import { formatAdminURL } from 'payload/shared'
 import React from 'react'
 
 import { iconFor } from '../nav/icons.js'
+import { readOptions } from '../../options.js'
+import { claudeReady } from '../claude/claude.js'
 import { AccountMenuClient, type SettingsLink } from './AccountMenu.client.js'
 
 export const SETTINGS_GROUP = 'Settings'
@@ -44,5 +46,9 @@ export const AccountMenu = (props: ServerProps) => {
       })),
   ]
 
-  return <AccountMenuClient settings={settings} />
+  const claude = readOptions(payload.config).views.claude && claudeReady(payload.config)
+    ? formatAdminURL({ adminRoute, path: '/claude' })
+    : undefined
+
+  return <AccountMenuClient settings={settings} claude={claude} />
 }

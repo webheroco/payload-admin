@@ -15,6 +15,7 @@ export const SEO_OVERVIEW = `${RSC}#SeoOverview`
 export const PERFORMANCE = `${RSC}#Performance`
 export const PERFORMANCE_HOME = `${RSC}#PerformanceHome`
 export const GUIDE = `${RSC}#Guide`
+export const CLAUDE_SETUP = `${RSC}#ClaudeSetup`
 export const LANGUAGES_CELL = `${RSC}#LanguagesCell`
 export const REVIEWS = `${RSC}#Reviews`
 export const SECTIONS = `${RSC}#Sections`
@@ -33,6 +34,7 @@ export const SERP_PREVIEW = `${CLIENT}#SerpPreview`
 export const YES_NO_CELL = `${CLIENT}#YesNoCell`
 export const LIST_PANELS = `${CLIENT}#ListPanels`
 export const LIST_HELP = `${CLIENT}#ListHelp`
+export const DUPLICATE_CHECK = `${CLIENT}#DuplicateCheck`
 
 /** Multi-site only: needs @payloadcms/plugin-multi-tenant. */
 export const SITE_MENU = `${MULTI_SITE}#SiteMenu`

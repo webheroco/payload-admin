@@ -48,7 +48,7 @@ test('the plugin sets the admin and keeps what the project set', () => {
   assert.ok(config.admin.components.providers.includes('@webheroco/payload-admin/client#ListPanels'))
   assert.equal(config.i18n.translations.en.general.noResultsFound, 'Nothing to show.')
   // Performance is the home page: it replaces the dashboard rather than adding /performance.
-  assert.deepEqual(Object.keys(config.admin.components.views), ['seoOverview', 'dashboard', 'guide', 'sections'])
+  assert.deepEqual(Object.keys(config.admin.components.views), ['seoOverview', 'dashboard', 'guide', 'claudeSetup', 'sections'])
   assert.equal(config.admin.custom.webheroAdmin.home, 'performance')
   assert.deepEqual(config.admin.custom.webheroAdmin.enquiries, { collection: 'submissions', formField: 'form', pageField: 'page' })
   assert.deepEqual(config.admin.custom.webheroAdmin.seo, [{ slug: 'pages', kind: 'Page' }])
@@ -85,14 +85,14 @@ test('pages can be turned off, and the Form Builder is found', () => {
   const input = base()
   input.collections.push({ slug: 'form-submissions', fields: [] })
   const config = webheroAdmin({ views: { performance: false } })(input)
-  assert.deepEqual(Object.keys(config.admin.components.views), ['seoOverview', 'guide', 'sections'])
+  assert.deepEqual(Object.keys(config.admin.components.views), ['seoOverview', 'guide', 'claudeSetup', 'sections'])
   assert.deepEqual(config.admin.custom.webheroAdmin.enquiries, { formBuilder: true })
   assert.equal(config.admin.custom.webheroAdmin.home, 'dashboard')
 })
 
 test('a site can keep its dashboard, with Performance on its own page', () => {
   const config = webheroAdmin({ home: 'dashboard' })(base())
-  assert.deepEqual(Object.keys(config.admin.components.views), ['seoOverview', 'performance', 'guide', 'sections'])
+  assert.deepEqual(Object.keys(config.admin.components.views), ['seoOverview', 'performance', 'guide', 'claudeSetup', 'sections'])
 })
 
 test('approvals are off unless asked for, and wrap everything with drafts when on', async () => {
@@ -252,4 +252,28 @@ test('a site that still lists the old "?" top right gets it taken out', () => {
   input.admin.components.actions.push('@webheroco/payload-admin/client#HelpButton')
   const actions = webheroAdmin()(input).admin.components.actions
   assert.ok(!actions.includes('@webheroco/payload-admin/client#HelpButton'))
+})
+
+test('the Claude page can be turned off', () => {
+  const config = webheroAdmin({ views: { claude: false } })(base())
+  assert.equal('claudeSetup' in config.admin.components.views, false)
+})
+
+test('duplicateCheck adds the fingerprint and the note to the upload collections named', async () => {
+  const input = base()
+  input.collections.push({ slug: 'media', upload: true, fields: [{ name: 'alt', type: 'text' }] })
+  const config = webheroAdmin({ duplicateCheck: ['media', 'pages'] })(input)
+  const media = config.collections.find((c) => c.slug === 'media')
+  assert.deepEqual(media.fields.slice(0, 3).map((f) => f.name), ['duplicateCheck', 'contentHash', 'alt'])
+  assert.equal(media.fields[1].index, true)
+  assert.equal(media.fields[1].admin.hidden, true)
+  // Not an upload collection: unchanged.
+  assert.equal(config.collections.find((c) => c.slug === 'pages').fields.some((f) => f.name === 'contentHash'), false)
+  // A server-side upload gets its fingerprint on save.
+  const hook = media.hooks.beforeChange.at(-1)
+  const data = await hook({ data: {}, req: { file: { data: Buffer.from('abc') } } })
+  assert.equal(data.contentHash, 'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad')
+  // Off by default.
+  const plain = webheroAdmin()(base())
+  assert.equal(plain.collections.some((c) => c.fields.some((f) => f.name === 'contentHash')), false)
 })

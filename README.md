@@ -91,7 +91,9 @@ Only what differs per client:
 | `maxVersions` | 50 | Versions kept per document. |
 | `redirectsFrom` | none | The domain the site replaced (`'old-site.com'`, or `{ [tenantId]: domain }` on multi-site): Redirects show each old address in full. |
 | `slowLog` | 1000 | Any read or save slower than this (ms) is logged as `cms-timing <collection> <operation> <ms>ms`. `false` turns it off. |
-| `views` | all on | `{ seo, performance, guide, sections }`: `false` turns a page off. Sections is off by default on a site with more than 100 kinds of section; `sections: true` keeps it. |
+| `duplicateCheck` | none | Upload collections (`['media']`) that look for the same picture already in the library when a file is picked, and offer it instead. Adds a hidden `contentHash` column: the site needs a migration. |
+| `claude` | none | `{ termsUrl }`: the published AI editing terms, linked from the Use with Claude page. |
+| `views` | all on | `{ seo, performance, guide, sections, claude }`: `false` turns a page off. The Use with Claude page (`/claude`) opens, and is linked from the guide and the account menu, only while the site's MCP and connector sign-in are on. Sections is off by default on a site with more than 100 kinds of section; `sections: true` keeps it. |
 | `approvals` | off | `true`, or `{ approverRoles, roleField, only }`: sign-off before anything goes live (see below). |
 | `home` | `'performance'` | What `/admin` opens on. Performance replaces the dashboard; `'dashboard'` keeps Payload's dashboard and puts Performance at `/performance`. |
 
