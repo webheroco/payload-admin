@@ -56,6 +56,9 @@ export const DuplicateCheck: React.FC = () => {
       return
     }
     let stale = false
+    // A new file: the last file's match must not stay on screen (or be chosen) while this one is checked.
+    setFound({})
+    setUsing(false)
     ;(async () => {
       const [hash, size] = await Promise.all([fingerprint(file), dimensions(file)])
       if (stale) return

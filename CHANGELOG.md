@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.6.1
+
+- Duplicate pictures: picking another file clears the last file's match at
+  once, so "Use that one" can't choose a match for the previous file.
+- A file replaced through the server (seed, API) gets its own fingerprint
+  instead of keeping the old one.
+
 ## 0.6.0
 
 Run `payload generate:importmap` after updating. No schema change unless you
