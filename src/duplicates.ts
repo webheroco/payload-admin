@@ -24,7 +24,9 @@ export const CONTENT_HASH = 'contentHash'
 
 const hashUploadedFile: CollectionBeforeChangeHook = ({ data, req }) => {
   const file = req.file as { data?: Buffer } | undefined
-  if (file?.data && file.data.length > 0 && data && !data[CONTENT_HASH]) {
+  // Whenever the bytes pass through the server they decide the fingerprint: a
+  // replaced file must not keep the old one. Browser uploads send their own.
+  if (file?.data && file.data.length > 0 && data) {
     data[CONTENT_HASH] = createHash('sha256').update(file.data).digest('hex')
   }
   return data

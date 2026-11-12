@@ -273,6 +273,9 @@ test('duplicateCheck adds the fingerprint and the note to the upload collections
   const hook = media.hooks.beforeChange.at(-1)
   const data = await hook({ data: {}, req: { file: { data: Buffer.from('abc') } } })
   assert.equal(data.contentHash, 'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad')
+  // A replacement file gets its own fingerprint, not the one already on the document.
+  const replaced = await hook({ data: { contentHash: 'old' }, req: { file: { data: Buffer.from('abc') } } })
+  assert.equal(replaced.contentHash, 'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad')
   // Off by default.
   const plain = webheroAdmin()(base())
   assert.equal(plain.collections.some((c) => c.fields.some((f) => f.name === 'contentHash')), false)
