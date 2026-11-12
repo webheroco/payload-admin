@@ -350,7 +350,7 @@ export const SeoWorkspace: React.FC<{
     await api(`${apiRoute}/${row.collection}/${row.id}?${params}`, 'PATCH', { alt: value })
     setAltRows((all) => all.map((r) => (altKey(r) === altKey(row) ? { ...r, alt: value } : r)))
     setDoneHere((s) => new Set(s).add(altKey(row)))
-    toast.success('Alt text saved.')
+    toast.success('Description saved.')
   }
 
   const shownRedirects = redirects.filter(
@@ -388,7 +388,7 @@ export const SeoWorkspace: React.FC<{
               className={`cms-tabs__tab${tab === 'alt' ? ' is-active' : ''}`}
               onClick={() => switchTab('alt')}
             >
-              Alt text{missingAlt ? <span className="cms-tabs__count">{missingAlt}</span> : null}
+              Picture descriptions{missingAlt ? <span className="cms-tabs__count">{missingAlt}</span> : null}
             </button>
           )}
           {canRedirect && (
@@ -411,7 +411,7 @@ export const SeoWorkspace: React.FC<{
                 : tab === 'schema'
                   ? 'The structured data (JSON-LD) each indexed page gives search engines, read from the live site. Site-wide types are summarised at the top. Red means errors that stop rich results, amber means recommended properties are missing. The schema is written by the site’s code, so fixes are a developer job.'
                   : tab === 'alt'
-                    ? `Alt text describes a picture for people using screen readers and for search engines${localeLabel ? `, in ${localeLabel}` : ''}. The number is how many pictures have none. Click a description to add or change it; decorative pictures can say what they show in a few words.`
+                    ? `A sentence describing each picture, read aloud to people using screen readers and used by search engines${localeLabel ? `, in ${localeLabel}` : ''}. The number is how many pictures have none. Click a description to add or change it.`
                     : 'Send visitors from an old address to a page that exists. Permanent (301) tells search engines the page has moved for good.'}
             </span>
           </span>
@@ -599,7 +599,7 @@ export const SeoWorkspace: React.FC<{
               <tr>
                 <th aria-label="Picture" />
                 <th>File name</th>
-                <th>Alt text</th>
+                <th>Description</th>
               </tr>
             </thead>
             <tbody>
@@ -616,8 +616,8 @@ export const SeoWorkspace: React.FC<{
                   <td>
                     <EditableText
                       value={row.alt}
-                      placeholder="Add alt text"
-                      label={`alt text for ${row.filename}`}
+                      placeholder="Describe this picture"
+                      label={`Description of ${row.filename}`}
                       onSave={saveAlt(row)}
                     />
                   </td>
@@ -775,7 +775,7 @@ export const SeoWorkspace: React.FC<{
       )}
       {tab === 'alt' && shownAlt.length === 0 && (
         <p className="cms-seo__empty">
-          {q ? 'No pictures match that search.' : allPictures ? 'No pictures yet.' : 'Every picture has alt text.'}
+          {q ? 'No pictures match that search.' : allPictures ? 'No pictures yet.' : 'Every picture has a description.'}
         </p>
       )}
       {tab === 'redirects' && shownRedirects.length === 0 && (

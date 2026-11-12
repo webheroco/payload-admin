@@ -78,7 +78,7 @@ Only what differs per client:
 | --- | --- | --- |
 | `routes` | `{ pages: '/:slug', posts: '/blog/:slug' }` | Where each collection lives on the site, for page tiles and the SEO overview. A document with its own `path` field uses that. |
 | `homeSlug` | `home` | The page served at `/`. |
-| `seo` | Pages and Posts, where they exist | The collections in the SEO overview, and what a row is called. Its Alt text tab lists the pictures in every upload collection with an `alt` field. |
+| `seo` | Pages and Posts, where they exist | The collections in the SEO overview, and what a row is called. Its Picture descriptions tab (the `alt` field) lists the pictures in every upload collection with an `alt` field. |
 | `enquiries` | the Form Builder if `form-submissions` exists, else `{ collection: 'submissions', formField: 'form', pageField: 'page' }` | Where Performance counts enquiries. |
 | `livePreview` | none | Collections and globals with Live Preview; they get the preview toolbar. |
 | `previewControls` | none | More components beside the preview toolbar, such as the site's click-to-edit bridge. |

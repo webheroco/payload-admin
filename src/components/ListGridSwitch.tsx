@@ -279,7 +279,7 @@ export function ListGridSwitch({
                   ) : null}
                   {size ? <span className="cms-grid__meta">{size}</span> : null}
                   {isMedia && !doc.alt?.trim() && !doc.decorative ? (
-                    <span className="cms-grid__meta cms-grid__meta--warn">No alt text</span>
+                    <span className="cms-grid__meta cms-grid__meta--warn">No description</span>
                   ) : null}
                 </Link>
               </li>

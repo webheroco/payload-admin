@@ -17,6 +17,8 @@ switch on `duplicateCheck`, which adds a column (make a migration).
   uploaded before the check get a "looks like" match on size and dimensions,
   for the editor to judge by eye. A matching name alone (phones reuse
   IMG_4417.jpeg) only says the new picture is saved as a separate one.
+- Plain words for alt text: the SEO overview tab is Picture descriptions, the
+  column Description, the grid flag "No description".
 - Pop-ups (drawers): the document's controls stay in the pop-up's own row
   instead of being pulled up over its title and description.
 
