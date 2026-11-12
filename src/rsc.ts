@@ -6,4 +6,5 @@ export { Performance, PerformanceHome } from './components/performance/Performan
 export { Sections } from './components/sections/Sections.js'
 export { Reviews } from './components/review/Reviews.js'
 export { Guide } from './components/guide/Guide.js'
+export { ClaudeSetup } from './components/claude/ClaudeSetup.js'
 export { LanguagesCell } from './components/i18n/LanguagesCell.js'

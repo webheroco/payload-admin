@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.6.0
+
+Run `payload generate:importmap` after updating. No schema change unless you
+switch on `duplicateCheck`, which adds a column (make a migration).
+
+- Use with Claude (`/claude`): how an editor adds the site to Claude as a
+  connector, with the site's own address to copy, what Claude may do, the
+  terms (`claude.termsUrl`) and where to disconnect. It opens only while the
+  site's MCP plugin and connector sign-in are on, and is linked from the guide
+  and the account menu then. `views.claude: false` turns it off.
+- Duplicate pictures (`duplicateCheck: ['media']`): when a file is picked, the
+  admin works out its fingerprint and looks for the same picture in the
+  library. If it's there, it shows that picture with "Use that one" (in the
+  pop-up from an image field it picks it and closes) or "Open it". Pictures
+  uploaded before the check get a "looks like" match on size and dimensions,
+  for the editor to judge by eye. A matching name alone (phones reuse
+  IMG_4417.jpeg) only says the new picture is saved as a separate one.
+- Plain words for alt text: the SEO overview tab is Picture descriptions, the
+  column Description, the grid flag "No description".
+- Pop-ups (drawers): the document's controls stay in the pop-up's own row
+  instead of being pulled up over its title and description.
+
 ## 0.5.0
 
 No schema change. Run `payload generate:importmap` after updating. Delete any

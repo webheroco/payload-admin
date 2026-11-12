@@ -78,7 +78,7 @@ Only what differs per client:
 | --- | --- | --- |
 | `routes` | `{ pages: '/:slug', posts: '/blog/:slug' }` | Where each collection lives on the site, for page tiles and the SEO overview. A document with its own `path` field uses that. |
 | `homeSlug` | `home` | The page served at `/`. |
-| `seo` | Pages and Posts, where they exist | The collections in the SEO overview, and what a row is called. Its Alt text tab lists the pictures in every upload collection with an `alt` field. |
+| `seo` | Pages and Posts, where they exist | The collections in the SEO overview, and what a row is called. Its Picture descriptions tab (the `alt` field) lists the pictures in every upload collection with an `alt` field. |
 | `enquiries` | the Form Builder if `form-submissions` exists, else `{ collection: 'submissions', formField: 'form', pageField: 'page' }` | Where Performance counts enquiries. |
 | `livePreview` | none | Collections and globals with Live Preview; they get the preview toolbar. |
 | `previewControls` | none | More components beside the preview toolbar, such as the site's click-to-edit bridge. |
@@ -91,7 +91,9 @@ Only what differs per client:
 | `maxVersions` | 50 | Versions kept per document. |
 | `redirectsFrom` | none | The domain the site replaced (`'old-site.com'`, or `{ [tenantId]: domain }` on multi-site): Redirects show each old address in full. |
 | `slowLog` | 1000 | Any read or save slower than this (ms) is logged as `cms-timing <collection> <operation> <ms>ms`. `false` turns it off. |
-| `views` | all on | `{ seo, performance, guide, sections }`: `false` turns a page off. Sections is off by default on a site with more than 100 kinds of section; `sections: true` keeps it. |
+| `duplicateCheck` | none | Upload collections (`['media']`) that look for the same picture already in the library when a file is picked, and offer it instead. Adds a hidden `contentHash` column: the site needs a migration. |
+| `claude` | none | `{ termsUrl }`: the published AI editing terms, linked from the Use with Claude page. |
+| `views` | all on | `{ seo, performance, guide, sections, claude }`: `false` turns a page off. The Use with Claude page (`/claude`) opens, and is linked from the guide and the account menu, only while the site's MCP and connector sign-in are on. Sections is off by default on a site with more than 100 kinds of section; `sections: true` keeps it. |
 | `approvals` | off | `true`, or `{ approverRoles, roleField, only }`: sign-off before anything goes live (see below). |
 | `home` | `'performance'` | What `/admin` opens on. Performance replaces the dashboard; `'dashboard'` keeps Payload's dashboard and puts Performance at `/performance`. |
 

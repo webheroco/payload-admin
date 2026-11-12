@@ -7,6 +7,13 @@
 import React from 'react'
 
 const paths: Record<string, React.ReactNode> = {
+  chat: <path d="M4 5h16v11H9l-5 4z" />,
+  copy: (
+    <>
+      <rect x="9" y="9" width="11" height="11" rx="2" />
+      <path d="M5 15V5a2 2 0 0 1 2-2h8" />
+    </>
+  ),
   home: <path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" />,
   search: (
     <>

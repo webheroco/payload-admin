@@ -16,6 +16,7 @@ import { readOptions } from '../../options.js'
 
 import { GuideClient, type GuideSection } from './GuideClient.js'
 import { headerActions } from '../headerActions.js'
+import { claudeReady } from '../claude/claude.js'
 
 export const Guide = async ({ initPageResult, params, searchParams }: AdminViewServerProps) => {
   const { locale, permissions, req, visibleEntities } = initPageResult
@@ -27,7 +28,7 @@ export const Guide = async ({ initPageResult, params, searchParams }: AdminViewS
   if (!user) throw new Error('Your account could not be read just now. Reload the page in a moment.')
 
   const url = (path: `/${string}`) => formatAdminURL({ adminRoute, path })
-  const { home, guideCards } = readOptions(payload.config)
+  const { home, guideCards, views } = readOptions(payload.config)
   const can = (slug: string) => Boolean(permissions?.collections?.[slug]?.read)
   const locales = payload.config.localization ? payload.config.localization.locales : []
   const sites = can('tenants') ? (await payload.count({ collection: 'tenants', req })).totalDocs : 0
@@ -144,6 +145,21 @@ export const Guide = async ({ initPageResult, params, searchParams }: AdminViewS
       ],
       action: { label: 'Open Performance', href: home === 'performance' ? adminRoute : url('/performance') },
     },
+    ...(views.claude && claudeReady(payload.config)
+      ? [
+          {
+            id: 'claude',
+            group: 'Pages',
+            icon: 'chat',
+            title: 'Ask Claude to make changes',
+            steps: [
+              'Add this website to Claude once, with your usual login here.',
+              'Then ask for changes in plain words. They arrive here as drafts for you to check and publish.',
+            ],
+            action: { label: 'Set up Claude', href: url('/claude') },
+          },
+        ]
+      : []),
     {
       id: 'account',
       group: 'Your account',

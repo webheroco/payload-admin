@@ -34,7 +34,7 @@ export const HeaderRow: React.FC = () => {
     }
 
     const measure = () => {
-      const controls = document.querySelector<HTMLElement>('.doc-controls')
+      const controls = document.querySelector<HTMLElement>('.doc-controls:not(.drawer *)')
       const crumb = document.querySelector('.app-header .step-nav')
       const actions = document.querySelector('.app-header__actions')
       const meta = controls?.querySelector('.doc-controls__meta')

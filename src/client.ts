@@ -16,6 +16,7 @@ export { ReviewBanner } from './components/review/ReviewBanner.js'
 export { YesNoCell } from './components/YesNoCell.js'
 export { ListPanels } from './components/ListPanels.js'
 export { ListHelp } from './components/ListHelp.js'
+export { DuplicateCheck } from './components/DuplicateCheck.js'
 // Building blocks for a project's own admin pieces, so they match.
 export { Mark, useFilter, useMenu, useSites } from './components/header/menu.js'
 export { Icon, iconFor } from './components/nav/icons.js'
